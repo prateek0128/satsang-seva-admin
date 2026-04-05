@@ -44,14 +44,12 @@ function App() {
   const action = useNavigationType();
   const location = useLocation();
   const pathname = location.pathname;
-  const [admin, setAdmin] = useState(false);
+  const [admin, setAdmin] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("admin")); } catch { return null; }
+  });
 
-  const handleAdmin = (id) => {
-    if (id === process.env.REACT_APP_ADMIN_KEY) {
-      setAdmin(true);
-    } else {
-      setAdmin(false);
-    }
+  const handleAdmin = (adminData) => {
+    setAdmin(adminData);
   };
 
   useEffect(() => {

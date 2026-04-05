@@ -64,13 +64,14 @@ const LogIn = () => {
           });
       } else {
         await axios
-          .post(url + "user/login", formData)
+          .post(url + "auth/login", { email: formData.email, password: formData.password })
           .then((resp) => {
             const token = resp.data.token;
-            const userId = resp.data.user?.id;
+            const userId = resp.data.user?.id || resp.data.user?._id;
             setUserId(userId);
             localStorage.setItem("token", token);
             localStorage.setItem("userId", userId);
+            localStorage.setItem("user", JSON.stringify(resp.data.user));
             alert(resp.data.message + "!");
             window.location.reload();
           })
@@ -111,7 +112,7 @@ const LogIn = () => {
       // return;
       const data = { email: formData.email };
       await axios
-        .post(url + "user/password-reset/send-otp", data)
+        .post(url + "auth/forgot-password", { identifier: data.email })
         .then((resp) => {
           // console.log(resp);
           setRegisterNumber("resp.data.to");
@@ -147,7 +148,7 @@ const LogIn = () => {
     };
     // console.log(data);
     await axios
-      .post(url + "user/password-reset/verify", data)
+      .post(url + "auth/reset-password", { email: data.email, otp: data.otp, password: data.newPassword })
       .then((resp) => {
         // console.log(resp);
         alert("Phone Number Verified Successfully! Reseting Your Password.");

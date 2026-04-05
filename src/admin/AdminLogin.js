@@ -7,13 +7,26 @@ import { toast } from '../components/Popup';
 const AdminLogin = ({ setAdmin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const url = process.env.REACT_APP_BACKEND;
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const admin = localStorage.getItem("admin");
+    if (token && admin) {
+      try {
+        const parsed = JSON.parse(admin);
+        if (parsed?.designation === "admin") navigate("/admin/dashboard");
+      } catch {}
+    }
+  }, [navigate]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      const { data } = await axios.post(url + "admin/login", { email, password });
+      const { data } = await axios.post(`${url}admin/login`, { email, password });
       localStorage.setItem("token", data.token);
       localStorage.setItem("admin", JSON.stringify(data.admin));
       setAdmin(data.admin);
@@ -21,16 +34,10 @@ const AdminLogin = ({ setAdmin }) => {
       navigate("/admin/dashboard");
     } catch (err) {
       toast(err.response?.data?.message || "Something went wrong. Please try again later.", "error");
+    } finally {
+      setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const adminToken = localStorage.getItem("token");
-    const admin = JSON.parse(localStorage.getItem("admin"));
-    if (adminToken && admin && admin?.designation === "admin") {
-      navigate("/admin/dashboard");
-    }
-  }, []);
 
   return (
     <div className="admin-login-container">
@@ -44,7 +51,7 @@ const AdminLogin = ({ setAdmin }) => {
           <label className="form-label" htmlFor="password">Password:</label>
           <input className="form-control" id="password" type="password" placeholder="Admin Password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
         </div>
-        <button type="submit">Login</button>
+        <button type="submit" disabled={loading}>{loading ? "Logging in..." : "Login"}</button>
         <p className="text-center mt-3" style={{ fontSize: "0.9rem" }}>
           No account? <Link to="/admin/signup">Create Admin</Link>
         </p>
