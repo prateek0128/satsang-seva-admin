@@ -133,9 +133,6 @@ function App() {
           <Route path="/sign-in" element={<SignUp />} />
           {/* Login */}
           <Route path="/login" element={<LogIn />} />
-          {/* All other routes */}
-          <Route path="*" element={<LogIn />} />
-          {/* Home */}
           <Route path="/" element={<Home />} />
           <Route path="/live-event" element={<LiveEvent />} />
           <Route path="/landing-design-a-2" element={<LandingDesign />} />
@@ -159,10 +156,13 @@ function App() {
           {/* Tearms and condition */}
           <Route path="/terms" element={<Terms />} />
           <Route path="/addblog" element={<AddBlog />} />
+          {/* Catch-all */}
+          <Route path="*" element={<LogIn />} />
         </Route>
 
         {/* Event detail — no navbar, opens cleanly from admin */}
         <Route path="/event/:id" element={<Event />} />
+        <Route path="/events/:id" element={<Event />} />
         {/* Public profile — no navbar, opens cleanly from admin */}
         <Route path="/public-profile" element={<PublicProfile />} />
 
