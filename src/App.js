@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
-import {
-  Routes,
-  Route,
-  useNavigationType,
-  useLocation,
-} from "react-router-dom";
+import { Routes, Route, useNavigationType, useLocation } from "react-router-dom";
+
+// User-facing page imports (kept for reference, routes commented out)
 import LandingDesign from "./pages/LandingDesign";
 import Event from "./pages/Event";
 import CategoriesPage from "./pages/CategoriesPage";
@@ -14,12 +11,18 @@ import ProfilePage from "./pages/ProfilePage";
 import SearchBar from "./pages/SearchBar";
 import LogIn from "./pages/LogIn";
 import BookingComponent from "./components/BookingComponent";
-import NavComponent from "./components/NavComponent";
 import PublicProfile from "./pages/PublicProfile";
 import About from "./pages/About";
 import ContactUs from "./pages/ContactUs";
 import AddBlog from "./pages/AddBlog";
 import Blogs from "./pages/Blogs";
+import Terms from "./components/Terms";
+import Home from "./pages/Home";
+import LiveEvent from "./components/LiveEvent";
+import Userlayout from "./components/UserLayout";
+import ViewProfile from "./pages/ViewProfile";
+
+// Admin imports
 import AdminPage from "./admin/AdminPage";
 import AllProducts from "./admin/AllProducts";
 import UserList from "./admin/UserList";
@@ -31,12 +34,6 @@ import Blog from "./admin/Blog";
 import AdminLayout from "./admin/AdminLayout";
 import AdminLogin from "./admin/AdminLogin";
 import AdminSignup from "./admin/AdminSignup";
-import GoogleTranslate from "./components/GoogleTranslate";
-import Terms from "./components/Terms";
-import Home from "./pages/Home";
-import LiveEvent from "./components/LiveEvent";
-import Userlayout from "./components/UserLayout";
-import ViewProfile from "./pages/ViewProfile";
 import UpdateUser from "./admin/UpdateUser";
 import UpdateEvent from "./admin/UpdateEvent";
 
@@ -48,149 +45,63 @@ function App() {
     try { return JSON.parse(localStorage.getItem("admin")); } catch { return null; }
   });
 
-  const handleAdmin = (adminData) => {
-    setAdmin(adminData);
-  };
+  const handleAdmin = (adminData) => setAdmin(adminData);
 
   useEffect(() => {
-    if (action !== "POP") {
-      window.scrollTo(0, 0);
-    }
+    if (action !== "POP") window.scrollTo(0, 0);
   }, [action, pathname]);
 
-  useEffect(() => {
-    let title = "";
-    let metaDescription = "";
-
-    switch (pathname) {
-      case "/":
-        title = "";
-        metaDescription = "";
-        break;
-      case "/live-event":
-        title = "";
-        metaDescription = "";
-        break;
-      case "/perticular-event-b":
-        title = "";
-        metaDescription = "";
-        break;
-      case "/landing-design-a-2":
-        title = "";
-        metaDescription = "";
-        break;
-      case "/perticular-event-a":
-        title = "";
-        metaDescription = "";
-        break;
-      case "/categories-page":
-        title = "";
-        metaDescription = "";
-        break;
-      case "/sign-in":
-        title = "";
-        metaDescription = "";
-        break;
-      case "/event-listing":
-        title = "";
-        metaDescription = "";
-        break;
-      case "/profile-page":
-        title = "";
-        metaDescription = "";
-        break;
-      case "/search-bar":
-        title = "";
-        metaDescription = "";
-        break;
-      case "/login":
-        title = "";
-        metaDescription = "";
-        break;
-    }
-
-    if (title) {
-      document.title = title;
-    }
-
-    if (metaDescription) {
-      const metaDescriptionTag = document.querySelector(
-        'head > meta[name="description"]'
-      );
-      if (metaDescriptionTag) {
-        metaDescriptionTag.content = metaDescription;
-      }
-    }
-  }, [pathname]);
-
   return (
-    <>
-      <GoogleTranslate />
-      {/* <NavComponent /> */}
-      <Routes>
-        <Route element={<Userlayout />}>
-          {/* Signin page */}
-          <Route path="/sign-in" element={<SignUp />} />
-          {/* Login */}
-          <Route path="/login" element={<LogIn />} />
-          <Route path="/" element={<Home />} />
-          <Route path="/live-event" element={<LiveEvent />} />
-          <Route path="/landing-design-a-2" element={<LandingDesign />} />
-          {/* Event category page */}
-          <Route path="/categories-page" element={<CategoriesPage />} />
-          {/* Profile page */}
-          <Route exact path="/profile-page" element={<ProfilePage />} />
-          {/* create event  */}
-          <Route path="/event-listing" element={<CreateEventComponent />} />
-          {/* Public profile */}
-          {/* Search bar */}
-          <Route path="/search-bar" element={<SearchBar />} />
-          {/* Booking component */}
-          <Route path="/booking" element={<BookingComponent />} />
-          {/* About us */}
-          <Route path="/aboutus" element={<About />} />
-          {/* Contact us */}
-          <Route path="/contactus" element={<ContactUs />} />
-          {/* Particuler blog */}
-          <Route path="/blog" element={<Blogs />} />
-          {/* Tearms and condition */}
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/addblog" element={<AddBlog />} />
-          {/* Catch-all */}
-          <Route path="*" element={<LogIn />} />
+    <Routes>
+      {/* ── Redirect root to admin login ── */}
+      <Route path="/" element={<AdminLogin setAdmin={handleAdmin} />} />
+
+      {/* ── Event & Public Profile preview (opened from admin in new tab) ── */}
+      <Route path="/event/:id" element={<Event />} />
+      <Route path="/public-profile" element={<PublicProfile />} />
+
+      {/* ── USER ROUTES (commented out — admin-only build) ──
+      <Route element={<Userlayout />}>
+        <Route path="/sign-in" element={<SignUp />} />
+        <Route path="/login" element={<LogIn />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/live-event" element={<LiveEvent />} />
+        <Route path="/landing-design-a-2" element={<LandingDesign />} />
+        <Route path="/categories-page" element={<CategoriesPage />} />
+        <Route exact path="/profile-page" element={<ProfilePage />} />
+        <Route path="/event-listing" element={<CreateEventComponent />} />
+        <Route path="/search-bar" element={<SearchBar />} />
+        <Route path="/booking" element={<BookingComponent />} />
+        <Route path="/aboutus" element={<About />} />
+        <Route path="/contactus" element={<ContactUs />} />
+        <Route path="/blog" element={<Blogs />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/addblog" element={<AddBlog />} />
+        <Route path="*" element={<LogIn />} />
+      </Route>
+      ── END USER ROUTES ── */}
+
+      {/* ── ADMIN ROUTES ── */}
+      <Route path="/admin">
+        <Route index element={<AdminLogin setAdmin={handleAdmin} />} />
+        <Route path="signup" element={<AdminSignup />} />
+        <Route path="*" element={<AdminLogin setAdmin={handleAdmin} />} />
+        <Route element={<AdminLayout setAdmin={handleAdmin} />}>
+          <Route path="dashboard" element={<AdminPage />} />
+          <Route path="allusers" element={<UserList />} />
+          <Route path="events" element={<Events />} />
+          <Route path="approve" element={<Approve />} />
+          <Route path="blog" element={<Blog />} />
+          <Route path="createblog" element={<AddBlog />} />
+          <Route path="updateuser/:id" element={<UpdateUser />} />
+          <Route path="updateevent/:id" element={<UpdateEvent />} />
+          <Route path="allproduct/:id/:name" element={<AllProducts />} />
+          <Route path="userevents/:userId" element={<UserEvents />} />
+          <Route path="updateform" element={<Updateform />} />
         </Route>
-
-        {/* Event detail — no navbar, opens cleanly from admin */}
-        <Route path="/event/:id" element={<Event />} />
-        <Route path="/events/:id" element={<Event />} />
-        {/* Public profile — no navbar, opens cleanly from admin */}
-        <Route path="/public-profile" element={<PublicProfile />} />
-
-
-        <Route path="/admin">
-          <Route index element={<AdminLogin setAdmin={handleAdmin} />} />
-          <Route path="signup" element={<AdminSignup />} />
-          <Route path="*" element={<AdminLogin setAdmin={handleAdmin} />} />
-          <Route element={<AdminLayout setAdmin={handleAdmin} />}>
-            <Route path="dashboard" element={<AdminPage />} />
-            <Route path="allusers" element={<UserList />} />
-            <Route path="events" element={<Events />} />
-            <Route path="approve" element={<Approve />} />
-            <Route path="blog" element={<Blog />} />
-            <Route path="createblog" element={<AddBlog />} />
-            <Route path="updateuser/:id" element={<UpdateUser />} />
-            <Route path="updateevent/:id" element={<UpdateEvent />} />
-            {/* <Route path="coupon" element={<Coupon />} /> */}
-            {/* <Route path="categorie" element={<Categories />} /> */}
-            {/* <Route path="brands" element={<Brands />} /> */}
-            {/* <Route path="orderdetails" element={<OrderDetails />} /> */}
-            <Route path="allproduct/:id/:name" element={<AllProducts />} />
-            <Route path="userevents/:userId" element={<UserEvents />} />
-            <Route path="updateform" element={<Updateform />} />
-          </Route>
-        </Route >
-      </Routes>
-    </>
+      </Route>
+    </Routes>
   );
 }
+
 export default App;

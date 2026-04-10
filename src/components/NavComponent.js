@@ -4,6 +4,7 @@ import { HashLink as Link } from "react-router-hash-link";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import "../Csss/NavComponent.css";
+import GoogleTranslate from "./GoogleTranslate";
 
 const NavComponent = ({ solid = false }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -112,6 +113,9 @@ const NavComponent = ({ solid = false }) => {
           </li>
           <li className="io" onClick={toggleMenu}>
             <Link to="/categories-page#main">Categories</Link>
+          </li>
+          <li className="io">
+            <GoogleTranslate />
           </li>
           {!userId ? (
             <li className="" onClick={toggleMenu}>

@@ -1,8 +1,6 @@
 #google_translate_element {
-  position: fixed;
-  top: 8px;
-  right: 12px;
-  z-index: 11111;
+  display: inline-flex;
+  align-items: center;
 }
 
 #google_translate_element img {

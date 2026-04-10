@@ -1,204 +1,135 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import View from "@mui/icons-material/VisibilityTwoTone";
-import Delete from "@mui/icons-material/DeleteForeverTwoTone";
-import Loader from "../components/Loader"; // Assuming you have a Loader component
-import dayjs from "dayjs"; // For date formatting
+import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
+
+const S = {
+  page: { padding: "28px 32px", background: "#f8fafc", minHeight: "100vh", fontFamily: "'Inter',-apple-system,sans-serif" },
+  card: { background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", overflow: "hidden" },
+  th: { padding: "11px 16px", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap", textAlign: "left" },
+  td: { padding: "14px 16px", fontSize: "0.82rem", color: "#334155", borderBottom: "1px solid #f1f5f9", verticalAlign: "middle" },
+  iconBtn: { background: "none", border: "none", cursor: "pointer", padding: "5px", borderRadius: 6, display: "inline-flex", alignItems: "center", color: "#94a3b8", transition: "all 0.15s" },
+};
 
 const Blog = () => {
   const url = process.env.REACT_APP_BACKEND;
   const navigate = useNavigate();
-
-  // State variables
   const [blogs, setBlogs] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [currentBlogId, setCurrentBlogId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch blogs on component mount
   useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await axios.get(`${url}blogs`, { headers });
+        setBlogs(res.data.data || res.data.blogs || []);
+      } catch (e) {
+        toast(e.response?.data?.message || e.message, "error");
+      } finally { setLoading(false); }
+    };
     fetchBlogs();
   }, []);
 
-  const fetchBlogs = async () => {
-    setLoading(true);
+  const handleDelete = async (id) => {
+    const ok = await confirmDialog("Delete this blog? This action is irreversible.");
+    if (!ok) return;
     try {
-      const headers = {
-        "Content-Type": "application/json",
-      };
       const token = localStorage.getItem("token");
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const response = await axios.get(`${url}blogs`, { headers });
-      setBlogs(response.data.data || response.data.blogs || []);
-    } catch (error) {
-      console.error("Error fetching blogs:", error);
-      toast("Error fetching blogs: " + (error.response?.data?.message || error.message), "error");
-    } finally {
-      setLoading(false);
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await axios.delete(`${url}blogs/${id}`, { headers });
+      setBlogs(blogs.filter(b => b._id !== id));
+      toast("Blog deleted successfully", "success");
+    } catch (e) {
+      toast(e.response?.data?.message || e.message, "error");
     }
-  };
-
-  // Handle blog creation
-  const handleCreateBlog = () => {
-    navigate("/admin/createblog");
-  };
-
-
-  // Handle blog deletion
-  const handleDelete = async () => {
-    try {
-      setLoading(true);
-      const headers = {
-        "Content-Type": "application/json",
-      };
-      const token = localStorage.getItem("token");
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const response = await axios.delete(`${url}blogs/${currentBlogId}`, { headers });
-      setBlogs(blogs.filter((blog) => blog._id !== currentBlogId));
-      toast(response.data.message || "Blog deleted successfully!", "success");
-      setShowDeleteDialog(false);
-      setCurrentBlogId(null);
-    } catch (error) {
-      console.error("Error deleting blog:", error);
-      toast("Error deleting blog: " + (error.response?.data?.message || error.message), "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Helper function to copy text to clipboard
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
-      .catch((err) => {
-        console.error("Failed to copy text: ", err);
-      });
   };
 
   return (
-    <div className="px-2">
-      {loading && <Loader />}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-[#EE7D45]">Blogs</h1>
-        <button
-          className="bg-[#EE7D45] text-white px-4 py-2 rounded hover:bg-[#D26600] transition-colors"
-          onClick={handleCreateBlog}
-        >
-          Create A New Blog
+    <div style={S.page}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 style={{ margin: "0 0 4px", fontSize: "1.25rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.3px" }}>Blogs</h1>
+          <p style={{ margin: 0, fontSize: "0.8rem", color: "#94a3b8" }}>{blogs.length} published posts</p>
+        </div>
+        <button onClick={() => navigate("/admin/createblog")}
+          style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: "#D26600", color: "#fff", fontWeight: 600, fontSize: "0.82rem", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 8px rgba(210,102,0,0.25)", transition: "background 0.15s" }}
+          onMouseEnter={e => e.currentTarget.style.background = "#b85a00"}
+          onMouseLeave={e => e.currentTarget.style.background = "#D26600"}>
+          + New Blog Post
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="">
-          {/* Header Row */}
-          <div className="flex bg-[#EE7D45] text-white font-bold">
-            <div className="p-3 w-16 flex-shrink-0">ID</div>
-            <div className="p-3 w-64 flex-shrink-0">Title</div>
-            <div className="p-3 flex-grow">Content</div>
-            <div className="p-3 w-24 flex-shrink-0">Created At</div>
-            <div className="p-3 w-24 flex-shrink-0">Actions</div>
+      <div style={S.card}>
+        {loading ? (
+          <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: "0.875rem" }}>Loading blogs...</div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  {["ID", "Title", "Preview", "Published", "Actions"].map(h => (
+                    <th key={h} style={S.th}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {blogs.length === 0 ? (
+                  <tr><td colSpan={5} style={{ ...S.td, textAlign: "center", padding: 40, color: "#94a3b8" }}>No blog posts yet</td></tr>
+                ) : blogs.map(blog => (
+                  <tr key={blog._id}
+                    onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    style={{ transition: "background 0.12s" }}>
+                    <td style={S.td}>
+                      <span onClick={() => navigator.clipboard.writeText(blog._id)} title="Copy ID"
+                        style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#94a3b8", cursor: "pointer" }}>
+                        ...{blog._id?.slice(-6)}
+                      </span>
+                    </td>
+                    <td style={{ ...S.td, maxWidth: 220 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        {blog.images?.[0] ? (
+                          <img src={blog.images[0]} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover", flexShrink: 0 }}
+                            onError={e => { e.target.style.display = "none"; }} />
+                        ) : (
+                          <div style={{ width: 36, height: 36, borderRadius: 8, background: "#f1f5f9", flexShrink: 0 }} />
+                        )}
+                        <span style={{ fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {blog.title || "—"}
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ ...S.td, maxWidth: 300, color: "#64748b" }}>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                        {blog.content ? blog.content.substring(0, 80) + "..." : "—"}
+                      </span>
+                    </td>
+                    <td style={S.td}>{blog.createdAt ? dayjs(blog.createdAt).format("DD MMM YYYY") : "—"}</td>
+                    <td style={S.td}>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <button style={S.iconBtn} title="View"
+                          onClick={() => window.open(`${process.env.REACT_APP_FRONTEND}/blog?q=${blog._id}`, "_blank")}
+                          onMouseEnter={e => e.currentTarget.style.color = "#2563eb"}
+                          onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                        <button style={S.iconBtn} title="Delete"
+                          onClick={() => handleDelete(blog._id)}
+                          onMouseEnter={e => e.currentTarget.style.color = "#ef4444"}
+                          onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-
-          {/* Data Rows */}
-          {blogs && blogs.length > 0 ? (
-            blogs.map((blog) => (
-              <div
-                key={blog._id}
-                className="flex border-b border-gray-200 hover:bg-gray-50 text-gray-700 text-sm"
-              >
-                <div
-                  className="p-3 w-16 flex-shrink-0 cursor-pointer"
-                  title="Click to copy ID"
-                  onClick={() => copyToClipboard(blog._id)}
-                >
-                  {blog._id ? `${blog._id.slice(-5)}...` : "--"}
-                </div>
-                <div
-                  className="p-3 w-64 flex-shrink-0 cursor-pointer truncate"
-                  title="Click to copy title"
-                  onClick={() => copyToClipboard(blog.title)}
-                >
-                  {blog.title || "--"}
-                </div>
-                <div
-                  className="p-3 flex-grow cursor-pointer truncate"
-                  title="Click to copy content"
-                  onClick={() => copyToClipboard(blog.content)}
-                >
-                  {blog.content.length > 100
-                    ? `${blog.content.substring(0, 100)}...`
-                    : blog.content || "--"}
-                </div>
-                <div
-                  className="p-3 w-24 flex-shrink-0 cursor-pointer"
-                  title="Click to copy created date"
-                  onClick={() => copyToClipboard(new Date(blog.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }))}
-                >
-                  {blog.createdAt ? dayjs(blog.createdAt).format("DD-MM-YYYY") : "--"}
-                </div>
-                <div className="p-3 w-24 flex-shrink-0 flex space-x-3">
-                  <View
-                    onClick={() => {
-                      window.open(`${process.env.REACT_APP_FRONTEND}/blog?q=${blog._id}`, "_blank", "noopener,noreferrer")
-                    }}
-                    titleAccess="View Blog"
-                    className="text-[#D26600] cursor-pointer"
-                  />
-                  <Delete
-                    onClick={() => {
-                      setCurrentBlogId(blog._id);
-                      setShowDeleteDialog(true);
-                    }}
-                    titleAccess="Delete Blog"
-                    className="text-[#D26600] cursor-pointer"
-                  />
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-4 text-center border-b">No blogs found</div>
-          )}
-        </div>
+        )}
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      {showDeleteDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
-            <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
-            <p className="mb-6">
-              Are you sure you want to DELETE this blog?
-              <br />
-              This action is irreversible.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 transition-colors"
-                onClick={() => {
-                  setShowDeleteDialog(false);
-                  setCurrentBlogId(null);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
-                onClick={handleDelete}
-                disabled={loading}
-              >
-                {loading ? "Deleting..." : "DELETE"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
