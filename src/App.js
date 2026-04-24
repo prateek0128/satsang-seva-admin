@@ -36,6 +36,7 @@ import AdminLogin from "./admin/AdminLogin";
 import AdminSignup from "./admin/AdminSignup";
 import UpdateUser from "./admin/UpdateUser";
 import UpdateEvent from "./admin/UpdateEvent";
+import DeleteAccountRequest from "./admin/DeleteAccountRequest";
 
 function App() {
   const action = useNavigationType();
@@ -59,6 +60,7 @@ function App() {
       {/* ── Event & Public Profile preview (opened from admin in new tab) ── */}
       <Route path="/event/:id" element={<Event />} />
       <Route path="/public-profile" element={<PublicProfile />} />
+      <Route path="/delete-account" element={<DeleteAccountRequest />} />
 
       {/* ── USER ROUTES (commented out — admin-only build) ──
       <Route element={<Userlayout />}>
