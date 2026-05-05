@@ -1,510 +1,398 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
-import {
-    TextField,
-    Button,
-    Tabs,
-    Tab,
-    MenuItem,
-} from "@mui/material";
-import Loader from "../components/Loader";
+import { useParams, useNavigate } from "react-router-dom";
 import { Country, State, City } from "country-state-city";
+import { toast } from "../components/Popup";
+import Loader from "../components/Loader";
+
+const S = {
+  container: { padding: "32px", background: "#f8fafc", minHeight: "100vh", fontFamily: "'Inter', sans-serif" },
+  header: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px" },
+  backBtn: { background: "#fff", border: "1px solid #e2e8f0", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, color: "#64748b", display: "flex", alignItems: "center", gap: "8px" },
+  saveBtn: { background: "linear-gradient(135deg, #D26600, #ea580c)", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "10px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(210,102,0,0.2)", transition: "all 0.2s" },
+  grid: { display: "grid", gridTemplateColumns: "340px 1fr", gap: "24px" },
+  card: { background: "#fff", borderRadius: "16px", border: "1px solid #e2e8f0", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", marginBottom: "24px" },
+  sectionTitle: { fontSize: "1.1rem", fontWeight: 700, color: "#0f172a", marginBottom: "20px", borderBottom: "2px solid #f1f5f9", paddingBottom: "10px", display: "flex", alignItems: "center", gap: "8px" },
+  label: { fontSize: "0.75rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px", display: "block" },
+  input: { width: "100%", padding: "12px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", color: "#334155", fontSize: "0.95rem", fontWeight: 500, outline: "none", transition: "border-color 0.2s", boxSizing: "border-box" },
+  select: { width: "100%", padding: "12px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", color: "#334155", fontSize: "0.95rem", fontWeight: 500, outline: "none", appearance: "none", cursor: "pointer" },
+  avatarWrapper: { textAlign: "center", marginBottom: "24px" },
+  avatar: { width: "140px", height: "140px", borderRadius: "50%", margin: "0 auto 16px", border: "4px solid #fff", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", objectFit: "cover" },
+  interestTag: { background: "#fff7ed", color: "#c2410c", padding: "6px 12px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 700, border: "1px solid #ffedd5", display: "flex", alignItems: "center", gap: "8px" },
+  docCard: { padding: "12px", border: "1px solid #e2e8f0", background: "#f8fafc", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "8px" }
+};
 
 const userTypeOptions = [
-    { value: "Host&Participant", label: "Host&Participant" },
-    { value: "Participant", label: "Participant" },
+  { value: "participant", label: "Participant" },
+  { value: "host", label: "Host" },
+  { value: "admin", label: "Admin" },
 ];
 
 const profileTypeOptions = [
-    { value: "Artist", label: "Artist" },
-    { value: "Orator", label: "Orator" },
-    { value: "Organizer", label: "Organizer" },
+  { value: "artist", label: "Artist" },
+  { value: "orator", label: "Orator" },
+  { value: "organizer", label: "Organizer" },
+  { value: "participant", label: "Participant" },
+  { value: "host", label: "Host" },
 ];
 
 const UpdateUser = () => {
-    const { id } = useParams();
-    const url = process.env.REACT_APP_BACKEND;
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const url = process.env.REACT_APP_BACKEND;
 
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [tab, setTab] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [otpRequired, setOtpRequired] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    name: "", email: "", phone: "", password: "",
+    userType: "participant", profileType: "participant", performerType: "None",
+    isOrganizer: false, bio: "", profilePicture: "", otp: "",
+    address1: "", address2: "", city: "", state: "", pincode: "", country: "",
+    facebook: "", instagram: "", youtube: "", twitter: "", website: "",
+    interests: [], documents: []
+  });
 
-    // Show OTP field only when needed by the backend response.
-    const [otpRequired, setOtpRequired] = useState(false);
+  const [newInterest, setNewInterest] = useState("");
 
-    // --- Basic Data ---
-    const [basicData, setBasicData] = useState({
-        name: "",
-        email: "",
-        phoneNumber: "",
-        password: "",
-        profileType: "",
-        userType: "",
-        otp: "",
-    });
+  const [allCountries] = useState(Country.getAllCountries());
+  const [allStates, setAllStates] = useState([]);
+  const [allCities, setAllCities] = useState([]);
 
-    // --- Additional Data ---
-    const [additionalData, setAdditionalData] = useState({
-        desc: "",
-        address: "",
-        address2: "",
-        city: "",
-        state: "",
-        postalCode: "",
-        country: "",
-    });
-
-    // --- Country-State-City arrays ---
-    const [allCountries, setAllCountries] = useState([]);
-    const [allStates, setAllStates] = useState([]);
-    const [allCities, setAllCities] = useState([]);
-
-    // On mount, fetch all countries
-    useEffect(() => {
-        const countries = Country.getAllCountries(); // returns array of { name, isoCode, ... }
-        setAllCountries(countries);
-    }, []);
-
-    // When additionalData.country changes, load states
-    useEffect(() => {
-        if (!additionalData.country) {
-            setAllStates([]);
-            setAllCities([]);
-            return;
+  useEffect(() => {
+    const fetchUser = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axios.get(`${url}admin/user/${id}`, { headers });
+        const u = response.data.user;
+        if (u) {
+          setFormData({
+            name: u.name || "",
+            email: u.email || "",
+            phone: u.phone || "",
+            password: "",
+            userType: u.userType || "participant",
+            profileType: u.profileType || "participant",
+            performerType: u.performerType || "None",
+            isOrganizer: u.isOrganizer || false,
+            bio: u.bio || "",
+            profilePicture: u.profilePicture || "",
+            address1: u.address?.address1 || "",
+            address2: u.address?.address2 || "",
+            city: u.address?.city || "",
+            state: u.address?.state || "",
+            pincode: u.address?.pincode || "",
+            country: u.address?.country || "",
+            facebook: u.socialLinks?.facebook || "",
+            instagram: u.socialLinks?.instagram || "",
+            youtube: u.socialLinks?.youtube || "",
+            twitter: u.socialLinks?.twitter || "",
+            website: u.socialLinks?.website || "",
+            interests: u.interests || [],
+            documents: u.documents || [],
+            otp: ""
+          });
         }
-
-        // Find the selected country by name in allCountries
-        const foundCountry = allCountries.find(
-            (c) => c.name.toLowerCase() === additionalData.country.toLowerCase()
-        );
-        if (!foundCountry) {
-            setAllStates([]);
-            setAllCities([]);
-            return;
-        }
-
-        const states = State.getStatesOfCountry(foundCountry.isoCode);
-        setAllStates(states || []);
-        // Reset city list whenever country changes
-        setAllCities([]);
-    }, [additionalData.country, allCountries]);
-
-    // When additionalData.state changes, load cities
-    useEffect(() => {
-        if (!additionalData.state || !additionalData.country) {
-            setAllCities([]);
-            return;
-        }
-
-        // Find the selected country by name
-        const foundCountry = allCountries.find(
-            (c) => c.name.toLowerCase() === additionalData.country.toLowerCase()
-        );
-        if (!foundCountry) {
-            setAllCities([]);
-            return;
-        }
-
-        // Find the selected state by name
-        const foundState = State.getStatesOfCountry(foundCountry.isoCode).find(
-            (s) => s.name.toLowerCase() === additionalData.state.toLowerCase()
-        );
-        if (!foundState) {
-            setAllCities([]);
-            return;
-        }
-
-        const cities = City.getCitiesOfState(foundCountry.isoCode, foundState.isoCode);
-        setAllCities(cities || []);
-    }, [additionalData.state, additionalData.country, allCountries]);
-
-    // Fetch user details by id on mount
-    useEffect(() => {
-        const fetchUser = async () => {
-            setLoading(true);
-            try {
-                const response = await axios.get(`${url}user/${id}`);
-                if (response.data.user) {
-                    const fetchedUser = response.data.user;
-                    setUser(fetchedUser);
-
-                    // Populate basic data fields
-                    setBasicData({
-                        name: fetchedUser?.name || "",
-                        email: fetchedUser?.email || "",
-                        phoneNumber: fetchedUser?.phoneNumber || "",
-                        password: "",
-                        profileType: fetchedUser?.profileType || "",
-                        userType: fetchedUser?.userType || "",
-                        otp: "",
-                    });
-
-                    // Populate additional details
-                    setAdditionalData({
-                        desc: fetchedUser?.desc || "",
-                        address: fetchedUser?.location?.address || "",
-                        address2: fetchedUser?.location?.address2 || "",
-                        city: fetchedUser?.location?.city || "",
-                        state: fetchedUser?.location?.state || "",
-                        postalCode: fetchedUser?.location?.postalCode || "",
-                        country: fetchedUser?.location?.country || "",
-                    });
-                }
-            } catch (error) {
-                alert("Error fetching user: " + error.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchUser();
-    }, [id, url]);
-
-    const handleTabChange = (e, newValue) => {
-        setTab(newValue);
+      } catch (error) {
+        toast("Error fetching user", "error");
+      } finally { setLoading(false); }
     };
+    fetchUser();
+  }, [id, url]);
 
-    // --- Basic form changes ---
-    const handleBasicChange = (e) => {
-        setBasicData({ ...basicData, [e.target.name]: e.target.value });
-    };
+  useEffect(() => {
+    if (formData.country) {
+      const found = allCountries.find(c => c.name === formData.country);
+      if (found) setAllStates(State.getStatesOfCountry(found.isoCode));
+    }
+  }, [formData.country, allCountries]);
 
-    // --- Additional form changes ---
-    const handleAdditionalChange = (e) => {
-        setAdditionalData({ ...additionalData, [e.target.name]: e.target.value });
-    };
+  useEffect(() => {
+    if (formData.state && formData.country) {
+      const foundC = allCountries.find(c => c.name === formData.country);
+      const foundS = allStates.find(s => s.name === formData.state);
+      if (foundC && foundS) setAllCities(City.getCitiesOfState(foundC.isoCode, foundS.isoCode));
+    }
+  }, [formData.state, formData.country, allCountries, allStates]);
 
-    // For the country dropdown
-    const handleCountryChange = (e) => {
-        setAdditionalData((prev) => ({
-            ...prev,
-            country: e.target.value,
-            state: "",
-            city: "",
-        }));
-    };
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
 
-    // For the state dropdown
-    const handleStateChange = (e) => {
-        setAdditionalData((prev) => ({
-            ...prev,
-            state: e.target.value,
-            city: "",
-        }));
-    };
+  const handleAddInterest = (e) => {
+    if (e.key === 'Enter' && newInterest.trim()) {
+      e.preventDefault();
+      if (!formData.interests.includes(newInterest.trim())) {
+        setFormData(prev => ({ ...prev, interests: [...prev.interests, newInterest.trim()] }));
+      }
+      setNewInterest("");
+    }
+  };
 
-    // For the city dropdown
-    const handleCityChange = (e) => {
-        setAdditionalData((prev) => ({
-            ...prev,
-            city: e.target.value,
-        }));
-    };
+  const handleRemoveInterest = (interest) => {
+    setFormData(prev => ({ ...prev, interests: prev.interests.filter(i => i !== interest) }));
+  };
 
-    // --- Update Basic User Info ---
-    const handleBasicUpdate = async () => {
-        const payload = {
-            name: basicData.name,
-            email: basicData.email,
-            phoneNumber: basicData.phoneNumber,
-            password: basicData.password,
-            userType: basicData.userType
-        };
-        if (basicData?.profileType && basicData?.profileType.trim() !== "") {
+  const handleRemoveDoc = (idx) => {
+    setFormData(prev => ({ ...prev, documents: prev.documents.filter((_, i) => i !== idx) }));
+  };
 
-            payload.profileType = basicData.profileType
-        }
-        if (basicData.otp) {
-            payload.otp = basicData.otp;
-        }
-        setLoading(true);
-        try {
-            const headers = { "Content-Type": "application/json" };
-            const token = localStorage.getItem("token");
-            if (token) {
-                headers["Authorization"] = `Bearer ${token}`;
-            }
-            const response = await axios.put(
-                `${url}admin/user/basic/${id}`,
-                payload,
-                { headers }
-            );
-            if (response.data.otp) {
-                setOtpRequired(true);
-                alert(
-                    response.data.message ||
-                    `OTP sent to your number. Please verify to complete the update.`
-                );
-            } else {
-                alert(response.data.message || "User updated successfully!");
-            }
-        } catch (error) {
-            alert(
-                "Error updating basic details: " +
-                (error.response?.data?.message || error.message)
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleUpdate = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+      
+      // Update Basic
+      const basicPayload = {
+        name: formData.name, email: formData.email, phone: formData.phone,
+        password: formData.password, userType: formData.userType,
+        profileType: formData.profileType, performerType: formData.performerType,
+        isOrganizer: formData.isOrganizer, otp: formData.otp
+      };
+      const basicRes = await axios.put(`${url}admin/user/basic/${id}`, basicPayload, { headers });
+      
+      if (basicRes.data.otp) {
+        setOtpRequired(true);
+        toast("OTP Required to verify changes", "info");
+      }
 
-    // --- Update Additional Details ---
-    const handleAdditionalUpdate = async () => {
+      // Update Additional
+      const additionalPayload = {
+        bio: formData.bio,
+        interests: formData.interests,
+        documents: formData.documents,
+        address: {
+          address1: formData.address1, address2: formData.address2,
+          city: formData.city, state: formData.state,
+          pincode: formData.pincode, country: formData.country
+        },
+        socialLinks: {
+          facebook: formData.facebook, instagram: formData.instagram,
+          youtube: formData.youtube, twitter: formData.twitter, website: formData.website
+        },
+        profilePicture: formData.profilePicture
+      };
+      
+      await axios.put(`${url}admin/user/modify/${id}`, additionalPayload, { headers });
 
-        const payload = {
-            desc: additionalData.desc,
-            location: {
-                address: additionalData.address,
-                address2: additionalData.address2,
-                city: additionalData.city,
-                state: additionalData.state,
-                postalCode: additionalData.postalCode,
-                country: additionalData.country,
-            },
-        };
+      toast("User updated successfully!", "success");
+      if (!basicRes.data.otp) navigate(`/admin/userdetails/${id}`);
 
-        const formData = new FormData();
-        formData.append("updateUser", JSON.stringify(payload));
+    } catch (error) {
+      toast(error.response?.data?.message || "Update failed", "error");
+    } finally { setLoading(false); }
+  };
 
-        setLoading(true);
-        try {
-            const headers = { "Content-Type": "multipart/form-data" };
-            const token = localStorage.getItem("token");
-            if (token) {
-                headers["Authorization"] = `Bearer ${token}`;
-            }
-            const response = await axios.put(
-                `${url}admin/user/modify/${id}`,
-                formData,
-                { headers }
-            );
-            alert(
-                response.data.message ||
-                "User additional details updated successfully!"
-            );
+  return (
+    <div style={S.container}>
+      {loading && <Loader />}
+      
+      <div style={S.header}>
+        <button style={S.backBtn} onClick={() => navigate(-1)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Cancel
+        </button>
+        <button style={S.saveBtn} onClick={handleUpdate}>
+          Save Changes
+        </button>
+      </div>
 
-        } catch (error) {
-            alert(
-                "Error updating additional details: " +
-                (error.response?.data?.message || error.message)
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // --- Render ---
-    return (
-        <div style={{ padding: "1rem" }}>
-            {loading && <Loader />}
-            <h1>Update User Information</h1>
-            <Tabs value={tab} onChange={handleTabChange}>
-                <Tab label="Basic Details" />
-                <Tab label="Additional Details" />
-            </Tabs>
-
-            {/* ---------------- Basic Details Tab ---------------- */}
-            {tab === 0 && (
-                <div style={{ marginTop: "1rem" }}>
-                    <TextField
-                        label="Name"
-                        name="name"
-                        value={basicData.name}
-                        onChange={handleBasicChange}
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Email"
-                        name="email"
-                        value={basicData.email}
-                        onChange={handleBasicChange}
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Phone Number"
-                        name="phoneNumber"
-                        value={basicData.phoneNumber}
-                        onChange={handleBasicChange}
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Password"
-                        name="password"
-                        value={basicData.password}
-                        onChange={handleBasicChange}
-                        type="password"
-                        fullWidth
-                        margin="normal"
-                    />
-                    {/* User Type Dropdown */}
-                    <TextField
-                        select
-                        label="User Type"
-                        name="userType"
-                        value={basicData.userType}
-                        onChange={handleBasicChange}
-                        fullWidth
-                        margin="normal"
-                    >
-                        {userTypeOptions.map((option) => (
-                            <MenuItem key={option.value} value={option.value}>
-                                {option.label}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                    {/* Profile Type Dropdown */}
-                    <TextField
-                        select
-                        label="Profile Type"
-                        name="profileType"
-                        value={basicData.profileType}
-                        onChange={handleBasicChange}
-                        fullWidth
-                        margin="normal"
-                    >
-                        {profileTypeOptions.map((option) => (
-                            <MenuItem key={option.value} value={option.value}>
-                                {option.label}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                    {/* Conditionally render OTP field */}
-                    {otpRequired && (
-                        <TextField
-                            label="OTP (if required)"
-                            name="otp"
-                            value={basicData.otp}
-                            onChange={handleBasicChange}
-                            fullWidth
-                            margin="normal"
-                            helperText="Enter OTP to complete update"
-                        />
-                    )}
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleBasicUpdate}
-                        style={{ marginTop: "1rem" }}
-                    >
-                        Update Basic Details
-                    </Button>
+      <div style={S.grid}>
+        {/* SIDEBAR */}
+        <div>
+          <div style={S.card}>
+            <div style={S.avatarWrapper}>
+              {formData.profilePicture ? (
+                <img src={formData.profilePicture.startsWith('http') ? formData.profilePicture : `${url.replace('/api/', '/')}/${formData.profilePicture}`} alt="Avatar" style={S.avatar} />
+              ) : (
+                <div style={{ ...S.avatar, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", fontSize: "3rem", color: "#cbd5e1" }}>
+                  {(formData.name || "?")[0].toUpperCase()}
                 </div>
-            )}
+              )}
+              <h2 style={{ ...S.name, marginBottom: "16px" }}>{formData.name || "User Profile"}</h2>
+              <div style={{ width: "100%", textAlign: "left" }}>
+                <span style={S.label}>Profile Picture URL</span>
+                <input style={S.input} name="profilePicture" value={formData.profilePicture} onChange={handleChange} placeholder="https://..." />
+              </div>
+            </div>
+          </div>
 
-            {/* ---------------- Additional Details Tab ---------------- */}
-            {tab === 1 && (
-                <div style={{ marginTop: "1rem" }}>
-                    <TextField
-                        label="Description"
-                        name="desc"
-                        value={additionalData.desc}
-                        onChange={handleAdditionalChange}
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Address"
-                        name="address"
-                        value={additionalData.address}
-                        onChange={handleAdditionalChange}
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Address 2"
-                        name="address2"
-                        value={additionalData.address2}
-                        onChange={handleAdditionalChange}
-                        fullWidth
-                        margin="normal"
-                    />
+          <div style={S.card}>
+            <h3 style={S.sectionTitle}>Account Type</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <span style={S.label}>User Role</span>
+                <select style={S.select} name="userType" value={formData.userType} onChange={handleChange}>
+                  {userTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <span style={S.label}>Profile Category</span>
+                <select style={S.select} name="profileType" value={formData.profileType} onChange={handleChange}>
+                  {profileTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                <input type="checkbox" name="isOrganizer" checked={formData.isOrganizer} onChange={handleChange} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
+                <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#334155" }}>Is Organizer</span>
+              </div>
+            </div>
+          </div>
 
-                    {/* Country Dropdown */}
-                    <TextField
-                        select
-                        label="Country"
-                        name="country"
-                        value={additionalData.country}
-                        onChange={handleCountryChange}
-                        fullWidth
-                        margin="normal"
-                    >
-                        <MenuItem value="">
-                            <em>Select Country</em>
-                        </MenuItem>
-                        {allCountries.map((c) => (
-                            <MenuItem key={c.isoCode} value={c.name}>
-                                {c.name}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-
-                    {/* State Dropdown */}
-                    <TextField
-                        select
-                        label="State"
-                        name="state"
-                        value={additionalData.state}
-                        onChange={handleStateChange}
-                        fullWidth
-                        margin="normal"
-                        disabled={!allStates.length}
-                    >
-                        <MenuItem value="">
-                            <em>Select State</em>
-                        </MenuItem>
-                        {allStates.map((s) => (
-                            <MenuItem key={s.isoCode} value={s.name}>
-                                {s.name}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-
-                    {/* City Dropdown */}
-                    <TextField
-                        select
-                        label="City"
-                        name="city"
-                        value={additionalData.city}
-                        onChange={handleCityChange}
-                        fullWidth
-                        margin="normal"
-                        disabled={!allCities.length}
-                    >
-                        <MenuItem value="">
-                            <em>Select City</em>
-                        </MenuItem>
-                        {allCities.map((ci) => (
-                            <MenuItem key={ci.name} value={ci.name}>
-                                {ci.name}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-
-                    <TextField
-                        label="Postal Code"
-                        name="postalCode"
-                        value={additionalData.postalCode}
-                        onChange={handleAdditionalChange}
-                        fullWidth
-                        margin="normal"
-                    />
-
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleAdditionalUpdate}
-                        style={{ marginTop: "1rem" }}
-                    >
-                        Update Additional Details
-                    </Button>
+          <div style={S.card}>
+            <h3 style={S.sectionTitle}>Interests / Categories</h3>
+            <span style={S.label}>Add New Category (Press Enter)</span>
+            <input style={{ ...S.input, marginBottom: "12px" }} value={newInterest} onChange={(e) => setNewInterest(e.target.value)} onKeyDown={handleAddInterest} placeholder="e.g. Bhajan" />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {formData.interests.map((it, idx) => (
+                <div key={idx} style={S.interestTag}>
+                  {it}
+                  <button onClick={() => handleRemoveInterest(it)} style={{ background: "none", border: "none", color: "#c2410c", cursor: "pointer", fontSize: "1rem", display: "flex" }}>×</button>
                 </div>
-            )}
+              ))}
+              {formData.interests.length === 0 && <span style={{ fontSize: "0.85rem", color: "#94a3b8", fontStyle: "italic" }}>No categories added.</span>}
+            </div>
+          </div>
         </div>
-    );
+
+        {/* MAIN FORM */}
+        <div>
+          <div style={S.card}>
+            <h3 style={S.sectionTitle}>Identity & Contact</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+              <div style={{ gridColumn: "span 2" }}>
+                <span style={S.label}>Full Name</span>
+                <input style={S.input} name="name" value={formData.name} onChange={handleChange} />
+              </div>
+              <div>
+                <span style={S.label}>Email Address</span>
+                <input style={S.input} name="email" value={formData.email} onChange={handleChange} />
+              </div>
+              <div>
+                <span style={S.label}>Phone Number</span>
+                <input style={S.input} name="phone" value={formData.phone} onChange={handleChange} />
+              </div>
+              <div style={{ gridColumn: "span 2" }}>
+                <span style={S.label}>New Password (Leave blank to keep current)</span>
+                <input style={S.input} type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" />
+              </div>
+              {otpRequired && (
+                <div style={{ gridColumn: "span 2", background: "#fff7ed", padding: "16px", borderRadius: "12px", border: "1px solid #ffedd5" }}>
+                  <span style={{ ...S.label, color: "#c2410c" }}>Verification OTP</span>
+                  <input style={{ ...S.input, borderColor: "#fb923c" }} name="otp" value={formData.otp} onChange={handleChange} placeholder="Enter OTP sent to phone" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div style={S.card}>
+            <h3 style={S.sectionTitle}>About & Biography</h3>
+            <span style={S.label}>Bio / Description</span>
+            <textarea style={{ ...S.input, minHeight: "120px", resize: "vertical" }} name="bio" value={formData.bio} onChange={handleChange} />
+          </div>
+
+          <div style={S.card}>
+            <h3 style={S.sectionTitle}>Address & Location</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <span style={S.label}>Street Address</span>
+                  <input style={S.input} name="address1" value={formData.address1} onChange={handleChange} />
+                </div>
+                <div style={{ gridColumn: "span 2" }}>
+                  <span style={S.label}>Address Line 2</span>
+                  <input style={S.input} name="address2" value={formData.address2} onChange={handleChange} />
+                </div>
+                <div>
+                  <span style={S.label}>Country</span>
+                  <select style={S.select} name="country" value={formData.country} onChange={handleChange}>
+                    <option value="">Select Country</option>
+                    {allCountries.map(c => <option key={c.isoCode} value={c.name}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <span style={S.label}>State</span>
+                  <select style={S.select} name="state" value={formData.state} onChange={handleChange} disabled={!allStates.length}>
+                    <option value="">Select State</option>
+                    {allStates.map(s => <option key={s.isoCode} value={s.name}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <span style={S.label}>City</span>
+                  <select style={S.select} name="city" value={formData.city} onChange={handleChange} disabled={!allCities.length}>
+                    <option value="">Select City</option>
+                    {allCities.map(ci => <option key={ci.name} value={ci.name}>{ci.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <span style={S.label}>Pincode / Postal</span>
+                  <input style={S.input} name="pincode" value={formData.pincode} onChange={handleChange} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={S.card}>
+            <h3 style={S.sectionTitle}>Social Profiles</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+              <div>
+                <span style={S.label}>Facebook</span>
+                <input style={S.input} name="facebook" value={formData.facebook} onChange={handleChange} placeholder="Profile link" />
+              </div>
+              <div>
+                <span style={S.label}>Instagram</span>
+                <input style={S.input} name="instagram" value={formData.instagram} onChange={handleChange} placeholder="Profile link" />
+              </div>
+              <div>
+                <span style={S.label}>YouTube</span>
+                <input style={S.input} name="youtube" value={formData.youtube} onChange={handleChange} placeholder="Channel link" />
+              </div>
+              <div>
+                <span style={S.label}>Twitter</span>
+                <input style={S.input} name="twitter" value={formData.twitter} onChange={handleChange} placeholder="Profile link" />
+              </div>
+              <div style={{ gridColumn: "span 2" }}>
+                <span style={S.label}>Website / Portfolio</span>
+                <input style={S.input} name="website" value={formData.website} onChange={handleChange} placeholder="https://..." />
+              </div>
+            </div>
+          </div>
+
+          {formData.userType !== "participant" && (
+            <div style={S.card}>
+              <h3 style={S.sectionTitle}>Documents Management</h3>
+              <span style={S.label}>Current Documents</span>
+              {formData.documents.length > 0 ? (
+                formData.documents.map((doc, idx) => (
+                  <div key={idx} style={S.docCard}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "1.2rem" }}>📄</span>
+                      <div>
+                        <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1e293b" }}>{doc.name}</div>
+                        <a href={doc.uri} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", color: "#2563eb", textDecoration: "none" }}>View File</a>
+                      </div>
+                    </div>
+                    <button onClick={() => handleRemoveDoc(idx)} style={{ background: "#fee2e2", color: "#ef4444", border: "none", padding: "6px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>Remove</button>
+                  </div>
+                ))
+              ) : (
+                <div style={{ padding: "20px", textAlign: "center", border: "2px dashed #e2e8f0", borderRadius: "12px", color: "#94a3b8", fontSize: "0.9rem" }}>
+                  No documents uploaded for this user.
+                </div>
+              )}
+              <p style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "12px" }}>
+                * Admin can view and remove documents. To upload new ones, please use the mobile app or user dashboard.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default UpdateUser;

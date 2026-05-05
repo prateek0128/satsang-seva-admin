@@ -31,12 +31,15 @@ import UserEvents from "./admin/UserEvents";
 import Updateform from "./admin/Updateform";
 import Approve from "./admin/Approve";
 import Blog from "./admin/Blog";
+import DraftEvents from "./admin/DraftEvents";
 import AdminLayout from "./admin/AdminLayout";
 import AdminLogin from "./admin/AdminLogin";
 import AdminSignup from "./admin/AdminSignup";
 import UpdateUser from "./admin/UpdateUser";
 import UpdateEvent from "./admin/UpdateEvent";
 import DeleteAccountRequest from "./admin/DeleteAccountRequest";
+import UserDetails from "./admin/UserDetails";
+import ContactQueries from "./admin/ContactQueries";
 
 function App() {
   const action = useNavigationType();
@@ -92,6 +95,7 @@ function App() {
           <Route path="dashboard" element={<AdminPage />} />
           <Route path="allusers" element={<UserList />} />
           <Route path="events" element={<Events />} />
+          <Route path="drafts" element={<DraftEvents />} />
           <Route path="approve" element={<Approve />} />
           <Route path="blog" element={<Blog />} />
           <Route path="createblog" element={<AddBlog />} />
@@ -99,7 +103,9 @@ function App() {
           <Route path="updateevent/:id" element={<UpdateEvent />} />
           <Route path="allproduct/:id/:name" element={<AllProducts />} />
           <Route path="userevents/:userId" element={<UserEvents />} />
+          <Route path="userdetails/:id" element={<UserDetails />} />
           <Route path="updateform" element={<Updateform />} />
+          <Route path="contact-queries" element={<ContactQueries />} />
         </Route>
       </Route>
     </Routes>

@@ -1,678 +1,388 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import { TextField, Button, CircularProgress, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Select, MenuItem, Checkbox, FormGroup } from "@mui/material";
 import dayjs from "dayjs";
-import { Country, State, City } from "country-state-city";
+import { toast } from "../components/Popup";
+import Loader from "../components/Loader";
 
-// Provided categories list
-const categoriesList = [
-    { value: "Satsang", label: "Satsang" },
-    { value: "Yoga", label: "Yoga" },
-    { value: "Meditation", label: "Meditation" },
-    { value: "Kirtan", label: "Kirtan" },
-    { value: "Utsavs", label: "Utsavs" },
-    { value: "Dharma Sabha", label: "Dharma Sabha" },
-    { value: "Adhyatmik Shivir", label: "Adhyatmik Shivir" },
-    { value: "Seva & Charity", label: "Seva & Charity" },
-    { value: "Sanskritik", label: "Sanskritik" },
-    { value: "Puja", label: "Puja" },
-    { value: "Vividh (Others)", label: "Vividh (Others)" },
-    { value: "Spiritual", label: "Spiritual" },
+const CATEGORIES = [
+  "Satsang", "Yoga", "Meditation", "Kirtan", "Utsavs",
+  "Dharma Sabha", "Adhyatmik Shivir", "Seva & Charity",
+  "Sanskritik", "Puja", "Vividh (Others)", "Spiritual",
 ];
 
-const UpdateEvent = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const url = process.env.REACT_APP_BACKEND;
+const LANGUAGES = ["Hindi", "English", "Gujarati", "Marathi", "Bengali", "Tamil", "Telugu", "Kannada", "Other"];
 
-    // Form state (matching event data structure)
-    const [formValues, setFormValues] = useState({
-        eventName: "",
-        eventCategory: [],
-        eventDesc: "",
-        eventPrice: "0",
-        eventLang: "",
-        noOfAttendees: "",
-        maxAttendees: "",
-        artistOrOratorName: "",
-        organizerName: "",
-        organizerWhatsapp: "",
-        eventLink: "",
-        locationLink: "",
-        bookingLink: "",
-        address: "",
-        address2: "",
-        landmark: "",
-        country: "",
-        state: "",
-        city: "",
-        postalCode: "",
-        startDate: "",
-        endDate: "",
-        startTime: "",
-        endTime: "",
-        eventAgenda: [
-            {
-                subEvent: 1,
-                title: "",
-                description: "",
-            },
-        ],
-        eventType: "free",
-    });
-
-    // For event posters/files
-    const [selectedFiles, setSelectedFiles] = useState([]);
-    const [previewImages, setPreviewImages] = useState([]);
-
-    // Loading and error states
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-
-    // For country/state/city dropdowns using country-state-city
-    const [selectedCountry, setSelectedCountry] = useState(null);
-    const [statesOptions, setStatesOptions] = useState([]);
-    const [selectedState, setSelectedState] = useState(null);
-    const [citiesOptions, setCitiesOptions] = useState([]);
-
-    // Fetch event data by id and prefill the form and address dropdowns
-    useEffect(() => {
-        const fetchEvent = async () => {
-            setLoading(true);
-            try {
-                const token = localStorage.getItem("token");
-                const headers = { "Content-Type": "application/json" };
-                if (token) headers["Authorization"] = `Bearer ${token}`;
-
-                const response = await axios.get(`${url}events/${id}`, { headers });
-                if (response.data && response.data.success) {
-                    const event = response.data.event;
-                    // Convert dates/times to input‑compatible formats
-                    const startDate = dayjs(event.startDate).format("YYYY-MM-DD");
-                    const endDate = dayjs(event.endDate).format("YYYY-MM-DD");
-                    const startTime = dayjs(event.startDate).format("HH:mm");
-                    const endTime = dayjs(event.endDate).format("HH:mm");
-
-                    // Set form values
-                    setFormValues({
-                        eventName: event.eventName || "",
-                        eventCategory: event.eventCategory || [],
-                        eventDesc: event.eventDesc || "",
-                        eventPrice: event.eventPrice || "0",
-                        eventLang: event.eventLang || "",
-                        noOfAttendees: event.noOfAttendees || "",
-                        maxAttendees: event.maxAttendees || "",
-                        artistOrOratorName: event.artistOrOratorName || "",
-                        organizerName: event.organizerName || "",
-                        organizerWhatsapp: event.organizerWhatsapp || "",
-                        eventLink: event.eventLink || "",
-                        locationLink: event.locationLink || "",
-                        bookingLink: event.bookingLink || "",
-                        address: event.address?.address || "",
-                        address2: event.address?.address2 || "",
-                        landmark: event.address?.landmark || "",
-                        country: event.address?.country || "",
-                        state: event.address?.state || "",
-                        city: event.address?.city || "",
-                        postalCode: event.address?.postalCode || "",
-                        startDate,
-                        endDate,
-                        startTime,
-                        endTime,
-                        eventAgenda: event.eventAgenda && event.eventAgenda.length > 0 ? event.eventAgenda : [{ subEvent: 1, title: "", description: "" }],
-                        eventType: event.eventPrice === "0" ? "free" : "paid",
-                    });
-
-                    // Set existing poster previews
-                    setPreviewImages(event.eventPosters || []);
-
-                    // For address dropdowns:
-                    // If country is provided, try to find it; otherwise default to India.
-                    let countryObj =
-                        Country.getAllCountries().find(
-                            (c) =>
-                                c.name.toLowerCase() === (event.address?.country || "").toLowerCase()
-                        ) || Country.getAllCountries().find(c => c.isoCode === "IN");
-                    setSelectedCountry(countryObj);
-                    setFormValues(prev => ({ ...prev, country: countryObj ? countryObj.name : "" }));
-                    // Load states for the selected country
-                    const states = countryObj ? State.getStatesOfCountry(countryObj.isoCode) : [];
-                    setStatesOptions(states);
-                    // If state is provided, find matching state
-                    let stateObj =
-                        states.find(
-                            (s) => s.name.toLowerCase() === (event.address?.state || "").toLowerCase()
-                        ) || null;
-                    setSelectedState(stateObj);
-                    setFormValues(prev => ({ ...prev, state: stateObj ? stateObj.name : "" }));
-                    // Load cities if state is selected
-                    if (stateObj) {
-                        const cities = City.getCitiesOfState(countryObj.isoCode, stateObj.isoCode);
-                        setCitiesOptions(cities);
-                    }
-                } else {
-                    setError("Event not found");
-                }
-            } catch (err) {
-                setError(err.response?.data?.message || err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchEvent();
-    }, [id, url]);
-
-    // Handle basic input changes
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormValues(prev => ({ ...prev, [name]: value }));
-    };
-
-    // Handle checkboxes for event categories
-    const handleCategoryChange = (e) => {
-        const { value, checked } = e.target;
-        let updatedCategories = [...formValues.eventCategory];
-        if (checked) {
-            updatedCategories.push(value);
-        } else {
-            updatedCategories = updatedCategories.filter(cat => cat !== value);
-        }
-        setFormValues(prev => ({ ...prev, eventCategory: updatedCategories }));
-    };
-
-    // Handle free/paid toggle
-    const handleEventTypeChange = (e) => {
-        const type = e.target.value;
-        if (type === "free") {
-            setFormValues(prev => ({ ...prev, eventType: type, bookingLink: "", eventPrice: "0" }));
-        } else {
-            setFormValues(prev => ({ ...prev, eventType: type }));
-        }
-    };
-
-    // Handle agenda item changes
-    const handleAgendaChange = (index, field, value) => {
-        const updatedAgenda = [...formValues.eventAgenda];
-        updatedAgenda[index] = { ...updatedAgenda[index], [field]: field === "subEvent" ? parseInt(value, 10) : value };
-        setFormValues(prev => ({ ...prev, eventAgenda: updatedAgenda }));
-    };
-
-    const addAgendaItem = () => {
-        const lastSubEvent = formValues.eventAgenda.length > 0 ? formValues.eventAgenda[formValues.eventAgenda.length - 1].subEvent : 0;
-        const newAgenda = [...formValues.eventAgenda, { subEvent: lastSubEvent + 1, title: "", description: "" }];
-        setFormValues(prev => ({ ...prev, eventAgenda: newAgenda }));
-    };
-
-    const removeAgendaItem = (index) => {
-        if (formValues.eventAgenda.length > 1) {
-            const newAgenda = formValues.eventAgenda.filter((_, i) => i !== index);
-            setFormValues(prev => ({ ...prev, eventAgenda: newAgenda }));
-        }
-    };
-
-    // Handle file selection for event posters
-    const handleFileChange = (e) => {
-        const files = Array.from(e.target.files);
-        // Limit to maximum 5 files
-        const limitedFiles = files.slice(0, 5);
-        setSelectedFiles(limitedFiles);
-        // Create preview URLs
-        const previews = limitedFiles.map(file => URL.createObjectURL(file));
-        setPreviewImages(previews);
-    };
-
-    // Address dropdown change handlers
-    const handleCountryChange = (e) => {
-        const countryIso = e.target.value;
-        const countryObj = Country.getAllCountries().find(c => c.isoCode === countryIso);
-        setSelectedCountry(countryObj);
-        setFormValues(prev => ({ ...prev, country: countryObj.name, state: "", city: "" }));
-        const states = countryObj ? State.getStatesOfCountry(countryObj.isoCode) : [];
-        setStatesOptions(states);
-        setSelectedState(null);
-        setCitiesOptions([]);
-    };
-
-    const handleStateChange = (e) => {
-        const stateIso = e.target.value;
-        const stateObj = statesOptions.find(s => s.isoCode === stateIso);
-        setSelectedState(stateObj);
-        setFormValues(prev => ({ ...prev, state: stateObj.name, city: "" }));
-        const cities = selectedCountry ? City.getCitiesOfState(selectedCountry.isoCode, stateObj.isoCode) : [];
-        setCitiesOptions(cities);
-    };
-
-    const handleCityChange = (e) => {
-        setFormValues(prev => ({ ...prev, city: e.target.value }));
-    };
-
-    // Submit update request
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const token = localStorage.getItem("token");
-            const headers = { "Content-Type": "multipart/form-data" };
-            if (token) headers["Authorization"] = `Bearer ${token}`;
-
-            // Prepare event data for update
-            const eventDataToUpdate = {
-                eventName: formValues.eventName,
-                eventCategory: formValues.eventCategory,
-                eventDesc: formValues.eventDesc,
-                eventPrice: formValues.eventType === "free" ? "0" : formValues.eventPrice,
-                eventLang: formValues.eventLang,
-                noOfAttendees: Number(formValues.noOfAttendees),
-                maxAttendees: Number(formValues.maxAttendees),
-                artistOrOratorName: formValues.artistOrOratorName,
-                organizerName: formValues.organizerName,
-                organizerWhatsapp: formValues.organizerWhatsapp,
-                eventLink: formValues.eventLink,
-                locationLink: formValues.locationLink,
-                bookingLink: formValues.eventType === "paid" ? formValues.bookingLink : "",
-                address: {
-                    address: formValues.address,
-                    address2: formValues.address2,
-                    landmark: formValues.landmark,
-                    city: formValues.city,
-                    state: formValues.state,
-                    postalCode: formValues.postalCode,
-                    country: formValues.country,
-                },
-                startDate: new Date(`${formValues.startDate}T${formValues.startTime}`),
-                endDate: new Date(`${formValues.endDate}T${formValues.endTime}`),
-                startTime: formValues.startTime,
-                endTime: formValues.endTime,
-                eventAgenda: formValues.eventAgenda,
-                eventType: formValues.eventType,
-            };
-
-            // Build FormData payload
-            const formData = new FormData();
-            formData.append("eventData", JSON.stringify(eventDataToUpdate));
-            selectedFiles.forEach(images => formData.append("images", images));
-
-            const response = await axios.put(`${url}admin/event/${id}`, formData, { headers });
-            if (response.data.success) {
-                alert(response.data.message || "Event updated successfully!");
-                navigate("/admin/events");
-            } else {
-                alert("Update failed: " + response.data.message);
-            }
-        } catch (err) {
-            alert("Error updating event: " + (err.response?.data?.message || err.message));
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading && !formValues.eventName) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <CircularProgress />
-            </div>
-        );
-    }
-    if (error) return <div className="text-red-500 text-center mt-4">{error}</div>;
-
-    return (
-        <div className="max-w-5xl mx-auto p-4">
-            <h1 className="text-3xl font-bold mb-6">Update Event</h1>
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Event Name */}
-                <TextField
-                    label="Event Name"
-                    name="eventName"
-                    fullWidth
-                    variant="outlined"
-                    value={formValues.eventName}
-                    onChange={handleInputChange}
-                    required
-                />
-
-                {/* Event Categories (Checkboxes) */}
-                <div>
-                    <p className="font-medium mb-2">Event Categories *</p>
-                    <div className="flex flex-wrap gap-4">
-                        {categoriesList.map((cat, index) => (
-                            <FormControlLabel
-                                key={index}
-                                control={
-                                    <Checkbox
-                                        value={cat.value}
-                                        checked={formValues.eventCategory.includes(cat.value)}
-                                        onChange={handleCategoryChange}
-                                    />
-                                }
-                                label={cat.label}
-                            />
-                        ))}
-                    </div>
-                </div>
-
-                {/* Event Description */}
-                <TextField
-                    label="Event Description"
-                    name="eventDesc"
-                    fullWidth
-                    multiline
-                    rows={4}
-                    variant="outlined"
-                    value={formValues.eventDesc}
-                    onChange={handleInputChange}
-                    required
-                />
-
-                {/* Event Price (only for paid events) */}
-                {formValues.eventType === "paid" && (
-                    <TextField
-                        label="Event Price"
-                        name="eventPrice"
-                        fullWidth
-                        variant="outlined"
-                        value={formValues.eventPrice}
-                        onChange={handleInputChange}
-                        required
-                    />
-                )}
-
-                {/* Event Language Dropdown */}
-                <FormControl fullWidth>
-                    <FormLabel>Event Language *</FormLabel>
-                    <Select
-                        name="eventLang"
-                        value={formValues.eventLang}
-                        onChange={handleInputChange}
-                        required
-                    >
-                        <MenuItem value=""><em>Select Language</em></MenuItem>
-                        <MenuItem value="Hindi">Hindi</MenuItem>
-                        <MenuItem value="English">English</MenuItem>
-                        <MenuItem value="Both">Both</MenuItem>
-                    </Select>
-                </FormControl>
-
-                {/* Number of Attendees & Maximum Attendees */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <TextField
-                        label="Number of Attendees"
-                        name="noOfAttendees"
-                        type="number"
-                        variant="outlined"
-                        value={formValues.noOfAttendees}
-                        onChange={handleInputChange}
-                        required
-                    />
-                    <TextField
-                        label="Maximum Attendees"
-                        name="maxAttendees"
-                        type="number"
-                        variant="outlined"
-                        value={formValues.maxAttendees}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </div>
-
-                {/* Orator/Artist Name, Organizer Name & Organizer Whatsapp */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <TextField
-                        label="Orator/Artist Name"
-                        name="artistOrOratorName"
-                        variant="outlined"
-                        value={formValues.artistOrOratorName}
-                        onChange={handleInputChange}
-                        required
-                    />
-                    <TextField
-                        label="Organizer Name"
-                        name="organizerName"
-                        variant="outlined"
-                        value={formValues.organizerName}
-                        onChange={handleInputChange}
-                        required
-                    />
-                    <TextField
-                        label="Organizer Whatsapp"
-                        name="organizerWhatsapp"
-                        variant="outlined"
-                        value={formValues.organizerWhatsapp}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </div>
-
-                {/* Event Link and Location Link */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <TextField
-                        label="Event Link"
-                        name="eventLink"
-                        variant="outlined"
-                        value={formValues.eventLink}
-                        onChange={handleInputChange}
-                    />
-                    <TextField
-                        label="Location Link"
-                        name="locationLink"
-                        variant="outlined"
-                        value={formValues.locationLink}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </div>
-
-                {/* Event Type (Free/Paid) and conditional Booking Link */}
-                <FormControl component="fieldset">
-                    <FormLabel component="legend">Event Type *</FormLabel>
-                    <RadioGroup row name="eventType" value={formValues.eventType} onChange={handleEventTypeChange}>
-                        <FormControlLabel value="free" control={<Radio />} label="Free" />
-                        <FormControlLabel value="paid" control={<Radio />} label="Paid" />
-                    </RadioGroup>
-                </FormControl>
-                {formValues.eventType === "paid" && (
-                    <TextField
-                        label="Booking Link"
-                        name="bookingLink"
-                        fullWidth
-                        variant="outlined"
-                        value={formValues.bookingLink}
-                        onChange={handleInputChange}
-                        required
-                    />
-                )}
-
-                {/* Address Section with Country/State/City dropdowns */}
-                <div className="space-y-4">
-                    <TextField
-                        label="Address Line 1"
-                        name="address"
-                        fullWidth
-                        variant="outlined"
-                        value={formValues.address}
-                        onChange={handleInputChange}
-                        required
-                    />
-                    <TextField
-                        label="Address Line 2 / Landmark"
-                        name="address2"
-                        fullWidth
-                        variant="outlined"
-                        value={formValues.address2}
-                        onChange={handleInputChange}
-                    />
-                    <TextField
-                        label="Landmark"
-                        name="landmark"
-                        fullWidth
-                        variant="outlined"
-                        value={formValues.landmark}
-                        onChange={handleInputChange}
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <FormControl fullWidth required>
-                            <FormLabel>Country</FormLabel>
-                            <Select
-                                value={selectedCountry ? selectedCountry.isoCode : ""}
-                                onChange={handleCountryChange}
-                            >
-                                {Country.getAllCountries().map((country) => (
-                                    <MenuItem key={country.isoCode} value={country.isoCode}>
-                                        {country.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <FormControl fullWidth required>
-                            <FormLabel>State</FormLabel>
-                            <Select
-                                value={selectedState ? selectedState.isoCode : ""}
-                                onChange={handleStateChange}
-                            >
-                                {statesOptions.map((state) => (
-                                    <MenuItem key={state.isoCode} value={state.isoCode}>
-                                        {state.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <FormControl fullWidth required>
-                            <FormLabel>City</FormLabel>
-                            <Select value={formValues.city} onChange={handleCityChange}>
-                                {citiesOptions.map((city) => (
-                                    <MenuItem key={city.name} value={city.name}>
-                                        {city.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </div>
-                    <TextField
-                        label="Postal Code"
-                        name="postalCode"
-                        variant="outlined"
-                        value={formValues.postalCode}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </div>
-
-                {/* Date & Time inputs */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <TextField
-                        label="Start Date"
-                        name="startDate"
-                        type="date"
-                        variant="outlined"
-                        value={formValues.startDate}
-                        onChange={handleInputChange}
-                        InputLabelProps={{ shrink: true }}
-                        required
-                    />
-                    <TextField
-                        label="End Date"
-                        name="endDate"
-                        type="date"
-                        variant="outlined"
-                        value={formValues.endDate}
-                        onChange={handleInputChange}
-                        InputLabelProps={{ shrink: true }}
-                        required
-                    />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <TextField
-                        label="Start Time"
-                        name="startTime"
-                        type="time"
-                        variant="outlined"
-                        value={formValues.startTime}
-                        onChange={handleInputChange}
-                        InputLabelProps={{ shrink: true }}
-                        required
-                    />
-                    <TextField
-                        label="End Time"
-                        name="endTime"
-                        type="time"
-                        variant="outlined"
-                        value={formValues.endTime}
-                        onChange={handleInputChange}
-                        InputLabelProps={{ shrink: true }}
-                        required
-                    />
-                </div>
-
-                {/* Event Agenda */}
-                <div>
-                    <p className="font-medium mb-2">Event Agenda *</p>
-                    {formValues.eventAgenda.map((item, index) => (
-                        <div key={index} className="border p-4 rounded mb-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-                                <TextField
-                                    label="Sub Event"
-                                    type="number"
-                                    name="subEvent"
-                                    value={item.subEvent}
-                                    onChange={(e) => handleAgendaChange(index, "subEvent", e.target.value)}
-                                />
-                                <TextField
-                                    label="Title"
-                                    name="title"
-                                    value={item.title}
-                                    onChange={(e) => handleAgendaChange(index, "title", e.target.value)}
-                                />
-                                <TextField
-                                    label="Description"
-                                    name="description"
-                                    value={item.description}
-                                    onChange={(e) => handleAgendaChange(index, "description", e.target.value)}
-                                    multiline
-                                    rows={2}
-                                />
-                            </div>
-                            {formValues.eventAgenda.length > 1 && (
-                                <Button variant="outlined" color="error" onClick={() => removeAgendaItem(index)}>
-                                    Remove Agenda Item
-                                </Button>
-                            )}
-                        </div>
-                    ))}
-                    <Button variant="contained" onClick={addAgendaItem}>
-                        Add Agenda Item
-                    </Button>
-                </div>
-
-                {/* Event Posters File Upload */}
-                <div>
-                    <p className="font-medium mb-2">Event Posters (max 5)</p>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleFileChange}
-                        className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-[#D26600] file:text-white
-              hover:file:bg-[#c65f00]"
-                    />
-                    {previewImages.length > 0 && (
-                        <div className="mt-4 grid grid-cols-3 gap-4">
-                            {previewImages.map((src, idx) => (
-                                <img key={idx} src={src} alt={`Poster ${idx}`} className="w-full h-auto object-cover rounded" />
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <Button variant="contained" color="primary" type="submit" fullWidth disabled={loading}>
-                    {loading ? "Updating..." : "Update Event"}
-                </Button>
-            </form>
-        </div>
-    );
+const inputStyle = {
+  width: "100%", padding: "9px 12px", borderRadius: 8,
+  border: "1px solid #e5e7eb", fontSize: "0.875rem",
+  outline: "none", boxSizing: "border-box", background: "#fff",
 };
+
+const labelStyle = { fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4, display: "block" };
+
+const Field = ({ label, children }) => (
+  <div style={{ display: "flex", flexDirection: "column" }}>
+    <label style={labelStyle}>{label}</label>
+    {children}
+  </div>
+);
+
+const UpdateEvent = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const url = process.env.REACT_APP_BACKEND;
+
+  const [form, setForm] = useState({
+    eventName: "", eventDesc: "", eventCategory: [],
+    eventPrice: "0", eventLang: "Hindi",
+    performerName: "", hostName: "", hostWhatsapp: "", sponserName: "",
+    eventLink: "", eventAddress: "", address2: "", landmark: "",
+    city: "", province: "", postalCode: "", country: "",
+    startDate: "", endDate: "", startTime: "", endTime: "",
+    noOfAttendees: "", visibility: "public",
+  });
+  const [subEvents, setSubEvents] = useState([{ title: "", detail: "" }]);
+  const [existingPosters, setExistingPosters] = useState([]);
+  const [newFiles, setNewFiles] = useState([]);
+  const [newPreviews, setNewPreviews] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
+
+  // Normalise any time string to HH:mm (required by <input type="time">)
+  const toHHmm = (t) => {
+    if (!t) return "";
+    // Already HH:mm
+    if (/^\d{2}:\d{2}$/.test(t)) return t;
+    // 12-hour with AM/PM e.g. "10:30 AM" or "10:30 am"
+    const match = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (match) {
+      let h = parseInt(match[1], 10);
+      const m = match[2];
+      const period = match[3].toUpperCase();
+      if (period === "AM" && h === 12) h = 0;
+      if (period === "PM" && h !== 12) h += 12;
+      return `${String(h).padStart(2, "0")}:${m}`;
+    }
+    return "";
+  };
+
+  const getHeaders = (contentType = "application/json") => {
+    const token = localStorage.getItem("token");
+    return { "Content-Type": contentType, ...(token && { Authorization: `Bearer ${token}` }) };
+  };
+
+  useEffect(() => {
+    const fetchEvent = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`${url}events/${id}`, { headers: getHeaders() });
+        const e = res.data.data;
+        setForm({
+          eventName: e.eventName || "",
+          eventDesc: e.eventDesc || "",
+          eventCategory: e.eventCategory || [],
+          eventPrice: e.eventPrice || "0",
+          eventLang: e.eventLang || "Hindi",
+          performerName: e.performerName || "",
+          hostName: e.hostName || "",
+          hostWhatsapp: e.hostWhatsapp || "",
+          sponserName: e.sponserName || "",
+          eventLink: e.eventLink || "",
+          eventAddress: e.eventAddress || "",
+          address2: e.address2 || "",
+          landmark: e.landmark || "",
+          city: e.city || "",
+          province: e.province || "",
+          postalCode: e.postalCode || "",
+          country: e.country || "",
+          startDate: e.startDate ? dayjs(e.startDate).format("YYYY-MM-DD") : "",
+          endDate: e.endDate ? dayjs(e.endDate).format("YYYY-MM-DD") : "",
+          startTime: toHHmm(e.startTime) || (e.startDate ? dayjs(e.startDate).format("HH:mm") : ""),
+          endTime: toHHmm(e.endTime) || (e.endDate ? dayjs(e.endDate).format("HH:mm") : ""),
+          noOfAttendees: e.noOfAttendees || "",
+          visibility: e.visibility || "public",
+        });
+        setExistingPosters(e.eventPosters || []);
+        setSubEvents(e.subEvents?.length ? e.subEvents : [{ title: "", detail: "" }]);
+      } catch (err) {
+        setFetchError(err.response?.data?.message || err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvent();
+  }, [id, url]);
+
+  const set = (field) => (e) => setForm(prev => ({ ...prev, [field]: e.target.value }));
+
+  const toggleCategory = (cat) => {
+    setForm(prev => ({
+      ...prev,
+      eventCategory: prev.eventCategory.includes(cat)
+        ? prev.eventCategory.filter(c => c !== cat)
+        : [...prev.eventCategory, cat],
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files).slice(0, 4);
+    setNewFiles(files);
+    setNewPreviews(files.map(f => URL.createObjectURL(f)));
+  };
+
+  const removeExistingPoster = (idx) => setExistingPosters(prev => prev.filter((_, i) => i !== idx));
+
+  const updateSubEvent = (idx, field, value) => {
+    setSubEvents(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.eventName) return toast("Event name is required", "error");
+    if (!form.eventCategory.length) return toast("Select at least one category", "error");
+    if (!form.startDate || !form.endDate) return toast("Start and end dates are required", "error");
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const formData = new FormData();
+      const fields = { ...form, subEvents: JSON.stringify(subEvents) };
+      Object.entries(fields).forEach(([k, v]) => {
+        if (Array.isArray(v)) v.forEach(item => formData.append(k, item));
+        else if (v !== "") formData.append(k, v);
+      });
+      existingPosters.forEach(p => formData.append("existingPosters", p));
+      newFiles.forEach(f => formData.append("posters", f));
+
+      await axios.put(`${url}events/${id}`, formData, { headers });
+      toast("Event updated successfully", "success");
+      navigate("/admin/events");
+    } catch (err) {
+      toast(err.response?.data?.message || err.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading && !form.eventName) return <Loader />;
+  if (fetchError) return <div style={{ padding: 32, color: "#ef4444" }}>{fetchError}</div>;
+
+  return (
+    <div style={{ maxWidth: 860, margin: "0 auto", padding: "24px 16px" }}>
+      {loading && <Loader />}
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+        <button onClick={() => navigate("/admin/events")} style={{
+          background: "none", border: "1px solid #e5e7eb", borderRadius: 8,
+          padding: "6px 14px", cursor: "pointer", fontSize: "0.82rem", color: "#555",
+        }}>← Back</button>
+        <h1 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#111" }}>Edit Event</h1>
+      </div>
+
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+        {/* Basic Info */}
+        <Section title="Basic Info">
+          <Field label="Event Name *">
+            <input style={inputStyle} value={form.eventName} onChange={set("eventName")} required />
+          </Field>
+          <Field label="Description">
+            <textarea style={{ ...inputStyle, minHeight: 90, resize: "vertical" }}
+              value={form.eventDesc} onChange={set("eventDesc")} />
+          </Field>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Field label="Language">
+              <select style={inputStyle} value={form.eventLang} onChange={set("eventLang")}>
+                {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </Field>
+            <Field label="Visibility">
+              <select style={inputStyle} value={form.visibility} onChange={set("visibility")}>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+            </Field>
+          </div>
+        </Section>
+
+        {/* Categories */}
+        <Section title="Categories *">
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {CATEGORIES.map(cat => {
+              const active = form.eventCategory.includes(cat);
+              return (
+                <button key={cat} type="button" onClick={() => toggleCategory(cat)} style={{
+                  padding: "5px 14px", borderRadius: 999, fontSize: "0.78rem", fontWeight: 600,
+                  cursor: "pointer", border: `1px solid ${active ? "#D26600" : "#e5e7eb"}`,
+                  background: active ? "#fff7ed" : "#fff", color: active ? "#D26600" : "#555",
+                  transition: "all 0.15s",
+                }}>{cat}</button>
+              );
+            })}
+          </div>
+        </Section>
+
+        {/* Dates & Times */}
+        <Section title="Dates & Times">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+            <Field label="Start Date *">
+              <input style={inputStyle} type="date" value={form.startDate} onChange={set("startDate")} required />
+            </Field>
+            <Field label="End Date *">
+              <input style={inputStyle} type="date" value={form.endDate} onChange={set("endDate")} required />
+            </Field>
+            <Field label="Start Time">
+              <input style={inputStyle} type="time" value={form.startTime} onChange={set("startTime")} />
+            </Field>
+            <Field label="End Time">
+              <input style={inputStyle} type="time" value={form.endTime} onChange={set("endTime")} />
+            </Field>
+          </div>
+        </Section>
+
+        {/* Pricing */}
+        <Section title="Pricing">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Field label="Price (₹) — set 0 for free">
+              <input style={inputStyle} type="number" min="0" value={form.eventPrice} onChange={set("eventPrice")} />
+            </Field>
+            <Field label="Expected Attendees">
+              <input style={inputStyle} value={form.noOfAttendees} onChange={set("noOfAttendees")} />
+            </Field>
+          </div>
+        </Section>
+
+        {/* People */}
+        <Section title="People">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Field label="Performer / Artist Name">
+              <input style={inputStyle} value={form.performerName} onChange={set("performerName")} />
+            </Field>
+            <Field label="Host Name">
+              <input style={inputStyle} value={form.hostName} onChange={set("hostName")} />
+            </Field>
+            <Field label="Host WhatsApp">
+              <input style={inputStyle} value={form.hostWhatsapp} onChange={set("hostWhatsapp")} />
+            </Field>
+            <Field label="Sponsor Name">
+              <input style={inputStyle} value={form.sponserName} onChange={set("sponserName")} />
+            </Field>
+          </div>
+        </Section>
+
+        {/* Location */}
+        <Section title="Location">
+          <Field label="Address Line 1">
+            <input style={inputStyle} value={form.eventAddress} onChange={set("eventAddress")} />
+          </Field>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Field label="Address Line 2">
+              <input style={inputStyle} value={form.address2} onChange={set("address2")} />
+            </Field>
+            <Field label="Landmark">
+              <input style={inputStyle} value={form.landmark} onChange={set("landmark")} />
+            </Field>
+            <Field label="City">
+              <input style={inputStyle} value={form.city} onChange={set("city")} />
+            </Field>
+            <Field label="State / Province">
+              <input style={inputStyle} value={form.province} onChange={set("province")} />
+            </Field>
+            <Field label="Postal Code">
+              <input style={inputStyle} value={form.postalCode} onChange={set("postalCode")} />
+            </Field>
+            <Field label="Country">
+              <input style={inputStyle} value={form.country} onChange={set("country")} />
+            </Field>
+          </div>
+          <Field label="Event Link (online / registration URL)">
+            <input style={inputStyle} value={form.eventLink} onChange={set("eventLink")} />
+          </Field>
+        </Section>
+
+        {/* Sub-Events */}
+        <Section title="Sub-Events / Agenda">
+          {subEvents.map((s, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto", gap: 10, alignItems: "end" }}>
+              <Field label={`Title ${i + 1}`}>
+                <input style={inputStyle} value={s.title} onChange={e => updateSubEvent(i, "title", e.target.value)} />
+              </Field>
+              <Field label="Detail">
+                <input style={inputStyle} value={s.detail} onChange={e => updateSubEvent(i, "detail", e.target.value)} />
+              </Field>
+              <button type="button" onClick={() => setSubEvents(prev => prev.filter((_, j) => j !== i))}
+                style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid #fca5a5", background: "#fff", color: "#ef4444", cursor: "pointer", fontSize: "0.8rem", marginBottom: 0 }}>
+                ✕
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setSubEvents(prev => [...prev, { title: "", detail: "" }])}
+            style={{ padding: "7px 16px", borderRadius: 8, border: "1px dashed #D26600", background: "#fff7ed", color: "#D26600", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600, alignSelf: "flex-start" }}>
+            + Add Sub-Event
+          </button>
+        </Section>
+
+        {/* Posters */}
+        <Section title="Event Posters">
+          {existingPosters.length > 0 && (
+            <div>
+              <p style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: 8 }}>Current posters (click × to remove)</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                {existingPosters.map((src, i) => {
+                  const imgSrc = src.startsWith("http") ? src : `${url?.replace("/api/", "")}${src}`;
+                  return (
+                    <div key={i} style={{ position: "relative" }}>
+                      <img src={imgSrc} alt="" style={{ width: 90, height: 90, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb" }} />
+                      <button type="button" onClick={() => removeExistingPoster(i)} style={{
+                        position: "absolute", top: -6, right: -6, width: 20, height: 20,
+                        borderRadius: "50%", background: "#ef4444", color: "#fff",
+                        border: "none", cursor: "pointer", fontSize: "0.7rem", lineHeight: 1,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>✕</button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <Field label="Upload new posters (max 4)">
+            <input type="file" accept="image/*" multiple onChange={handleFileChange}
+              style={{ fontSize: "0.82rem", color: "#555" }} />
+          </Field>
+          {newPreviews.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 8 }}>
+              {newPreviews.map((src, i) => (
+                <img key={i} src={src} alt="" style={{ width: 90, height: 90, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb" }} />
+              ))}
+            </div>
+          )}
+        </Section>
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", paddingBottom: 32 }}>
+          <button type="button" onClick={() => navigate("/admin/events")} style={{
+            padding: "10px 24px", borderRadius: 8, border: "1px solid #e5e7eb",
+            background: "#fff", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem",
+          }}>Cancel</button>
+          <button type="submit" disabled={loading} style={{
+            padding: "10px 28px", borderRadius: 8, border: "none",
+            background: "#D26600", color: "#fff", cursor: "pointer",
+            fontWeight: 700, fontSize: "0.875rem", opacity: loading ? 0.7 : 1,
+          }}>{loading ? "Saving…" : "Save Changes"}</button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+const Section = ({ title, children }) => (
+  <div style={{ background: "#fff", borderRadius: 12, padding: "18px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", gap: 14 }}>
+    <p style={{ margin: 0, fontSize: "0.82rem", fontWeight: 700, color: "#D26600", textTransform: "uppercase", letterSpacing: "0.05em" }}>{title}</p>
+    {children}
+  </div>
+);
 
 export default UpdateEvent;

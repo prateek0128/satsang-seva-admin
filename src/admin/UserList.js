@@ -18,14 +18,19 @@ const S = {
     background: type === "admin" ? "#fef3c7" : type === "host" ? "#eff6ff" : "#f0fdf4",
     color: type === "admin" ? "#92400e" : type === "host" ? "#1d4ed8" : "#166534",
   }),
+  performerBadge: (type) => ({
+    display: "inline-block", fontSize: "0.68rem", fontWeight: 600, padding: "2px 8px", borderRadius: 6, textTransform: "capitalize",
+    background: type?.toLowerCase() === "artist" ? "#fce7f3" : type?.toLowerCase() === "orator" ? "#ede9fe" : "#f1f5f9",
+    color: type?.toLowerCase() === "artist" ? "#be185d" : type?.toLowerCase() === "orator" ? "#6d28d9" : "#475569",
+  }),
 };
 
 const UserList = () => {
+  const navigate = useNavigate();
   const url = process.env.REACT_APP_BACKEND;
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -47,7 +52,7 @@ const UserList = () => {
     try {
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      await axios.delete(url + "users/" + user._id, { headers });
+      await axios.delete(url + "admin/user/" + user._id, { headers });
       setUsers(users.filter(u => u._id !== user._id));
       toast("User deleted successfully", "success");
     } catch (e) {
@@ -82,7 +87,7 @@ const UserList = () => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {["ID", "Name", "Type", "Email", "Phone", "Joined", "Actions"].map(h => (
+                  {["ID", "Name", "Type", "Performer Type", "Email", "Phone", "Joined", "Actions"].map(h => (
                     <th key={h} style={S.th}>{h}</th>
                   ))}
                 </tr>
@@ -103,13 +108,26 @@ const UserList = () => {
                     </td>
                     <td style={S.td}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#D26600,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "0.75rem", fontWeight: 700, flexShrink: 0 }}>
+                        {user.profilePicture ? (
+                          <img 
+                            src={user.profilePicture.startsWith('http') ? user.profilePicture : `${url.replace('/api/', '/')}${user.profilePicture}`} 
+                            alt={user.name} 
+                            style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} 
+                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                          />
+                        ) : null}
+                        <div style={{ display: user.profilePicture ? "none" : "flex", width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#D26600,#f59e0b)", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "0.75rem", fontWeight: 700, flexShrink: 0 }}>
                           {(user.name || "?")[0].toUpperCase()}
                         </div>
                         <span style={{ fontWeight: 600, color: "#0f172a" }}>{user.name || "—"}</span>
                       </div>
                     </td>
                     <td style={S.td}><span style={S.badge(user.userType)}>{user.userType || "—"}</span></td>
+                    <td style={S.td}>
+                      <span style={user.performerType ? S.performerBadge(user.performerType) : { fontSize: "0.75rem", color: "#475569" }}>
+                        {user.performerType || "—"}
+                      </span>
+                    </td>
                     <td style={{ ...S.td, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       <span onClick={() => navigator.clipboard.writeText(user.email || "")} title="Copy" style={{ cursor: "pointer" }}>{user.email || "—"}</span>
                     </td>
@@ -119,18 +137,18 @@ const UserList = () => {
                     <td style={S.td}>{user.createdAt ? dayjs(user.createdAt).format("DD MMM YYYY") : "—"}</td>
                     <td style={S.td}>
                       <div style={{ display: "flex", gap: 4 }}>
-                        <button style={S.iconBtn} title="View Profile"
-                          onClick={() => window.open(`${process.env.REACT_APP_FRONTEND}/public-profile?q=${user._id}`, "_blank")}
+                        <button style={S.iconBtn} title="View Details"
+                          onClick={() => navigate(`/admin/userdetails/${user._id}`)}
                           onMouseEnter={e => e.currentTarget.style.color = "#2563eb"}
                           onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
-                        <button style={S.iconBtn} title="Edit User"
+                        {/* <button style={S.iconBtn} title="Edit User"
                           onClick={() => navigate(`/admin/updateuser/${user._id}`)}
                           onMouseEnter={e => e.currentTarget.style.color = "#D26600"}
                           onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
+                        </button> */}
                         <button style={S.iconBtn} title="Delete User"
                           onClick={() => handleDelete(user)}
                           onMouseEnter={e => e.currentTarget.style.color = "#ef4444"}

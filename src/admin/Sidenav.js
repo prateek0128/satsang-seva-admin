@@ -1,90 +1,125 @@
 import React, { forwardRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import DashboardIcon from '@mui/icons-material/SpaceDashboardTwoTone';
-import UsersIcon from '@mui/icons-material/PeopleAltTwoTone';
-import EventsIcon from '@mui/icons-material/EventNoteTwoTone';
-import ApproveIcon from '@mui/icons-material/FactCheckTwoTone';
-import BlogIcon from '@mui/icons-material/ArticleTwoTone';
-import LogoutIcon from '@mui/icons-material/LogoutTwoTone';
-import { toast, confirmDialog } from '../components/Popup';
+import DashboardIcon from '@mui/icons-material/SpaceDashboardRounded';
+import UsersIcon from '@mui/icons-material/PeopleRounded';
+import EventsIcon from '@mui/icons-material/EventAvailableRounded';
+import ApproveIcon from '@mui/icons-material/VerifiedUserRounded';
+import BlogIcon from '@mui/icons-material/DescriptionRounded';
+import LogoutIcon from '@mui/icons-material/PowerSettingsNewRounded';
+import DraftsIcon from '@mui/icons-material/EditNoteRounded';
+import SupportIcon from '@mui/icons-material/SupportAgentRounded';
+import { confirmDialog } from '../components/Popup';
 
 const navItems = [
-  { to: '/admin/dashboard', label: 'Dashboard', icon: <DashboardIcon fontSize="small" /> },
-  { to: '/admin/allusers', label: 'Users', icon: <UsersIcon fontSize="small" /> },
-  { to: '/admin/events', label: 'Events', icon: <EventsIcon fontSize="small" /> },
-  { to: '/admin/approve', label: 'Approvals', icon: <ApproveIcon fontSize="small" /> },
-  { to: '/admin/blog', label: 'Blogs', icon: <BlogIcon fontSize="small" /> },
+  { to: '/admin/dashboard', label: 'Overview', icon: <DashboardIcon /> },
+  { to: '/admin/allusers', label: 'User Directory', icon: <UsersIcon /> },
+  { to: '/admin/events', label: 'Events Hub', icon: <EventsIcon /> },
+  { to: '/admin/approve', label: 'Approvals', icon: <ApproveIcon /> },
+  { to: '/admin/drafts', label: 'Drafts', icon: <DraftsIcon /> },
+  { to: '/admin/blog', label: 'Blogs & News', icon: <BlogIcon /> },
+  { to: '/admin/contact-queries', label: 'Support Queries', icon: <SupportIcon /> },
 ];
 
-const SideNavbar = forwardRef(({ isOpen, closeNav }, ref) => {
+const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav }, ref) => {
   const location = useLocation();
 
   const handleLogOut = async () => {
-    const ok = await confirmDialog('Are you sure you want to logout?');
+    const ok = await confirmDialog('Are you sure you want to exit?');
     if (ok) {
-      localStorage.removeItem('admin');
-      localStorage.removeItem('token');
-      window.location.reload();
+      localStorage.clear();
+      window.location.href = '/admin';
     }
   };
 
   return (
     <div ref={ref} style={{
-      position: 'fixed', top: 0, left: isOpen ? 0 : -260,
-      width: 240, height: '100vh', background: '#1a1a2e',
-      zIndex: 10000, transition: 'left 0.28s cubic-bezier(.4,0,.2,1)',
-      display: 'flex', flexDirection: 'column', boxShadow: isOpen ? '4px 0 24px rgba(0,0,0,0.18)' : 'none',
+      position: 'fixed', top: 0, left: 0,
+      width: isOpen ? 260 : 80, height: '100vh', 
+      background: '#0f172a', // Deep Slate
+      zIndex: 10000, 
+      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      display: 'flex', flexDirection: 'column', 
+      boxShadow: '10px 0 30px rgba(0,0,0,0.1)',
+      overflow: 'hidden',
     }}>
-      {/* Logo */}
-      <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, background: '#D26600', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#fff', fontWeight: 800, fontSize: '1rem' }}>S</span>
-          </div>
-          <div>
-            <p style={{ color: '#fff', fontWeight: 700, fontSize: '0.95rem', margin: 0, lineHeight: 1.2 }}>SatsangSeva</p>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', margin: 0 }}>Admin Panel</p>
-          </div>
+      {/* Brand Section */}
+      <div style={{ 
+        padding: '32px 24px', 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '16px',
+        borderBottom: '1px solid rgba(255,255,255,0.05)' 
+      }}>
+        <div style={{ 
+          width: 40, height: 40, borderRadius: 12, 
+          background: 'linear-gradient(135deg, #D26600, #ea580c)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', fontSize: '1.2rem', fontWeight: 900,
+          flexShrink: 0,
+          boxShadow: '0 4px 12px rgba(210,102,0,0.3)'
+        }}>
+          S
         </div>
+        {isOpen && (
+          <div style={{ animation: 'fadeIn 0.3s' }}>
+            <h1 style={{ margin: 0, color: '#fff', fontSize: '1.1rem', fontWeight: 800, letterSpacing: '-0.5px' }}>Satsang</h1>
+            <p style={{ margin: 0, color: '#64748b', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Admin Control</p>
+          </div>
+        )}
       </div>
 
       {/* Nav Items */}
-      <nav style={{ flex: 1, padding: '12px 12px', display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' }}>
+      <nav style={{ flex: 1, padding: '24px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {navItems.map(({ to, label, icon }) => {
           const active = location.pathname === to;
           return (
             <Link key={to} to={to} onClick={closeNav} style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '10px 14px', borderRadius: 10, textDecoration: 'none',
-              background: active ? 'rgba(210,102,0,0.18)' : 'transparent',
-              color: active ? '#D26600' : 'rgba(255,255,255,0.7)',
-              fontWeight: active ? 700 : 500, fontSize: '0.875rem',
-              transition: 'all 0.18s',
-              borderLeft: active ? '3px solid #D26600' : '3px solid transparent',
+              display: 'flex', alignItems: 'center', gap: '16px',
+              padding: '12px 16px', borderRadius: '12px', textDecoration: 'none',
+              justifyContent: isOpen ? 'flex-start' : 'center',
+              background: active ? 'rgba(210,102,0,0.1)' : 'transparent',
+              color: active ? '#fff' : '#94a3b8',
+              position: 'relative',
+              transition: 'all 0.2s ease',
             }}
-              onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#fff'; } }}
-              onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; } }}
+              onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = '#fff'; } }}
+              onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#94a3b8'; } }}
             >
-              <span style={{ color: active ? '#D26600' : 'rgba(255,255,255,0.5)', display: 'flex' }}>{icon}</span>
-              {label}
+              <span style={{ 
+                color: active ? '#D26600' : 'inherit', 
+                display: 'flex', 
+                transition: 'transform 0.2s ease',
+                transform: active ? 'scale(1.1)' : 'none'
+              }}>{icon}</span>
+              
+              {isOpen && <span style={{ fontSize: '0.9rem', fontWeight: active ? 700 : 500 }}>{label}</span>}
+              
+              {active && (
+                <div style={{ 
+                  position: 'absolute', left: -12, width: 4, height: 24, 
+                  background: '#D26600', borderRadius: '0 4px 4px 0',
+                  boxShadow: '4px 0 10px rgba(210,102,0,0.4)'
+                }} />
+              )}
             </Link>
           );
         })}
       </nav>
 
       {/* Logout */}
-      <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ padding: '24px 12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <button onClick={handleLogOut} style={{
-          width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-          padding: '10px 14px', borderRadius: 10, border: 'none',
-          background: 'transparent', color: 'rgba(255,255,255,0.6)',
-          fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.18s',
+          width: '100%', display: 'flex', alignItems: 'center', gap: '16px',
+          padding: '12px 16px', borderRadius: '12px', border: 'none',
+          justifyContent: isOpen ? 'flex-start' : 'center',
+          background: 'rgba(239, 68, 68, 0.05)', color: '#f87171',
+          fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s',
         }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)'; e.currentTarget.style.color = '#f87171'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; e.currentTarget.style.color = '#ef4444'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'; e.currentTarget.style.color = '#f87171'; }}
         >
-          <LogoutIcon fontSize="small" />
-          Logout
+          <LogoutIcon />
+          {isOpen && 'Log Out'}
         </button>
       </div>
     </div>
