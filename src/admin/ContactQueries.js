@@ -20,6 +20,7 @@ const ContactQueries = () => {
   const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState("all"); // "all", "help", "contact"
 
   useEffect(() => {
     const fetchQueries = async () => {
@@ -51,12 +52,20 @@ const ContactQueries = () => {
     }
   };
 
-  const filtered = queries.filter(q =>
-    !search || 
-    q.firstName?.toLowerCase().includes(search.toLowerCase()) ||
-    q.email?.toLowerCase().includes(search.toLowerCase()) ||
-    q.subject?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = queries.filter(q => {
+    const matchesSearch = !search || 
+      q.firstName?.toLowerCase().includes(search.toLowerCase()) ||
+      q.email?.toLowerCase().includes(search.toLowerCase()) ||
+      q.subject?.toLowerCase().includes(search.toLowerCase());
+    
+    const isHelp = !!q.isHelp || 
+                   q.subject?.toLowerCase().includes("help") || 
+                   q.subject?.toLowerCase().includes("support");
+
+    if (filterType === "help") return matchesSearch && isHelp;
+    if (filterType === "contact") return matchesSearch && !isHelp;
+    return matchesSearch;
+  });
 
   return (
     <div style={S.page}>
@@ -65,10 +74,35 @@ const ContactQueries = () => {
           <h1 style={S.title}>Contact Queries</h1>
           <p style={S.sub}>{queries.length} total messages received</p>
         </div>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or subject..."
-          style={{ padding: "9px 14px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: "0.82rem", color: "#334155", outline: "none", width: 280, fontFamily: "inherit", background: "#fff" }}
-          onFocus={e => e.target.style.borderColor = "#D26600"}
-          onBlur={e => e.target.style.borderColor = "#e2e8f0"} />
+        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", background: "#f1f5f9", padding: "4px", borderRadius: "10px", gap: "4px" }}>
+            {["all", "help", "contact"].map(type => (
+              <button
+                key={type}
+                onClick={() => setFilterType(type)}
+                style={{
+                  padding: "6px 16px",
+                  borderRadius: "8px",
+                  border: "none",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  background: filterType === type ? "#fff" : "transparent",
+                  color: filterType === type ? "#D26600" : "#64748b",
+                  boxShadow: filterType === type ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  transition: "all 0.2s"
+                }}
+              >
+                {type === "all" ? "All" : type === "help" ? "Help" : "Contact"}
+              </button>
+            ))}
+          </div>
+
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..."
+            style={{ padding: "9px 14px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: "0.82rem", color: "#334155", outline: "none", width: 220, fontFamily: "inherit", background: "#fff" }}
+            onFocus={e => e.target.style.borderColor = "#D26600"}
+            onBlur={e => e.target.style.borderColor = "#e2e8f0"} />
+        </div>
       </div>
 
       <div style={S.card}>
@@ -79,15 +113,19 @@ const ContactQueries = () => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {["Date", "Sender", "Contact", "Subject", "Message", "Actions"].map(h => (
+                  {["Date", "Sender", "Contact", "Type", "Subject", "Message", "Actions"].map(h => (
                     <th key={h} style={S.th}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={6} style={{ ...S.td, textAlign: "center", padding: 40, color: "#94a3b8" }}>No queries found</td></tr>
-                ) : filtered.map(q => (
+                  <tr><td colSpan={7} style={{ ...S.td, textAlign: "center", padding: 40, color: "#94a3b8" }}>No queries found</td></tr>
+                ) : filtered.map(q => {
+                  const isHelp = !!q.isHelp || 
+                                q.subject?.toLowerCase().includes("help") || 
+                                q.subject?.toLowerCase().includes("support");
+                  return (
                   <tr key={q._id}
                     onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -114,7 +152,15 @@ const ContactQueries = () => {
                       <div style={{ color: "#334155" }}>{q.email}</div>
                       <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{q.phone || "No phone"}</div>
                     </td>
-                    
+
+                    <td style={{...S.td, whiteSpace: "nowrap"}}>
+                      {isHelp ? (
+                        <span style={{ background: "rgba(230,99,52,0.1)", color: "#E66334", fontSize: "0.75rem", fontWeight: 700, padding: "4px 10px", borderRadius: "20px", textTransform: "capitalize" }}>Help</span>
+                      ) : (
+                        <span style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb", fontSize: "0.75rem", fontWeight: 700, padding: "4px 10px", borderRadius: "20px", textTransform: "capitalize" }}>Contact</span>
+                      )}
+                    </td>
+
                     <td style={{...S.td, fontWeight: 600, color: "#0f172a", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
                       {q.subject}
                     </td>
@@ -141,7 +187,8 @@ const ContactQueries = () => {
                       </div>
                     </td>
                   </tr>
-                ))}
+                );
+                })}
               </tbody>
             </table>
           </div>
