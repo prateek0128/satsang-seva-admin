@@ -40,6 +40,7 @@ import UpdateEvent from "./admin/UpdateEvent";
 import DeleteAccountRequest from "./admin/DeleteAccountRequest";
 import UserDetails from "./admin/UserDetails";
 import ContactQueries from "./admin/ContactQueries";
+import PendingHosts from "./admin/PendingHosts";
 
 function App() {
   const action = useNavigationType();
@@ -97,6 +98,7 @@ function App() {
           <Route path="events" element={<Events />} />
           <Route path="drafts" element={<DraftEvents />} />
           <Route path="approve" element={<Approve />} />
+          <Route path="approve-hosts" element={<PendingHosts />} />
           <Route path="blog" element={<Blog />} />
           <Route path="createblog" element={<AddBlog />} />
           <Route path="updateuser/:id" element={<UpdateUser />} />
