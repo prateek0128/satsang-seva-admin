@@ -41,6 +41,8 @@ import DeleteAccountRequest from "./admin/DeleteAccountRequest";
 import UserDetails from "./admin/UserDetails";
 import ContactQueries from "./admin/ContactQueries";
 import PendingHosts from "./admin/PendingHosts";
+import BookingList from "./admin/BookingList";
+import NotificationList from "./admin/NotificationList";
 
 function App() {
   const action = useNavigationType();
@@ -108,6 +110,8 @@ function App() {
           <Route path="userdetails/:id" element={<UserDetails />} />
           <Route path="updateform" element={<Updateform />} />
           <Route path="contact-queries" element={<ContactQueries />} />
+          <Route path="bookings" element={<BookingList />} />
+          <Route path="notifications" element={<NotificationList />} />
         </Route>
       </Route>
     </Routes>

@@ -133,6 +133,15 @@ const Events = () => {
 
   const columns = useMemo(() => [
     {
+      accessorKey: "eventId",
+      header: "Event ID",
+      cell: ({ getValue }) => (
+        <span style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "#64748b", fontWeight: 700 }}>
+          {getValue() || "—"}
+        </span>
+      )
+    },
+    {
       accessorKey: "eventName",
       header: "Event Detail",
       cell: ({ row, getValue }) => {
@@ -174,6 +183,22 @@ const Events = () => {
           <div style={{ fontWeight: 600 }}>{dayjs(getValue()).format("DD MMM YYYY")}</div>
           <div style={{ fontSize: "0.75rem", color: row.original.eventPrice === "0" ? "#15803d" : "#D26600", fontWeight: 700 }}>
             {row.original.eventPrice === "0" ? "FREE" : `₹${row.original.eventPrice}`}
+          </div>
+        </div>
+      )
+    },
+    {
+      accessorKey: "approved",
+      header: "Engagement",
+      cell: ({ row }) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#64748b", fontSize: "0.75rem" }}>
+            <VisibilityIcon sx={{ fontSize: 14 }} />
+            <span style={{ fontWeight: 600 }}>{row.original.viewCount || 0}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#059669", fontSize: "0.75rem" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span style={{ fontWeight: 600 }}>{row.original.bookings?.length || 0}</span>
           </div>
         </div>
       )

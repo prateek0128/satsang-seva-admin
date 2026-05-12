@@ -110,7 +110,7 @@ const UserEvents = () => {
           <table className="table table-bordered table-hover m-0">
             <thead className='sticky-top'>
               <tr>
-                <th>ID</th>
+                <th>Event ID</th>
                 <th>Host Name</th>
                 <th>Event Name</th>
                 <th>Event Price</th>
@@ -123,7 +123,7 @@ const UserEvents = () => {
             <tbody>
               {userEvents.map(event => (
                 <tr key={event._id}>
-                  <td>{event._id}</td>
+                  <td>{event.eventId || event._id}</td>
                   <td>{event.hostName}</td>
                   <td>{event.eventName}</td>
                   <td>{event.eventPrice === '0' ? 'Free' : `₹${event.eventPrice}`}</td>

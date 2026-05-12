@@ -8,6 +8,8 @@ import BlogIcon from '@mui/icons-material/DescriptionRounded';
 import LogoutIcon from '@mui/icons-material/PowerSettingsNewRounded';
 import DraftsIcon from '@mui/icons-material/EditNoteRounded';
 import SupportIcon from '@mui/icons-material/SupportAgentRounded';
+import BookingsIcon from '@mui/icons-material/BookOnlineRounded';
+import NotificationsIcon from '@mui/icons-material/NotificationsRounded';
 import { confirmDialog } from '../components/Popup';
 
 const navItems = [
@@ -19,6 +21,8 @@ const navItems = [
   { to: '/admin/drafts', label: 'Drafts', icon: <DraftsIcon /> },
   { to: '/admin/blog', label: 'Blogs & News', icon: <BlogIcon /> },
   { to: '/admin/contact-queries', label: 'Support Queries', icon: <SupportIcon /> },
+  { to: '/admin/bookings', label: 'Booking Management', icon: <BookingsIcon /> },
+  { to: '/admin/notifications', label: 'Notification History', icon: <NotificationsIcon /> },
 ];
 
 const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav }, ref) => {
@@ -36,19 +40,23 @@ const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav }, ref) => {
     <div ref={ref} style={{
       position: 'fixed', top: 0, left: 0,
       width: isOpen ? 260 : 80, height: '100vh', 
-      background: '#0f172a', // Deep Slate
+      background: '#0f172a',
       zIndex: 10000, 
       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
       display: 'flex', flexDirection: 'column', 
-      boxShadow: '10px 0 30px rgba(0,0,0,0.1)',
+      boxShadow: '10px 0 30px rgba(0,0,0,0.15)',
       overflow: 'hidden',
     }}>
+      <style>{`
+        .sidenav-nav::-webkit-scrollbar { display: none; }
+        .sidenav-nav { scrollbar-width: none; -ms-overflow-style: none; }
+      `}</style>
       {/* Brand Section */}
       <div style={{ 
-        padding: '32px 24px', 
+        padding: '20px 16px', 
         display: 'flex', 
         alignItems: 'center', 
-        gap: '16px',
+        gap: '12px',
         borderBottom: '1px solid rgba(255,255,255,0.05)' 
       }}>
         <div style={{ 
@@ -70,13 +78,13 @@ const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav }, ref) => {
       </div>
 
       {/* Nav Items */}
-      <nav style={{ flex: 1, padding: '24px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <nav className="sidenav-nav" style={{ flex: 1, padding: '8px 10px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1px' }}>
         {navItems.map(({ to, label, icon }) => {
           const active = location.pathname === to;
           return (
             <Link key={to} to={to} onClick={closeNav} style={{
-              display: 'flex', alignItems: 'center', gap: '16px',
-              padding: '12px 16px', borderRadius: '12px', textDecoration: 'none',
+              display: 'flex', alignItems: 'center', gap: '14px',
+              padding: '9px 14px', borderRadius: '10px', textDecoration: 'none',
               justifyContent: isOpen ? 'flex-start' : 'center',
               background: active ? 'rgba(210,102,0,0.1)' : 'transparent',
               color: active ? '#fff' : '#94a3b8',
@@ -108,18 +116,18 @@ const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav }, ref) => {
       </nav>
 
       {/* Logout */}
-      <div style={{ padding: '24px 12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ padding: '8px 10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <button onClick={handleLogOut} style={{
-          width: '100%', display: 'flex', alignItems: 'center', gap: '16px',
-          padding: '12px 16px', borderRadius: '12px', border: 'none',
+          width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
+          padding: '9px 14px', borderRadius: '10px', border: 'none',
           justifyContent: isOpen ? 'flex-start' : 'center',
           background: 'rgba(239, 68, 68, 0.05)', color: '#f87171',
-          fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s',
+          fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s',
         }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; e.currentTarget.style.color = '#ef4444'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)'; e.currentTarget.style.color = '#ef4444'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'; e.currentTarget.style.color = '#f87171'; }}
         >
-          <LogoutIcon />
+          <LogoutIcon style={{ fontSize: '1.25rem' }} />
           {isOpen && 'Log Out'}
         </button>
       </div>

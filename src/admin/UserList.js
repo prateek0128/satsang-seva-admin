@@ -29,6 +29,12 @@ const S = {
     color: approved ? "#166534" : "#991b1b",
     border: approved ? "1px solid #bcf0da" : "1px solid #fecaca",
   }),
+  filterTab: (active) => ({
+    padding: "8px 16px", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer", borderRadius: "8px",
+    background: active ? "#D26600" : "transparent",
+    color: active ? "#fff" : "#64748b",
+    border: "none", transition: "all 0.2s"
+  }),
 };
 
 const UserList = () => {
@@ -37,6 +43,8 @@ const UserList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [sortConfig, setSortConfig] = useState({ key: "createdAt", direction: "desc" });
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -52,6 +60,14 @@ const UserList = () => {
     fetchUsers();
   }, []);
 
+  const requestSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
   const handleDelete = async (user) => {
     const ok = await confirmDialog(`Delete ${user.name || "this user"}? This action is irreversible.`);
     if (!ok) return;
@@ -66,11 +82,42 @@ const UserList = () => {
     }
   };
 
-  const filtered = users.filter(u =>
-    !search || u.name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.email?.toLowerCase().includes(search.toLowerCase()) ||
-    u.phone?.includes(search)
-  );
+  const getSortedUsers = (usersToSort) => {
+    const sorted = [...usersToSort].sort((a, b) => {
+      const aValue = a[sortConfig.key] || "";
+      const bValue = b[sortConfig.key] || "";
+      
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  };
+
+  const filtered = users.filter(u => {
+    const matchesSearch = !search || 
+      u.name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase()) ||
+      u.phone?.includes(search);
+    
+    const matchesFilter = filterType === "all" || u.userType === filterType;
+    
+    return matchesSearch && matchesFilter;
+  });
+
+  const sortedAndFiltered = getSortedUsers(filtered);
+
+  const headers = [
+    { label: "User ID", key: "userId" },
+    { label: "Name", key: "name" },
+    { label: "Type", key: "userType" },
+    { label: "Performer Type", key: "performerType" },
+    { label: "Approved", key: "approved" },
+    { label: "Email", key: "email" },
+    { label: "Phone", key: "phone" },
+    { label: "Joined", key: "createdAt" },
+    { label: "Actions", key: null },
+  ];
 
   return (
     <div style={S.page}>
@@ -79,10 +126,19 @@ const UserList = () => {
           <h1 style={S.title}>Users</h1>
           <p style={S.sub}>{users.length} total registered users</p>
         </div>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or phone..."
-          style={{ padding: "9px 14px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: "0.82rem", color: "#334155", outline: "none", width: 260, fontFamily: "inherit", background: "#fff" }}
-          onFocus={e => e.target.style.borderColor = "#D26600"}
-          onBlur={e => e.target.style.borderColor = "#e2e8f0"} />
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div style={{ display: "flex", background: "#f1f5f9", padding: "4px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+            {["all", "host", "participant"].map(type => (
+              <button key={type} onClick={() => setFilterType(type)} style={S.filterTab(filterType === type)}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or phone..."
+            style={{ padding: "9px 14px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: "0.82rem", color: "#334155", outline: "none", width: 260, fontFamily: "inherit", background: "#fff" }}
+            onFocus={e => e.target.style.borderColor = "#D26600"}
+            onBlur={e => e.target.style.borderColor = "#e2e8f0"} />
+        </div>
       </div>
 
       <div style={S.card}>
@@ -93,23 +149,32 @@ const UserList = () => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {["ID", "Name", "Type", "Performer Type", "Approved", "Email", "Phone", "Joined", "Actions"].map(h => (
-                    <th key={h} style={S.th}>{h}</th>
+                  {headers.map(h => (
+                    <th key={h.label} 
+                      style={{ ...S.th, cursor: h.key ? "pointer" : "default", userSelect: "none" }}
+                      onClick={() => h.key && requestSort(h.key)}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        {h.label}
+                        {h.key && sortConfig.key === h.key && (
+                          <span>{sortConfig.direction === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
-                  <tr><td colSpan={7} style={{ ...S.td, textAlign: "center", padding: 40, color: "#94a3b8" }}>No users found</td></tr>
-                ) : filtered.map(user => (
+                {sortedAndFiltered.length === 0 ? (
+                  <tr><td colSpan={9} style={{ ...S.td, textAlign: "center", padding: 40, color: "#94a3b8" }}>No users found</td></tr>
+                ) : sortedAndFiltered.map(user => (
                   <tr key={user._id}
                     onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     style={{ transition: "background 0.12s" }}>
                     <td style={S.td}>
-                      <span onClick={() => navigator.clipboard.writeText(user._id)} title="Copy ID"
-                        style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#94a3b8", cursor: "pointer" }}>
-                        ...{user._id?.slice(-6)}
+                      <span onClick={() => navigator.clipboard.writeText(user.userId || user._id)} title="Copy ID"
+                        style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b", fontWeight: 600, cursor: "pointer" }}>
+                        {user.userId || "—"}
                       </span>
                     </td>
                     <td style={S.td}>
@@ -158,12 +223,12 @@ const UserList = () => {
                           onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
-                        {/* <button style={S.iconBtn} title="Edit User"
+                        <button style={S.iconBtn} title="Edit User"
                           onClick={() => navigate(`/admin/updateuser/${user._id}`)}
                           onMouseEnter={e => e.currentTarget.style.color = "#D26600"}
                           onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button> */}
+                        </button>
                         <button style={S.iconBtn} title="Delete User"
                           onClick={() => handleDelete(user)}
                           onMouseEnter={e => e.currentTarget.style.color = "#ef4444"}

@@ -51,7 +51,7 @@ const AllProducts = () => {
           <tbody>
             {(bookings && bookings.length > 0) ? bookings.map((booking) => (
               <tr key={booking._id}>
-                <td>{booking._id}</td>
+                <td>{booking.bookingId || booking._id}</td>
                 <td>{booking.attendeeContact}</td>
                 <td>{booking.user ? booking.user.name : 'N/A'}</td> {/* Add a null check here */}
                 <td>{booking.noOfAttendee}</td>

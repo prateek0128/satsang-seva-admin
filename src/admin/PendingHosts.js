@@ -76,7 +76,7 @@ const PendingHosts = () => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {["Host", "Type", "Email", "Phone", "Location", "Submitted", "Actions"].map(h => (
+                  {["User ID", "Host", "Type", "Email", "Phone", "Location", "Submitted", "Actions"].map(h => (
                     <th key={h} style={S.th}>{h}</th>
                   ))}
                 </tr>
@@ -93,6 +93,11 @@ const PendingHosts = () => {
                     onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     style={{ transition: "background 0.12s" }}>
+                    <td style={S.td}>
+                      <span style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "#64748b", fontWeight: 700 }}>
+                        {host.userId || "—"}
+                      </span>
+                    </td>
                     <td style={{ ...S.td, maxWidth: 200 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
