@@ -107,6 +107,8 @@ const AdminPage = () => {
     { label: 'User Management', desc: 'View, edit and manage all users', icon: <UserMgmtIcon />, color: '#2563eb', path: '/admin/allusers' },
     { label: 'Events', desc: 'Browse and manage all events', icon: <EventMgmtIcon />, color: '#D26600', path: '/admin/events' },
     { label: 'Blog Management', desc: 'Create and publish blog posts', icon: <BlogIcon />, color: '#7c3aed', path: '/admin/blog' },
+    { label: 'Booking Management', desc: 'View and manage all user bookings', icon: <BookingIcon />, color: '#d97706', path: '/admin/bookings' },
+    { label: 'Notification History', desc: 'Track all sent notifications', icon: <PendingIcon />, color: '#6366f1', path: '/admin/notifications' },
   ];
 
   return (

@@ -55,16 +55,13 @@ const ContactQueries = () => {
   const filtered = queries.filter(q => {
     const matchesSearch = !search || 
       q.firstName?.toLowerCase().includes(search.toLowerCase()) ||
+      q.lastName?.toLowerCase().includes(search.toLowerCase()) ||
       q.email?.toLowerCase().includes(search.toLowerCase()) ||
-      q.subject?.toLowerCase().includes(search.toLowerCase());
+      q.subject?.toLowerCase().includes(search.toLowerCase()) ||
+      q.message?.toLowerCase().includes(search.toLowerCase());
     
-    const isHelp = !!q.isHelp || 
-                   q.subject?.toLowerCase().includes("help") || 
-                   q.subject?.toLowerCase().includes("support");
-
-    if (filterType === "help") return matchesSearch && isHelp;
-    if (filterType === "contact") return matchesSearch && !isHelp;
-    return matchesSearch;
+    if (filterType === "all") return matchesSearch;
+    return matchesSearch && q.queryType?.toLowerCase() === filterType;
   });
 
   return (
@@ -75,25 +72,26 @@ const ContactQueries = () => {
           <p style={S.sub}>{queries.length} total messages received</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", background: "#f1f5f9", padding: "4px", borderRadius: "10px", gap: "4px" }}>
-            {["all", "help", "contact"].map(type => (
+          <div style={{ display: "flex", background: "#f1f5f9", padding: "4px", borderRadius: "10px", gap: "4px", flexWrap: "wrap" }}>
+            {["all", "contact", "help", "experience", "report", "feedback"].map(type => (
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
                 style={{
-                  padding: "6px 16px",
+                  padding: "6px 14px",
                   borderRadius: "8px",
                   border: "none",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: 600,
                   cursor: "pointer",
                   background: filterType === type ? "#fff" : "transparent",
                   color: filterType === type ? "#D26600" : "#64748b",
                   boxShadow: filterType === type ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  textTransform: "capitalize"
                 }}
               >
-                {type === "all" ? "All" : type === "help" ? "Help" : "Contact"}
+                {type}
               </button>
             ))}
           </div>
@@ -122,9 +120,13 @@ const ContactQueries = () => {
                 {filtered.length === 0 ? (
                   <tr><td colSpan={7} style={{ ...S.td, textAlign: "center", padding: 40, color: "#94a3b8" }}>No queries found</td></tr>
                 ) : filtered.map(q => {
-                  const isHelp = !!q.isHelp || 
-                                q.subject?.toLowerCase().includes("help") || 
-                                q.subject?.toLowerCase().includes("support");
+                  const qType = q.queryType || 'Contact';
+                  let badgeStyle = { background: "rgba(37,99,235,0.1)", color: "#2563eb" }; // Default Contact (Blue)
+                  
+                  if (qType === 'Help') badgeStyle = { background: "rgba(230,99,52,0.1)", color: "#E66334" }; // Orange
+                  else if (qType === 'Experience') badgeStyle = { background: "rgba(16,185,129,0.1)", color: "#10b981" }; // Green
+                  else if (qType === 'Feedback') badgeStyle = { background: "rgba(139,92,246,0.1)", color: "#8b5cf6" }; // Purple
+                  else if (qType === 'Report') badgeStyle = { background: "rgba(239,68,68,0.1)", color: "#ef4444" }; // Red
                   return (
                   <tr key={q._id}
                     onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
@@ -154,11 +156,9 @@ const ContactQueries = () => {
                     </td>
 
                     <td style={{...S.td, whiteSpace: "nowrap"}}>
-                      {isHelp ? (
-                        <span style={{ background: "rgba(230,99,52,0.1)", color: "#E66334", fontSize: "0.75rem", fontWeight: 700, padding: "4px 10px", borderRadius: "20px", textTransform: "capitalize" }}>Help</span>
-                      ) : (
-                        <span style={{ background: "rgba(37,99,235,0.1)", color: "#2563eb", fontSize: "0.75rem", fontWeight: 700, padding: "4px 10px", borderRadius: "20px", textTransform: "capitalize" }}>Contact</span>
-                      )}
+                      <span style={{ ...badgeStyle, fontSize: "0.72rem", fontWeight: 700, padding: "4px 10px", borderRadius: "20px", textTransform: "capitalize" }}>
+                        {qType}
+                      </span>
                     </td>
 
                     <td style={{...S.td, fontWeight: 600, color: "#0f172a", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>

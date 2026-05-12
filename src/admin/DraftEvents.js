@@ -65,7 +65,7 @@ const DraftEvents = () => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {["Event", "Category", "Host", "Host Email", "Last Updated", "Actions"].map(h => (
+                  {["Event ID", "Event", "Category", "Host", "Host Email", "Last Updated", "Actions"].map(h => (
                     <th key={h} style={S.th}>{h}</th>
                   ))}
                 </tr>
@@ -88,6 +88,11 @@ const DraftEvents = () => {
                     onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     style={{ transition: "background 0.12s" }}>
+                    <td style={S.td}>
+                      <span style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "#64748b", fontWeight: 700 }}>
+                        {event.eventId || "—"}
+                      </span>
+                    </td>
                     <td style={{ ...S.td, maxWidth: 200 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         {event.eventPosters?.[0] ? (
@@ -103,9 +108,6 @@ const DraftEvents = () => {
                         )}
                         <div style={{ minWidth: 0 }}>
                           <p style={{ margin: 0, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{event.eventName || "Untitled Draft"}</p>
-                          <p style={{ margin: 0, fontSize: "0.7rem", color: "#94a3b8" }} onClick={() => navigator.clipboard.writeText(event._id)} title="Copy ID" className="cursor-pointer">
-                            ...{event._id?.slice(-6)}
-                          </p>
                         </div>
                       </div>
                     </td>
