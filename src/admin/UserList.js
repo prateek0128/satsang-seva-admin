@@ -23,6 +23,12 @@ const S = {
     background: type?.toLowerCase() === "artist" ? "#fce7f3" : type?.toLowerCase() === "orator" ? "#ede9fe" : "#f1f5f9",
     color: type?.toLowerCase() === "artist" ? "#be185d" : type?.toLowerCase() === "orator" ? "#6d28d9" : "#475569",
   }),
+  approvedBadge: (approved) => ({
+    display: "inline-block", fontSize: "0.68rem", fontWeight: 600, padding: "2px 8px", borderRadius: 6,
+    background: approved ? "#f0fdf4" : "#fef2f2",
+    color: approved ? "#166534" : "#991b1b",
+    border: approved ? "1px solid #bcf0da" : "1px solid #fecaca",
+  }),
 };
 
 const UserList = () => {
@@ -87,7 +93,7 @@ const UserList = () => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {["ID", "Name", "Type", "Performer Type", "Email", "Phone", "Joined", "Actions"].map(h => (
+                  {["ID", "Name", "Type", "Performer Type", "Approved", "Email", "Phone", "Joined", "Actions"].map(h => (
                     <th key={h} style={S.th}>{h}</th>
                   ))}
                 </tr>
@@ -127,6 +133,15 @@ const UserList = () => {
                       <span style={user.performerType ? S.performerBadge(user.performerType) : { fontSize: "0.75rem", color: "#475569" }}>
                         {user.performerType || "—"}
                       </span>
+                    </td>
+                    <td style={S.td}>
+                      {user.userType === "host" ? (
+                        <span style={S.approvedBadge(user.approved)}>
+                          {user.approved ? "Approved" : "Pending"}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>—</span>
+                      )}
                     </td>
                     <td style={{ ...S.td, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       <span onClick={() => navigator.clipboard.writeText(user.email || "")} title="Copy" style={{ cursor: "pointer" }}>{user.email || "—"}</span>
