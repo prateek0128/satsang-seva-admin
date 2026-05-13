@@ -34,6 +34,8 @@ const ContactQueries = () => {
         ]);
         setQueries(queriesRes.data.data || []);
         setChatMessages((messagesRes.data.data || []).map(m => ({ ...m, queryType: 'Message' })));
+        // Mark all contact messages as read
+        axios.patch(url + "admin/contacts/mark-read", {}, { headers }).catch(() => {});
       } catch (e) {
         console.error("Fetch contacts error:", e);
         toast("Error fetching contact queries: " + e.message, "error");

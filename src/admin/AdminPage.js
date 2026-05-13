@@ -458,6 +458,90 @@ const AdminPage = () => {
         ))}
       </div>
 
+      {/* ── Summary Bar ── */}
+      <div
+        style={{
+          marginTop: 24,
+          marginBottom: 28,
+          background: "#fff",
+          borderRadius: 14,
+          border: "1px solid #e2e8f0",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+          padding: "20px 24px",
+        }}
+      >
+        <h2
+          style={{
+            margin: "0 0 16px",
+            fontSize: "0.9rem",
+            fontWeight: 700,
+            color: "#0f172a",
+          }}
+        >
+          Platform Summary
+        </h2>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 16,
+          }}
+        >
+          {[
+            {
+              label: "Avg. Bookings / Event",
+              value: data.events
+                ? (data.bookings / data.events).toFixed(1)
+                : "—",
+            },
+            {
+              label: "Users / Event Ratio",
+              value: data.events ? (data.users / data.events).toFixed(1) : "—",
+            },
+            { label: "System Status", value: "Operational" },
+            {
+              label: "Last Refreshed",
+              value: new Date().toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            },
+          ].map((item, i) => (
+            <div
+              key={i}
+              style={{
+                padding: "14px 16px",
+                background: "#f8fafc",
+                borderRadius: 10,
+                border: "1px solid #f1f5f9",
+              }}
+            >
+              <p
+                style={{
+                  margin: "0 0 6px",
+                  fontSize: "0.72rem",
+                  fontWeight: 600,
+                  color: "#94a3b8",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                {item.label}
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  color: "#0f172a",
+                }}
+              >
+                {loading ? "—" : item.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
       {/* ── Two Column ── */}
       <div
         style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}
@@ -665,90 +749,6 @@ const AdminPage = () => {
               {sending ? "Sending..." : "Send Notification"}
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* ── Summary Bar ── */}
-      <div
-        style={{
-          marginTop: 24,
-          background: "#fff",
-          borderRadius: 14,
-          border: "1px solid #e2e8f0",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-          padding: "20px 24px",
-        }}
-      >
-        <h2
-          style={{
-            margin: "0 0 16px",
-            fontSize: "0.9rem",
-            fontWeight: 700,
-            color: "#0f172a",
-          }}
-        >
-          Platform Summary
-        </h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 16,
-          }}
-        >
-          {[
-            {
-              label: "Avg. Bookings / Event",
-              value: data.events
-                ? (data.bookings / data.events).toFixed(1)
-                : "—",
-            },
-            {
-              label: "Users / Event Ratio",
-              value: data.events ? (data.users / data.events).toFixed(1) : "—",
-            },
-            { label: "System Status", value: "Operational" },
-            {
-              label: "Last Refreshed",
-              value: new Date().toLocaleTimeString("en-IN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              style={{
-                padding: "14px 16px",
-                background: "#f8fafc",
-                borderRadius: 10,
-                border: "1px solid #f1f5f9",
-              }}
-            >
-              <p
-                style={{
-                  margin: "0 0 6px",
-                  fontSize: "0.72rem",
-                  fontWeight: 600,
-                  color: "#94a3b8",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                {item.label}
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "1rem",
-                  fontWeight: 700,
-                  color: "#0f172a",
-                }}
-              >
-                {loading ? "—" : item.value}
-              </p>
-            </div>
-          ))}
         </div>
       </div>
 
