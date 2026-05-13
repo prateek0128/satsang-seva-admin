@@ -29,7 +29,7 @@ import UserList from "./admin/UserList";
 import Events from "./admin/Events";
 import UserEvents from "./admin/UserEvents";
 import Updateform from "./admin/Updateform";
-import Approve from "./admin/Approve";
+import Approvals from "./admin/Approvals";
 import Blog from "./admin/Blog";
 import DraftEvents from "./admin/DraftEvents";
 import AdminLayout from "./admin/AdminLayout";
@@ -40,7 +40,6 @@ import UpdateEvent from "./admin/UpdateEvent";
 import DeleteAccountRequest from "./admin/DeleteAccountRequest";
 import UserDetails from "./admin/UserDetails";
 import ContactQueries from "./admin/ContactQueries";
-import PendingHosts from "./admin/PendingHosts";
 import BookingList from "./admin/BookingList";
 import NotificationList from "./admin/NotificationList";
 
@@ -99,8 +98,7 @@ function App() {
           <Route path="allusers" element={<UserList />} />
           <Route path="events" element={<Events />} />
           <Route path="drafts" element={<DraftEvents />} />
-          <Route path="approve" element={<Approve />} />
-          <Route path="approve-hosts" element={<PendingHosts />} />
+          <Route path="approvals" element={<Approvals />} />
           <Route path="blog" element={<Blog />} />
           <Route path="createblog" element={<AddBlog />} />
           <Route path="updateuser/:id" element={<UpdateUser />} />
