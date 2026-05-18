@@ -12,7 +12,7 @@ const S = {
   sectionTitle: { padding: "14px 16px", borderBottom: "1px solid #e2e8f0", fontSize: "0.8rem", fontWeight: 700, color: "#0f172a", background: "#f8fafc", display: "flex", alignItems: "center", gap: 8 },
   badge: (color) => ({ fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: 6, background: color + "18", color }),
   th: { padding: "11px 16px", background: "#f8fafc", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap", textAlign: "left" },
-  td: { padding: "12px 16px", fontSize: "0.82rem", color: "#334155", borderBottom: "1px solid #f1f5f9", verticalAlign: "top" },
+  td: { padding: "12px 16px", fontSize: "0.82rem", color: "#334155", borderBottom: "1px solid #f1f5f9", verticalAlign: "top", whiteSpace: "nowrap" },
   typeBadge: (type) => ({
     padding: "3px 8px", borderRadius: 6, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase",
     background: type === "broadcast" ? "#eff6ff" : type === "event_approved" ? "#f0fdf4" : type === "event_submitted" ? "#fff7ed" : type === "event_draft" ? "#f5f3ff" : type === "host_submitted" ? "#f0f9ff" : "#fef2f2",

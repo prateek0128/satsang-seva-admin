@@ -11,8 +11,8 @@ const S = {
   title: { fontSize: "1.5rem", fontWeight: 800, color: "#0f172a", margin: 0 },
   card: { background: "#fff", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", overflow: "hidden" },
   table: { width: "100%", borderCollapse: "collapse", textAlign: "left" },
-  th: { padding: "16px 24px", background: "#f1f5f9", fontSize: "0.75rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid #e2e8f0" },
-  td: { padding: "16px 24px", fontSize: "0.875rem", color: "#334155", borderBottom: "1px solid #f1f5f9" },
+  th: { padding: "16px 24px", background: "#f1f5f9", fontSize: "0.75rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" },
+  td: { padding: "16px 24px", fontSize: "0.875rem", color: "#334155", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap" },
   id: { fontFamily: "monospace", fontSize: "0.8rem", color: "#64748b", fontWeight: 700, background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" },
   badge: (status) => ({
     padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700,

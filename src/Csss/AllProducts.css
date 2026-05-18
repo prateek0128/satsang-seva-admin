@@ -14,6 +14,7 @@
   .table th, .table td {
     padding: 8px 12px; /* Add padding for readability */
     text-align: left; /* Align text to the left */
+    white-space: nowrap;
   }
   
   .table th {
