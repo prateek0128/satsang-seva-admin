@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Country, State, City } from "country-state-city";
 import { toast } from "../components/Popup";
 import Loader from "../components/Loader";
@@ -36,10 +36,25 @@ const profileTypeOptions = [
   { value: "host", label: "Host" },
 ];
 
+const INTEREST_LABELS = {
+  1: "Satsang",
+  2: "Bhajan & Kirtan",
+  3: "Pooja",
+  4: "Yoga & Dhyan",
+  5: "Dharma Sabha",
+  6: "Adhyatmik Shivir",
+  7: "Utsav",
+  8: "Seva & Charity",
+  9: "Sanskritik Karyakram",
+  10: "Samuhik Vivah",
+};
+
 const UpdateUser = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const url = process.env.REACT_APP_BACKEND;
+  const isReadOnly = location.pathname.includes("/admin/userdetails/");
 
   const [loading, setLoading] = useState(false);
   const [otpRequired, setOtpRequired] = useState(false);
@@ -54,6 +69,9 @@ const UpdateUser = () => {
   });
 
   const [newInterest, setNewInterest] = useState("");
+  const [docFiles, setDocFiles] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [stats, setStats] = useState({ subscribers: 0, subscriptions: 0 });
 
   const [allCountries] = useState(Country.getAllCountries());
   const [allStates, setAllStates] = useState([]);
@@ -68,6 +86,10 @@ const UpdateUser = () => {
         const response = await axios.get(`${url}admin/user/${id}`, { headers });
         const u = response.data.user;
         if (u) {
+          setStats({
+            subscribers: u.subscribers?.length || 0,
+            subscriptions: u.subscriptions?.length || 0,
+          });
           setFormData({
             name: u.name || "",
             email: u.email || "",
@@ -95,6 +117,15 @@ const UpdateUser = () => {
             otp: ""
           });
         }
+        try {
+          const eventsRes = await axios.get(`${url}events`, { headers, params: { user: id, limit: 100 } });
+          const rawData = eventsRes.data.data || eventsRes.data;
+          const eventsList = rawData.events || rawData;
+          const userEvents = Array.isArray(eventsList) ? eventsList.filter(e => (e.user?._id || e.user) === id) : [];
+          setEvents(userEvents);
+        } catch (ee) {
+          setEvents([]);
+        }
       } catch (error) {
         toast("Error fetching user", "error");
       } finally { setLoading(false); }
@@ -119,6 +150,16 @@ const UpdateUser = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (name === "phone") {
+      const digitsOnly = String(value || "").replace(/\D/g, "").slice(0, 10);
+      setFormData(prev => ({ ...prev, phone: digitsOnly }));
+      return;
+    }
+    if (name === "pincode") {
+      const digitsOnly = String(value || "").replace(/\D/g, "").slice(0, 6);
+      setFormData(prev => ({ ...prev, pincode: digitsOnly }));
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
@@ -140,7 +181,27 @@ const UpdateUser = () => {
     setFormData(prev => ({ ...prev, documents: prev.documents.filter((_, i) => i !== idx) }));
   };
 
+  const handleDocFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter((f) => {
+      const isImage = f.type.startsWith("image/");
+      const isPdf = f.type === "application/pdf";
+      return isImage || isPdf;
+    });
+    if (validFiles.length !== files.length) {
+      toast("Only image and PDF documents are allowed", "error");
+    }
+    setDocFiles(validFiles);
+  };
+
+  const getInterestLabel = (interest) => {
+    const key = Number(interest);
+    if (!Number.isNaN(key) && INTEREST_LABELS[key]) return INTEREST_LABELS[key];
+    return String(interest || "").trim() || "Unknown";
+  };
+
   const handleUpdate = async () => {
+    if (isReadOnly) return;
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -177,7 +238,17 @@ const UpdateUser = () => {
         profilePicture: formData.profilePicture
       };
       
-      await axios.put(`${url}admin/user/modify/${id}`, additionalPayload, { headers });
+      if (docFiles.length > 0) {
+        const multipartHeaders = token ? { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } : { "Content-Type": "multipart/form-data" };
+        const additionalForm = new FormData();
+        additionalForm.append("updateUser", JSON.stringify(additionalPayload));
+        docFiles.forEach((file) => {
+          additionalForm.append("documents", file);
+        });
+        await axios.put(`${url}admin/user/modify/${id}`, additionalForm, { headers: multipartHeaders });
+      } else {
+        await axios.put(`${url}admin/user/modify/${id}`, additionalPayload, { headers });
+      }
 
       toast("User updated successfully!", "success");
       if (!basicRes.data.otp) navigate(`/admin/userdetails/${id}`);
@@ -187,6 +258,11 @@ const UpdateUser = () => {
     } finally { setLoading(false); }
   };
 
+  const isParticipant =
+    (!formData.userType || formData.userType.toLowerCase() === "participant") &&
+    (!formData.profileType || formData.profileType.toLowerCase() === "participant") &&
+    (!formData.performerType || formData.performerType === "None");
+
   return (
     <div style={S.container}>
       {loading && <Loader />}
@@ -194,13 +270,25 @@ const UpdateUser = () => {
       <div style={S.header}>
         <button style={S.backBtn} onClick={() => navigate(-1)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Cancel
+          {isReadOnly ? "Back" : "Cancel"}
         </button>
-        <button style={S.saveBtn} onClick={handleUpdate}>
-          Save Changes
-        </button>
+        {isReadOnly && (
+          <button style={S.saveBtn} onClick={() => navigate(`/admin/updateuser/${id}`)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: "8px", verticalAlign: "middle" }}>
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Edit Details
+          </button>
+        )}
+        {!isReadOnly && (
+          <button style={S.saveBtn} onClick={handleUpdate}>
+            Save Changes
+          </button>
+        )}
       </div>
 
+      <fieldset disabled={isReadOnly} style={{ border: "none", margin: 0, padding: 0 }}>
       <div style={S.grid}>
         {/* SIDEBAR */}
         <div>
@@ -226,37 +314,67 @@ const UpdateUser = () => {
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
                 <span style={S.label}>User Role</span>
-                <select style={S.select} name="userType" value={formData.userType} onChange={handleChange}>
+                <select style={S.select} name="userType" value={formData.userType} onChange={handleChange} disabled>
                   {userTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div>
                 <span style={S.label}>Profile Category</span>
-                <select style={S.select} name="profileType" value={formData.profileType} onChange={handleChange}>
+                <select style={S.select} name="profileType" value={formData.profileType} onChange={handleChange} disabled>
                   {profileTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                <input type="checkbox" name="isOrganizer" checked={formData.isOrganizer} onChange={handleChange} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
-                <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#334155" }}>Is Organizer</span>
               </div>
             </div>
           </div>
 
           <div style={S.card}>
+            <h3 style={S.sectionTitle}>Account Stats</h3>
+            <div style={{ display: "flex", gap: "8px", justifyContent: "space-between" }}>
+              {!isParticipant && (
+                <>
+                  <div style={{ flex: 1, background: "#fff7ed", borderRadius: "12px", padding: "10px 4px", textAlign: "center", border: "1px solid #ffedd5" }}>
+                    <div style={{ color: "#D26600", fontSize: "1.25rem", fontWeight: 800, marginBottom: "2px" }}>
+                      {events.length}
+                    </div>
+                    <div style={{ color: "#9a3412", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>
+                      Posts
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, background: "#fff7ed", borderRadius: "12px", padding: "10px 4px", textAlign: "center", border: "1px solid #ffedd5" }}>
+                    <div style={{ color: "#D26600", fontSize: "1.25rem", fontWeight: 800, marginBottom: "2px" }}>
+                      {stats.subscribers}
+                    </div>
+                    <div style={{ color: "#9a3412", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>
+                      Subscribers
+                    </div>
+                  </div>
+                </>
+              )}
+              <div style={{ flex: 1, background: "#fff7ed", borderRadius: "12px", padding: "10px 4px", textAlign: "center", border: "1px solid #ffedd5" }}>
+                <div style={{ color: "#D26600", fontSize: "1.25rem", fontWeight: 800, marginBottom: "2px" }}>
+                  {stats.subscriptions}
+                </div>
+                <div style={{ color: "#9a3412", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>
+                  Following
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {formData.userType !== "host" && <div style={S.card}>
             <h3 style={S.sectionTitle}>Interests / Categories</h3>
             <span style={S.label}>Add New Category (Press Enter)</span>
             <input style={{ ...S.input, marginBottom: "12px" }} value={newInterest} onChange={(e) => setNewInterest(e.target.value)} onKeyDown={handleAddInterest} placeholder="e.g. Bhajan" />
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {formData.interests.map((it, idx) => (
                 <div key={idx} style={S.interestTag}>
-                  {it}
+                  {getInterestLabel(it)}
                   <button onClick={() => handleRemoveInterest(it)} style={{ background: "none", border: "none", color: "#c2410c", cursor: "pointer", fontSize: "1rem", display: "flex" }}>×</button>
                 </div>
               ))}
               {formData.interests.length === 0 && <span style={{ fontSize: "0.85rem", color: "#94a3b8", fontStyle: "italic" }}>No categories added.</span>}
             </div>
-          </div>
+          </div>}
         </div>
 
         {/* MAIN FORM */}
@@ -274,7 +392,7 @@ const UpdateUser = () => {
               </div>
               <div>
                 <span style={S.label}>Phone Number</span>
-                <input style={S.input} name="phone" value={formData.phone} onChange={handleChange} />
+                <input style={S.input} name="phone" value={formData.phone} onChange={handleChange} inputMode="numeric" maxLength={10} />
               </div>
               <div style={{ gridColumn: "span 2" }}>
                 <span style={S.label}>New Password (Leave blank to keep current)</span>
@@ -330,41 +448,88 @@ const UpdateUser = () => {
                 </div>
                 <div>
                   <span style={S.label}>Pincode / Postal</span>
-                  <input style={S.input} name="pincode" value={formData.pincode} onChange={handleChange} />
+                  <input style={S.input} name="pincode" value={formData.pincode} onChange={handleChange} inputMode="numeric" maxLength={6} />
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={S.card}>
-            <h3 style={S.sectionTitle}>Social Profiles</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-              <div>
-                <span style={S.label}>Facebook</span>
-                <input style={S.input} name="facebook" value={formData.facebook} onChange={handleChange} placeholder="Profile link" />
-              </div>
-              <div>
-                <span style={S.label}>Instagram</span>
-                <input style={S.input} name="instagram" value={formData.instagram} onChange={handleChange} placeholder="Profile link" />
-              </div>
-              <div>
-                <span style={S.label}>YouTube</span>
-                <input style={S.input} name="youtube" value={formData.youtube} onChange={handleChange} placeholder="Channel link" />
-              </div>
-              <div>
-                <span style={S.label}>Twitter</span>
-                <input style={S.input} name="twitter" value={formData.twitter} onChange={handleChange} placeholder="Profile link" />
-              </div>
-              <div style={{ gridColumn: "span 2" }}>
-                <span style={S.label}>Website / Portfolio</span>
-                <input style={S.input} name="website" value={formData.website} onChange={handleChange} placeholder="https://..." />
               </div>
             </div>
           </div>
 
           {formData.userType !== "participant" && (
             <div style={S.card}>
+              <h3 style={S.sectionTitle}>Social Profiles</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                <div>
+                  <span style={S.label}>Facebook</span>
+                  <input style={S.input} name="facebook" value={formData.facebook} onChange={handleChange} placeholder="Profile link" />
+                </div>
+                <div>
+                  <span style={S.label}>Instagram</span>
+                  <input style={S.input} name="instagram" value={formData.instagram} onChange={handleChange} placeholder="Profile link" />
+                </div>
+                <div>
+                  <span style={S.label}>YouTube</span>
+                  <input style={S.input} name="youtube" value={formData.youtube} onChange={handleChange} placeholder="Channel link" />
+                </div>
+                <div>
+                  <span style={S.label}>Twitter</span>
+                  <input style={S.input} name="twitter" value={formData.twitter} onChange={handleChange} placeholder="Profile link" />
+                </div>
+                <div style={{ gridColumn: "span 2" }}>
+                  <span style={S.label}>Website / Portfolio</span>
+                  <input style={S.input} name="website" value={formData.website} onChange={handleChange} placeholder="https://..." />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {formData.userType !== "participant" && (
+            <div style={S.card}>
               <h3 style={S.sectionTitle}>Documents Management</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "10px", marginBottom: "14px" }}>
+              <input
+                id="doc-upload-input"
+                type="file"
+                multiple
+                accept="image/*,application/pdf"
+                onChange={handleDocFileChange}
+                style={{ display: "none" }}
+              />
+              <label
+                htmlFor="doc-upload-input"
+                style={{
+                  gridColumn: "span 3",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  padding: "12px 16px",
+                  borderRadius: "10px",
+                  background: "linear-gradient(135deg, #D26600, #ea580c)",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: "0.88rem",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(210,102,0,0.25)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 5 17 10"/>
+                  <line x1="12" y1="5" x2="12" y2="17"/>
+                </svg>
+                Upload Documents (Image/PDF)
+              </label>
+            </div>
+              {docFiles.length > 0 && (
+                <div style={{ marginBottom: "14px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {docFiles.map((f, i) => (
+                    <div key={`${f.name}-${i}`} style={{ fontSize: "0.78rem", color: "#475569" }}>
+                      {f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)
+                    </div>
+                  ))}
+                </div>
+              )}
               <span style={S.label}>Current Documents</span>
               {formData.documents.length > 0 ? (
                 formData.documents.map((doc, idx) => (
@@ -385,12 +550,13 @@ const UpdateUser = () => {
                 </div>
               )}
               <p style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "12px" }}>
-                * Admin can view and remove documents. To upload new ones, please use the mobile app or user dashboard.
+                * Select image or PDF documents from your device, then click Save Changes.
               </p>
             </div>
           )}
         </div>
       </div>
+      </fieldset>
     </div>
   );
 };

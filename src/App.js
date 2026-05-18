@@ -38,7 +38,6 @@ import AdminSignup from "./admin/AdminSignup";
 import UpdateUser from "./admin/UpdateUser";
 import UpdateEvent from "./admin/UpdateEvent";
 import DeleteAccountRequest from "./admin/DeleteAccountRequest";
-import UserDetails from "./admin/UserDetails";
 import ContactQueries from "./admin/ContactQueries";
 import BookingList from "./admin/BookingList";
 import NotificationList from "./admin/NotificationList";
@@ -105,7 +104,7 @@ function App() {
           <Route path="updateevent/:id" element={<UpdateEvent />} />
           <Route path="allproduct/:id/:name" element={<AllProducts />} />
           <Route path="userevents/:userId" element={<UserEvents />} />
-          <Route path="userdetails/:id" element={<UserDetails />} />
+          <Route path="userdetails/:id" element={<UpdateUser />} />
           <Route path="updateform" element={<Updateform />} />
           <Route path="contact-queries" element={<ContactQueries />} />
           <Route path="bookings" element={<BookingList />} />
