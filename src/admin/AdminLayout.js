@@ -7,7 +7,7 @@ import TopNav from './TopNav';
 const AdminLayout = () => {
   const navRef = useRef(null)
   const navigate = useNavigate()
-  const [isOpen, setIsOpen] = useState(true); // Default open for desktop
+  const [isOpen, setIsOpen] = useState(false);
   
   const toggleNav = () => setIsOpen(!isOpen);
   const closeNav = () => {
@@ -17,7 +17,6 @@ const AdminLayout = () => {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) setIsOpen(false);
-      else setIsOpen(true);
     };
     window.addEventListener('resize', handleResize);
     handleResize(); // Initial check

@@ -45,6 +45,17 @@ const S = {
 
 const categoryOptions = ["Satsang", "Kirtan", "Sabha", "Yoga", "Utsav", "Adhyatmik", "Puja", "Seva & Charity", "Sanskritik", "Vividh"];
 
+const getEventTiming = (event) => {
+  const comparisonDate = event.endDate || event.startDate;
+  const isPast = comparisonDate ? dayjs(comparisonDate).endOf("day").isBefore(dayjs()) : false;
+
+  return {
+    label: isPast ? "Past" : "Upcoming",
+    bg: isPast ? "#f1f5f9" : "#ecfdf5",
+    fg: isPast ? "#475569" : "#047857",
+  };
+};
+
 const Events = () => {
   const navigate = useNavigate();
   const url = process.env.REACT_APP_BACKEND;
@@ -178,14 +189,32 @@ const Events = () => {
     {
       accessorKey: "startDate",
       header: "Date & Price",
-      cell: ({ row, getValue }) => (
-        <div>
-          <div style={{ fontWeight: 600 }}>{dayjs(getValue()).format("DD MMM YYYY")}</div>
-          <div style={{ fontSize: "0.75rem", color: row.original.eventPrice === "0" ? "#15803d" : "#D26600", fontWeight: 700 }}>
-            {row.original.eventPrice === "0" ? "FREE" : `₹${row.original.eventPrice}`}
+      cell: ({ row, getValue }) => {
+        return (
+          <div>
+            <div style={{ fontWeight: 600 }}>
+              {getValue() ? dayjs(getValue()).format("DD MMM YYYY") : "—"}
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600 }}>
+              to {row.original.endDate ? dayjs(row.original.endDate).format("DD MMM YYYY") : "—"}
+            </div>
+            <div style={{ marginTop: "4px" }}>
+              <span style={{ fontSize: "0.75rem", color: row.original.eventPrice === "0" ? "#15803d" : "#D26600", fontWeight: 700 }}>
+                {row.original.eventPrice === "0" ? "FREE" : `₹${row.original.eventPrice}`}
+              </span>
+            </div>
           </div>
-        </div>
-      )
+        );
+      }
+    },
+    {
+      id: "eventTiming",
+      header: "Event Timing",
+      accessorFn: (row) => getEventTiming(row).label,
+      cell: ({ row }) => {
+        const timing = getEventTiming(row.original);
+        return <span style={S.badge(timing.bg, timing.fg)}>{timing.label}</span>;
+      }
     },
     {
       accessorKey: "approved",
