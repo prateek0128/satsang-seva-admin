@@ -56,6 +56,7 @@ const NotificationList = () => {
   const [loadingReceived, setLoadingReceived] = useState(false);
   const [sentTotal, setSentTotal] = useState(0);
   const [sentPage, setSentPage] = useState(1);
+  const [selectedMessage, setSelectedMessage] = useState(null);
 
   const getHeaders = () => {
     const token = localStorage.getItem("token");
@@ -142,7 +143,20 @@ const NotificationList = () => {
                         </td>
                         <td style={S.td}><span style={S.typeBadge(n.type)}>{n.type}</span></td>
                         <td style={{ ...S.td, fontWeight: 700 }}>{n.title}</td>
-                        <td style={{ ...S.td, maxWidth: 300, fontSize: "0.8rem", color: "#64748b" }}>{n.message}</td>
+                        <td style={{ ...S.td, maxWidth: 300, fontSize: "0.8rem", color: "#64748b" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                              {n.message}
+                            </div>
+                            <button 
+                              onClick={() => setSelectedMessage(n.message)} 
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "#D26600", padding: 0, display: "flex" }}
+                              title="View full message"
+                            >
+                              <IconEye />
+                            </button>
+                          </div>
+                        </td>
                         <td style={{ ...S.td, whiteSpace: "nowrap" }}>{dayjs(n.createdAt).format("DD MMM, hh:mm A")}</td>
                         <td style={S.td}>
                           {n.isRead
@@ -269,6 +283,20 @@ const NotificationList = () => {
             </div>
           </>
         )
+      )}
+      
+      {selectedMessage && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "#fff", padding: 24, borderRadius: 12, maxWidth: 500, width: "90%", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
+            <h3 style={{ margin: "0 0 16px", fontSize: "1.1rem", color: "#0f172a" }}>Message Details</h3>
+            <div style={{ fontSize: "0.9rem", color: "#334155", lineHeight: 1.5, whiteSpace: "pre-wrap", maxHeight: "60vh", overflowY: "auto" }}>
+              {selectedMessage}
+            </div>
+            <div style={{ marginTop: 24, textAlign: "right" }}>
+              <button onClick={() => setSelectedMessage(null)} style={{ padding: "8px 16px", background: "#f1f5f9", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600, color: "#475569" }}>Close</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
