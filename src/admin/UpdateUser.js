@@ -160,6 +160,34 @@ const UpdateUser = () => {
       setFormData(prev => ({ ...prev, pincode: digitsOnly }));
       return;
     }
+
+    // Keep userType/profileType consistent when admin changes account type
+    if (name === "userType") {
+      setFormData((prev) => {
+        const nextUserType = value;
+        if (nextUserType === "participant") {
+          return { ...prev, userType: nextUserType, profileType: "participant", performerType: "None" };
+        }
+        if (nextUserType === "host") {
+          const nextProfileType = prev.profileType === "participant" ? "host" : (prev.profileType || "host");
+          return { ...prev, userType: nextUserType, profileType: nextProfileType };
+        }
+        return { ...prev, userType: nextUserType };
+      });
+      return;
+    }
+
+    if (name === "profileType") {
+      setFormData((prev) => {
+        const nextProfileType = value;
+        const nextUserType =
+          ["artist", "orator", "organizer", "host"].includes(nextProfileType) ? "host" : (nextProfileType === "participant" ? "participant" : prev.userType);
+        const nextPerformerType = nextUserType === "participant" ? "None" : prev.performerType;
+        return { ...prev, profileType: nextProfileType, userType: nextUserType, performerType: nextPerformerType };
+      });
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
@@ -314,13 +342,13 @@ const UpdateUser = () => {
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
                 <span style={S.label}>User Role</span>
-                <select style={S.select} name="userType" value={formData.userType} onChange={handleChange} disabled>
+                <select style={S.select} name="userType" value={formData.userType} onChange={handleChange}>
                   {userTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div>
                 <span style={S.label}>Profile Category</span>
-                <select style={S.select} name="profileType" value={formData.profileType} onChange={handleChange} disabled>
+                <select style={S.select} name="profileType" value={formData.profileType} onChange={handleChange}>
                   {profileTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>

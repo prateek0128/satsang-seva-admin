@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
+import { Country, State, City } from "country-state-city";
 import { toast } from "../components/Popup";
 import Loader from "../components/Loader";
 
@@ -48,6 +49,10 @@ const UpdateEvent = () => {
   const [newPreviews, setNewPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(null);
+
+  const [allCountries] = useState(Country.getAllCountries());
+  const [allStates, setAllStates] = useState([]);
+  const [allCities, setAllCities] = useState([]);
 
   // Normalise any time string to HH:mm (required by <input type="time">)
   const toHHmm = (t) => {
@@ -114,7 +119,52 @@ const UpdateEvent = () => {
     fetchEvent();
   }, [id, url]);
 
-  const set = (field) => (e) => setForm(prev => ({ ...prev, [field]: e.target.value }));
+  useEffect(() => {
+    if (!form.country) {
+      setAllStates([]);
+      setAllCities([]);
+      return;
+    }
+    const found = allCountries.find((c) => c.name === form.country);
+    if (!found) {
+      setAllStates([]);
+      setAllCities([]);
+      return;
+    }
+    setAllStates(State.getStatesOfCountry(found.isoCode));
+  }, [form.country, allCountries]);
+
+  useEffect(() => {
+    if (!form.province || !form.country) {
+      setAllCities([]);
+      return;
+    }
+    const foundC = allCountries.find((c) => c.name === form.country);
+    const foundS = allStates.find((s) => s.name === form.province);
+    if (!foundC || !foundS) {
+      setAllCities([]);
+      return;
+    }
+    setAllCities(City.getCitiesOfState(foundC.isoCode, foundS.isoCode));
+  }, [form.province, form.country, allCountries, allStates]);
+
+  const set = (field) => (e) => {
+    const raw = e?.target?.value ?? "";
+    if (field === "postalCode") {
+      const digitsOnly = String(raw).replace(/\D/g, "").slice(0, 6);
+      setForm((prev) => ({ ...prev, postalCode: digitsOnly }));
+      return;
+    }
+    if (field === "country") {
+      setForm((prev) => ({ ...prev, country: raw, province: "", city: "" }));
+      return;
+    }
+    if (field === "province") {
+      setForm((prev) => ({ ...prev, province: raw, city: "" }));
+      return;
+    }
+    setForm((prev) => ({ ...prev, [field]: raw }));
+  };
 
   const toggleCategory = (cat) => {
     setForm(prev => ({
@@ -286,16 +336,53 @@ const UpdateEvent = () => {
               <input style={inputStyle} value={form.landmark} onChange={set("landmark")} />
             </Field>
             <Field label="City">
-              <input style={inputStyle} value={form.city} onChange={set("city")} />
+              <select style={inputStyle} value={form.city} onChange={set("city")}>
+                <option value="">Select City</option>
+                {!!form.city && !allCities.some((c) => c.name === form.city) && (
+                  <option value={form.city}>{form.city}</option>
+                )}
+                {allCities.map((c) => (
+                  <option key={c.name} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </Field>
             <Field label="State / Province">
-              <input style={inputStyle} value={form.province} onChange={set("province")} />
+              <select style={inputStyle} value={form.province} onChange={set("province")}>
+                <option value="">Select State</option>
+                {!!form.province && !allStates.some((s) => s.name === form.province) && (
+                  <option value={form.province}>{form.province}</option>
+                )}
+                {allStates.map((s) => (
+                  <option key={s.isoCode || s.name} value={s.name}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </Field>
             <Field label="Postal Code">
-              <input style={inputStyle} value={form.postalCode} onChange={set("postalCode")} />
+              <input
+                style={inputStyle}
+                value={form.postalCode}
+                onChange={set("postalCode")}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+              />
             </Field>
             <Field label="Country">
-              <input style={inputStyle} value={form.country} onChange={set("country")} />
+              <select style={inputStyle} value={form.country} onChange={set("country")}>
+                <option value="">Select Country</option>
+                {!!form.country && !allCountries.some((c) => c.name === form.country) && (
+                  <option value={form.country}>{form.country}</option>
+                )}
+                {allCountries.map((c) => (
+                  <option key={c.isoCode || c.name} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </Field>
           </div>
           <Field label="Event Link (online / registration URL)">
