@@ -233,13 +233,33 @@ const Events = () => {
       )
     },
     {
+      accessorKey: "createdAt",
+      header: "Created",
+      cell: ({ getValue }) => getValue() ? (
+        <div>
+          <div style={{ fontWeight: 600 }}>{dayjs(getValue()).format("DD MMM YYYY")}</div>
+          <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{dayjs(getValue()).format("hh:mm A")}</div>
+        </div>
+      ) : "—"
+    },
+    {
       accessorKey: "approved",
       header: "Status",
-      cell: ({ getValue }) => {
+      cell: ({ getValue, row }) => {
         const approved = getValue();
-        return <span style={S.badge(approved ? "#f0fdf4" : "#fff7ed", approved ? "#166534" : "#9a3412")}>
-          {approved ? "Approved" : "Pending"}
-        </span>;
+        return (
+          <div>
+            <span style={S.badge(approved ? "#f0fdf4" : "#fff7ed", approved ? "#166534" : "#9a3412")}>
+              {approved ? "Approved" : "Pending"}
+            </span>
+            {approved && row.original.approvedAt && (
+              <div style={{ marginTop: 4 }}>
+                <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{dayjs(row.original.approvedAt).format("DD MMM YYYY")}</div>
+                <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{dayjs(row.original.approvedAt).format("hh:mm A")}</div>
+              </div>
+            )}
+          </div>
+        );
       }
     },
     {

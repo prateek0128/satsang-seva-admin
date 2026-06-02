@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 import { toast } from "../components/Popup";
 import Loader from "../components/Loader";
 
@@ -77,11 +78,13 @@ const S = {
   pagination: { display: "flex", justifyContent: "center", gap: "8px", marginTop: "24px", flexWrap: "wrap" },
   pageBtn: (active) => ({ padding: "8px 16px", borderRadius: "8px", border: "1px solid #e2e8f0", background: active ? "#D26600" : "#fff", color: active ? "#fff" : "#64748b", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }),
   emptyRow: { padding: "32px 24px", textAlign: "center", color: "#94a3b8", fontSize: "0.9rem" },
+  viewBtn: { padding: "6px 14px", borderRadius: "8px", border: "1px solid #D26600", background: "#fff", color: "#D26600", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
 };
 
 const EMPTY_FILTERS = { eventId: "", hostName: "", date: "", bookingId: "", status: "" };
 
 const BookingList = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -237,16 +240,17 @@ const BookingList = () => {
               <th style={S.th}>Tickets</th>
               <th style={S.th}>Date</th>
               <th style={S.th}>Status</th>
+              <th style={S.th}>Action</th>
             </tr>
           </thead>
           <tbody>
             {loading && bookings.length === 0 ? (
               <tr>
-                <td colSpan={7} style={S.emptyRow}>Loading...</td>
+                <td colSpan={8} style={S.emptyRow}>Loading...</td>
               </tr>
             ) : bookings.length === 0 ? (
               <tr>
-                <td colSpan={7} style={S.emptyRow}>
+                <td colSpan={8} style={S.emptyRow}>
                   {hasActiveFilters ? "No bookings match your filters." : "No bookings found."}
                 </td>
               </tr>
@@ -271,6 +275,9 @@ const BookingList = () => {
                   <td style={S.td}>{dayjs(b.createdAt).format("DD MMM YYYY")}</td>
                   <td style={S.td}>
                     <span style={S.badge(b.status)}>{b.status}</span>
+                  </td>
+                  <td style={S.td}>
+                    <button style={S.viewBtn} onClick={() => navigate(`/admin/bookings/${b._id}`, { state: { booking: b } })}>View</button>
                   </td>
                 </tr>
               ))

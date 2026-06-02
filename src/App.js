@@ -40,6 +40,7 @@ import UpdateEvent from "./admin/UpdateEvent";
 import DeleteAccountRequest from "./admin/DeleteAccountRequest";
 import ContactQueries from "./admin/ContactQueries";
 import BookingList from "./admin/BookingList";
+import BookingDetails from "./admin/BookingDetails";
 import NotificationList from "./admin/NotificationList";
 
 function App() {
@@ -108,6 +109,7 @@ function App() {
           <Route path="updateform" element={<Updateform />} />
           <Route path="contact-queries" element={<ContactQueries />} />
           <Route path="bookings" element={<BookingList />} />
+          <Route path="bookings/:id" element={<BookingDetails />} />
           <Route path="notifications" element={<NotificationList />} />
         </Route>
       </Route>

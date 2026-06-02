@@ -115,7 +115,7 @@ const UserList = () => {
     { label: "Approved", key: "approved" },
     { label: "Email", key: "email" },
     { label: "Phone", key: "phone" },
-    { label: "Joined", key: "createdAt" },
+    { label: "Registered", key: "createdAt" },
     { label: "Actions", key: null },
   ];
 
@@ -201,9 +201,17 @@ const UserList = () => {
                     </td>
                     <td style={S.td}>
                       {user.userType === "host" ? (
-                        <span style={S.approvedBadge(user.approved)}>
-                          {user.approved ? "Approved" : "Pending"}
-                        </span>
+                        <div>
+                          <span style={S.approvedBadge(user.approved)}>
+                            {user.approved ? "Approved" : "Pending"}
+                          </span>
+                          {user.approved && user.approvedAt && (
+                            <div style={{ marginTop: 4 }}>
+                              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{dayjs(user.approvedAt).format("DD MMM YYYY")}</div>
+                              <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{dayjs(user.approvedAt).format("hh:mm A")}</div>
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>—</span>
                       )}
@@ -214,7 +222,14 @@ const UserList = () => {
                     <td style={S.td}>
                       <span onClick={() => navigator.clipboard.writeText(user.phone || "")} title="Copy" style={{ cursor: "pointer" }}>{user.phone || "—"}</span>
                     </td>
-                    <td style={S.td}>{user.createdAt ? dayjs(user.createdAt).format("DD MMM YYYY") : "—"}</td>
+                    <td style={S.td}>
+                      {user.createdAt ? (
+                        <div>
+                          <div>{dayjs(user.createdAt).format("DD MMM YYYY")}</div>
+                          <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{dayjs(user.createdAt).format("hh:mm A")}</div>
+                        </div>
+                      ) : "—"}
+                    </td>
                     <td style={S.td}>
                       <div style={{ display: "flex", gap: 4 }}>
                         <button style={S.iconBtn} title="View Details"
