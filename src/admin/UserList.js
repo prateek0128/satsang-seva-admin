@@ -214,7 +214,10 @@ const UserList = () => {
                     <td style={S.td}>
                       <span onClick={() => navigator.clipboard.writeText(user.phone || "")} title="Copy" style={{ cursor: "pointer" }}>{user.phone || "—"}</span>
                     </td>
-                    <td style={S.td}>{user.createdAt ? dayjs(user.createdAt).format("DD MMM YYYY") : "—"}</td>
+                    <td style={S.td}>
+                      <div style={{ fontWeight: 500 }}>{user.createdAt ? dayjs(user.createdAt).format("DD MMM YYYY") : "—"}</div>
+                      {user.createdAt && <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "2px" }}>{dayjs(user.createdAt).format("hh:mm A")}</div>}
+                    </td>
                     <td style={S.td}>
                       <div style={{ display: "flex", gap: 4 }}>
                         <button style={S.iconBtn} title="View Details"

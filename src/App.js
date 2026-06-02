@@ -31,6 +31,7 @@ import UserEvents from "./admin/UserEvents";
 import Updateform from "./admin/Updateform";
 import Approvals from "./admin/Approvals";
 import Blog from "./admin/Blog";
+import ViewBlog from "./admin/ViewBlog";
 import DraftEvents from "./admin/DraftEvents";
 import AdminLayout from "./admin/AdminLayout";
 import AdminLogin from "./admin/AdminLogin";
@@ -99,7 +100,9 @@ function App() {
           <Route path="drafts" element={<DraftEvents />} />
           <Route path="approvals" element={<Approvals />} />
           <Route path="blog" element={<Blog />} />
+          <Route path="viewblog/:id" element={<ViewBlog />} />
           <Route path="createblog" element={<AddBlog />} />
+          <Route path="editblog/:id" element={<AddBlog />} />
           <Route path="updateuser/:id" element={<UpdateUser />} />
           <Route path="updateevent/:id" element={<UpdateEvent />} />
           <Route path="allproduct/:id/:name" element={<AllProducts />} />

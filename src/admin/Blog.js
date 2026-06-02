@@ -69,23 +69,23 @@ const Blog = () => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {["ID", "Title", "Preview", "Published", "Actions"].map(h => (
+                  {["ID", "Title", "Preview", "Shared By", "Published", "Actions"].map(h => (
                     <th key={h} style={S.th}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {blogs.length === 0 ? (
-                  <tr><td colSpan={5} style={{ ...S.td, textAlign: "center", padding: 40, color: "#94a3b8" }}>No blog posts yet</td></tr>
+                  <tr><td colSpan={6} style={{ ...S.td, textAlign: "center", padding: 40, color: "#94a3b8" }}>No blog posts yet</td></tr>
                 ) : blogs.map(blog => (
                   <tr key={blog._id}
                     onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     style={{ transition: "background 0.12s" }}>
                     <td style={S.td}>
-                      <span onClick={() => navigator.clipboard.writeText(blog._id)} title="Copy ID"
-                        style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#94a3b8", cursor: "pointer" }}>
-                        ...{blog._id?.slice(-6)}
+                      <span onClick={() => navigator.clipboard.writeText(blog.blogId || blog._id)} title="Copy ID"
+                        style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#D26600", cursor: "pointer", background: "#fff7ed", padding: "2px 7px", borderRadius: "5px", border: "1px solid #ffedd5", fontWeight: 700 }}>
+                        {blog.blogId || `...${blog._id?.slice(-6)}`}
                       </span>
                     </td>
                     <td style={{ ...S.td, maxWidth: 220 }}>
@@ -106,11 +106,22 @@ const Blog = () => {
                         {blog.content ? blog.content.substring(0, 80) + "..." : "—"}
                       </span>
                     </td>
+                    <td style={S.td}>
+                      <span style={{ fontSize: "0.82rem", color: blog.uploadedBy ? "#334155" : "#94a3b8", fontWeight: blog.uploadedBy ? 600 : 400 }}>
+                        {blog.uploadedBy || "—"}
+                      </span>
+                    </td>
                     <td style={S.td}>{blog.createdAt ? dayjs(blog.createdAt).format("DD MMM YYYY") : "—"}</td>
                     <td style={S.td}>
                       <div style={{ display: "flex", gap: 4 }}>
+                        <button style={S.iconBtn} title="Edit"
+                          onClick={() => navigate(`/admin/editblog/${blog._id}`)}
+                          onMouseEnter={e => e.currentTarget.style.color = "#D26600"}
+                          onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
                         <button style={S.iconBtn} title="View"
-                          onClick={() => window.open(`${process.env.REACT_APP_FRONTEND}/blog?q=${blog._id}`, "_blank")}
+                          onClick={() => navigate(`/admin/viewblog/${blog._id}`)}
                           onMouseEnter={e => e.currentTarget.style.color = "#2563eb"}
                           onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
