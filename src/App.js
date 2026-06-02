@@ -38,6 +38,7 @@ import AdminLogin from "./admin/AdminLogin";
 import AdminSignup from "./admin/AdminSignup";
 import UpdateUser from "./admin/UpdateUser";
 import UpdateEvent from "./admin/UpdateEvent";
+import ViewEvent from "./admin/ViewEvent";
 import DeleteAccountRequest from "./admin/DeleteAccountRequest";
 import ContactQueries from "./admin/ContactQueries";
 import BookingList from "./admin/BookingList";
@@ -105,6 +106,7 @@ function App() {
           <Route path="editblog/:id" element={<AddBlog />} />
           <Route path="updateuser/:id" element={<UpdateUser />} />
           <Route path="updateevent/:id" element={<UpdateEvent />} />
+          <Route path="event/:id" element={<ViewEvent />} />
           <Route path="allproduct/:id/:name" element={<AllProducts />} />
           <Route path="userevents/:userId" element={<UserEvents />} />
           <Route path="userdetails/:id" element={<UpdateUser />} />

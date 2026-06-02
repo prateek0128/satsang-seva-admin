@@ -12,7 +12,7 @@ const S = {
   card: { background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", overflow: "hidden" },
   th: { padding: "11px 16px", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap", textAlign: "left" },
   td: { padding: "12px 16px", fontSize: "0.82rem", color: "#334155", borderBottom: "1px solid #f1f5f9", verticalAlign: "middle", whiteSpace: "nowrap" },
-  iconBtn: { background: "none", border: "none", cursor: "pointer", padding: "5px", borderRadius: 6, display: "inline-flex", alignItems: "center", color: "#94a3b8", transition: "all 0.15s" },
+  iconBtn: (bg, color) => ({ width: 30, height: 30, borderRadius: 8, border: `1px solid ${bg}`, background: bg, color, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "opacity 0.15s" }),
   badge: (type) => ({
     display: "inline-block", fontSize: "0.68rem", fontWeight: 600, padding: "2px 8px", borderRadius: 6,
     background: type === "admin" ? "#fef3c7" : type === "host" ? "#eff6ff" : "#f0fdf4",
@@ -219,24 +219,15 @@ const UserList = () => {
                       {user.createdAt && <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "2px" }}>{dayjs(user.createdAt).format("hh:mm A")}</div>}
                     </td>
                     <td style={S.td}>
-                      <div style={{ display: "flex", gap: 4 }}>
-                        <button style={S.iconBtn} title="View Details"
-                          onClick={() => navigate(`/admin/userdetails/${user._id}`)}
-                          onMouseEnter={e => e.currentTarget.style.color = "#2563eb"}
-                          onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button style={S.iconBtn("#eff6ff", "#2563eb")} title="View Details" onClick={() => navigate(`/admin/userdetails/${user._id}`)}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
-                        <button style={S.iconBtn} title="Edit User"
-                          onClick={() => navigate(`/admin/updateuser/${user._id}`)}
-                          onMouseEnter={e => e.currentTarget.style.color = "#D26600"}
-                          onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <button style={S.iconBtn("#f0fdf4", "#16a34a")} title="Edit User" onClick={() => navigate(`/admin/updateuser/${user._id}`)}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
-                        <button style={S.iconBtn} title="Delete User"
-                          onClick={() => handleDelete(user)}
-                          onMouseEnter={e => e.currentTarget.style.color = "#ef4444"}
-                          onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                        <button style={S.iconBtn("#fef2f2", "#dc2626")} title="Delete User" onClick={() => handleDelete(user)}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                         </button>
                       </div>
                     </td>
