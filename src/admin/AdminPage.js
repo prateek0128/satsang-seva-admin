@@ -42,10 +42,11 @@ const StatCard = ({ label, value, icon, color, light, change, path, loading, nav
     onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 8px 28px rgba(0,0,0,0.1), 0 0 0 1px ${color}22`; e.currentTarget.style.transform = "translateY(-3px)"; }}
     onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.05)"; e.currentTarget.style.transform = "translateY(0)"; }}
   >
-    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${color},${color}88)`, borderRadius: "16px 16px 0 0" }} />
+    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${color},#f58021,#ffa726)`, borderRadius: "16px 16px 0 0" }} />
     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
-      <div style={{ width: 46, height: 46, borderRadius: 13, background: light, display: "flex", alignItems: "center", justifyContent: "center", color, boxShadow: `0 4px 12px ${color}22` }}>
-        {icon}
+      <div style={{ width: 46, height: 46, borderRadius: 13, background: light, display: "flex", alignItems: "center", justifyContent: "center", color, boxShadow: `0 4px 16px ${color}33`, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, background: `radial-gradient(circle at 30% 30%, rgba(245,128,33,0.2), transparent 60%)`, opacity: 0.6 }} />
+        <div style={{ position: "relative", zIndex: 1 }}>{icon}</div>
       </div>
       <span style={{ fontSize: "0.65rem", fontWeight: 800, color, background: light, border: `1px solid ${color}30`, padding: "3px 9px", borderRadius: 999, letterSpacing: "0.06em", textTransform: "uppercase" }}>
         {change}
@@ -163,7 +164,7 @@ const AdminPage = () => {
   ];
 
   return (
-    <div style={{ padding: "32px", background: "#f8fafc", minHeight: "100vh", fontFamily: "'Plus Jakarta Sans','Inter',-apple-system,sans-serif" }}>
+    <div style={{ padding: "32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "'Plus Jakarta Sans','Inter',-apple-system,sans-serif" }}>
 
       {/* ── Header ── */}
       <div style={{ marginBottom: 32 }}>
@@ -172,7 +173,7 @@ const AdminPage = () => {
         </p>
         <h1 style={{ margin: "0 0 4px", fontSize: "1.75rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.05em", lineHeight: 1.15 }}>
           {greeting},{" "}
-          <span style={{ background: "linear-gradient(135deg,#D26600,#f59e0b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          <span style={{ background: "linear-gradient(135deg,#D26600,#f58021,#ffa726)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
             {admin?.name?.split(" ")[0] || "Admin"}
           </span>
         </h1>
@@ -187,10 +188,11 @@ const AdminPage = () => {
       </div>
 
       {/* ── Platform Summary ── */}
-      <div style={{ marginBottom: 28, background: "linear-gradient(135deg,#0f172a 0%,#1e293b 100%)", borderRadius: 18, border: "1px solid rgba(255,255,255,0.06)", boxShadow: "0 4px 24px rgba(15,23,42,0.2)", padding: "24px 28px", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, borderRadius: "50%", background: "rgba(210,102,0,0.12)", filter: "blur(50px)", pointerEvents: "none" }} />
-        <p style={{ margin: "0 0 16px", fontSize: "0.72rem", fontWeight: 800, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Platform Summary</p>
-        <div className="summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
+      <div style={{ marginBottom: 28, background: "linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%)", borderRadius: 18, border: "1px solid rgba(255,255,255,0.06)", boxShadow: "0 4px 24px rgba(15,23,42,0.2)", padding: "24px 28px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(circle, rgba(245,128,33,0.15), transparent 70%)", filter: "blur(50px)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -60, left: -60, width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(210,102,0,0.12), transparent 70%)", filter: "blur(60px)", pointerEvents: "none" }} />
+        <p style={{ margin: "0 0 16px", fontSize: "0.72rem", fontWeight: 800, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.12em", position: "relative", zIndex: 1 }}>Platform Summary</p>
+        <div className="summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, position: "relative", zIndex: 1 }}>
           <MetricItem label="Avg. Bookings / Event" value={data.events ? (data.bookings / data.events).toFixed(1) : "—"} loading={loading} />
           <MetricItem label="Notifications Sent"    value={data.notifications}                                            loading={loading} />
           <MetricItem label="Contact Queries"       value={data.contacts}                                                 loading={loading} />
@@ -214,9 +216,10 @@ const AdminPage = () => {
 
         {/* Push Notification */}
         <div style={{ background: "#fff", borderRadius: 18, border: "1px solid #e8edf5", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <div style={{ padding: "18px 22px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 12, background: "linear-gradient(135deg,#fff7ed,#fffbf5)" }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg,#D26600,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 4px 12px rgba(210,102,0,0.3)" }}>
-              {icons.bell}
+          <div style={{ padding: "18px 22px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 12, background: "linear-gradient(135deg,#fff7ed 0%,#fff3e0 50%,#ffe0b2 100%)" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg,#D26600,#f58021,#ffa726)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 4px 16px rgba(245,128,33,0.35)", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent 70%)" }} />
+              <div style={{ position: "relative", zIndex: 1 }}>{icons.bell}</div>
             </div>
             <div>
               <h2 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.3px" }}>Push Notification</h2>
@@ -252,16 +255,30 @@ const AdminPage = () => {
               disabled={sending}
               style={{
                 padding: "11px 20px", borderRadius: 9, border: "none",
-                background: sending ? "#f1f5f9" : "#D26600",
+                background: sending ? "#f1f5f9" : "linear-gradient(135deg,#D26600,#f58021,#ffa726)",
                 color: sending ? "#94a3b8" : "#fff",
                 fontWeight: 700, fontSize: "0.875rem",
                 cursor: sending ? "not-allowed" : "pointer",
                 transition: "all 0.18s", fontFamily: "inherit",
-                boxShadow: sending ? "none" : "0 2px 8px rgba(210,102,0,0.28)",
+                boxShadow: sending ? "none" : "0 4px 16px rgba(245,128,33,0.35)",
                 marginTop: "auto",
+                position: "relative",
+                overflow: "hidden",
               }}
-              onMouseEnter={e => { if (!sending) { e.currentTarget.style.background = "#b85a00"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(210,102,0,0.4)"; } }}
-              onMouseLeave={e => { if (!sending) { e.currentTarget.style.background = "#D26600"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(210,102,0,0.28)"; } }}
+              onMouseEnter={e => { 
+                if (!sending) { 
+                  e.currentTarget.style.background = "linear-gradient(135deg,#b35800,#D26600,#f58021)"; 
+                  e.currentTarget.style.boxShadow = "0 6px 24px rgba(245,128,33,0.5)"; 
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                } 
+              }}
+              onMouseLeave={e => { 
+                if (!sending) { 
+                  e.currentTarget.style.background = "linear-gradient(135deg,#D26600,#f58021,#ffa726)"; 
+                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(245,128,33,0.35)"; 
+                  e.currentTarget.style.transform = "translateY(0)";
+                } 
+              }}
             >
               {sending ? "Sending…" : "Send Notification"}
             </button>

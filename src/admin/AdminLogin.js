@@ -59,7 +59,7 @@ const AdminLogin = ({ setAdmin }) => {
         /* ── Left panel ── */
         .login-left {
           flex: 1.1;
-          background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 40%, #1a0a00 100%);
+          background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 40%, #1a0800 100%);
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -72,24 +72,24 @@ const AdminLogin = ({ setAdmin }) => {
           content:'';
           position:absolute;
           inset:0;
-          background: radial-gradient(ellipse at 20% 50%, rgba(210,102,0,0.18) 0%, transparent 60%),
+          background: radial-gradient(ellipse at 20% 50%, rgba(245,128,33,0.2) 0%, transparent 60%),
                       radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.12) 0%, transparent 55%);
           pointer-events:none;
         }
         .l-orb { position:absolute; border-radius:50%; filter:blur(70px); pointer-events:none; }
-        .l-orb1 { width:320px;height:320px;background:rgba(210,102,0,0.22);top:-60px;left:-80px;animation:loginOrb1 8s ease-in-out infinite; }
+        .l-orb1 { width:320px;height:320px;background:rgba(245,128,33,0.25);top:-60px;left:-80px;animation:loginOrb1 8s ease-in-out infinite; }
         .l-orb2 { width:260px;height:260px;background:rgba(99,102,241,0.15);bottom:-40px;right:-60px;animation:loginOrb2 10s ease-in-out infinite; }
-        .l-orb3 { width:180px;height:180px;background:rgba(245,158,11,0.12);top:50%;left:50%;margin:-90px 0 0 -90px;animation:loginOrb3 6s ease-in-out infinite; }
+        .l-orb3 { width:180px;height:180px;background:rgba(245,128,33,0.18);top:50%;left:50%;margin:-90px 0 0 -90px;animation:loginOrb3 6s ease-in-out infinite; }
 
         .l-logo-wrap {
           display:flex;align-items:center;gap:14px;margin-bottom:52px;position:relative;z-index:1;
         }
         .l-logo-icon {
           width:52px;height:52px;border-radius:16px;
-          background:linear-gradient(135deg,#D26600,#f59e0b);
+          background:linear-gradient(135deg,#D26600,#f58021,#ffa726);
           display:flex;align-items:center;justify-content:center;
           font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:-1px;
-          box-shadow:0 8px 24px rgba(210,102,0,0.45),inset 0 1px 0 rgba(255,255,255,0.25);
+          box-shadow:0 8px 28px rgba(245,128,33,0.5),inset 0 1px 0 rgba(255,255,255,0.3);
         }
         .l-logo-text { color:#fff;font-size:1.25rem;font-weight:800;letter-spacing:-0.5px; }
         .l-logo-sub  { color:rgba(255,255,255,0.4);font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;margin-top:2px; }
@@ -100,7 +100,7 @@ const AdminLogin = ({ setAdmin }) => {
           color:#fff;margin-bottom:20px;
         }
         .l-headline span {
-          background:linear-gradient(135deg,#f59e0b,#D26600);
+          background:linear-gradient(135deg,#f58021,#ffa726,#D26600);
           -webkit-background-clip:text;-webkit-text-fill-color:transparent;
         }
         .l-desc {
@@ -119,19 +119,19 @@ const AdminLogin = ({ setAdmin }) => {
         /* ── Right panel ── */
         .login-right {
           flex:0.9;
-          background:#fff;
+          background: linear-gradient(160deg, #fff8f2 0%, #fff3e6 40%, #fef9f5 100%);
           display:flex;flex-direction:column;justify-content:center;align-items:center;
           padding:48px 56px;
           position:relative;overflow:hidden;
         }
         .login-right::before {
           content:'';position:absolute;top:0;left:0;right:0;height:3px;
-          background:linear-gradient(90deg,#D26600,#f59e0b,#D26600);
+          background:linear-gradient(90deg,#D26600,#f58021,#D26600);
           background-size:200% 100%;
         }
         .r-bg-dot {
           position:absolute;width:400px;height:400px;border-radius:50%;
-          background:radial-gradient(circle,rgba(210,102,0,0.04) 0%,transparent 70%);
+          background:radial-gradient(circle,rgba(245,128,33,0.05) 0%,transparent 70%);
           bottom:-100px;right:-100px;pointer-events:none;
         }
 
@@ -147,26 +147,26 @@ const AdminLogin = ({ setAdmin }) => {
           border:2px solid #e2e8f0;border-radius:12px;
           background:#f8fafc;transition:all 0.2s;overflow:hidden;
         }
-        .r-input-wrap.focused { border-color:#D26600;background:#fff;box-shadow:0 0 0 4px rgba(210,102,0,0.1); }
+        .r-input-wrap.focused { border-color:#f58021;background:#fff;box-shadow:0 0 0 4px rgba(245,128,33,0.12); }
         .r-icon { padding:0 14px;color:#94a3b8;display:flex;align-items:center;flex-shrink:0; }
-        .r-input-wrap.focused .r-icon { color:#D26600; }
+        .r-input-wrap.focused .r-icon { color:#f58021; }
         .r-input { flex:1;padding:13px 12px 13px 0;border:none;background:transparent;font-size:0.9rem;color:#0f172a;outline:none;font-family:inherit; }
         .r-input::placeholder { color:#cbd5e1; }
         .r-eye { padding:0 14px;background:none;border:none;cursor:pointer;color:#94a3b8;display:flex;align-items:center;transition:color 0.18s; }
-        .r-eye:hover { color:#D26600; }
+        .r-eye:hover { color:#f58021; }
 
         .r-row { display:flex;align-items:center;justify-content:space-between;margin:4px 0 24px; }
         .r-remember { display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:#64748b;font-weight:500;user-select:none; }
         .r-remember input { width:16px;height:16px;accent-color:#D26600;cursor:pointer;border-radius:4px; }
-        .r-forgot { font-size:0.82rem;color:#D26600;font-weight:700;text-decoration:none;transition:opacity 0.18s; }
+        .r-forgot { font-size:0.82rem;color:#f58021;font-weight:700;text-decoration:none;transition:opacity 0.18s; }
         .r-forgot:hover { opacity:0.75; }
 
         .r-btn {
           width:100%;padding:14px;border-radius:12px;border:none;
-          background:linear-gradient(135deg,#D26600,#f59e0b);
+          background:linear-gradient(135deg,#D26600,#f58021,#ffa726);
           color:#fff;font-weight:800;font-size:0.95rem;
           cursor:pointer;transition:all 0.22s;font-family:inherit;letter-spacing:0.01em;
-          box-shadow:0 6px 20px rgba(210,102,0,0.35);
+          box-shadow:0 6px 24px rgba(245,128,33,0.4);
           position:relative;overflow:hidden;
         }
         .r-btn::after {
@@ -174,7 +174,7 @@ const AdminLogin = ({ setAdmin }) => {
           background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);
           transition:none;
         }
-        .r-btn:hover:not(:disabled) { transform:translateY(-2px);box-shadow:0 10px 30px rgba(210,102,0,0.45); }
+        .r-btn:hover:not(:disabled) { transform:translateY(-2px);box-shadow:0 12px 36px rgba(245,128,33,0.5); }
         .r-btn:hover:not(:disabled)::after { animation:loginShine 0.6s ease forwards; }
         .r-btn:active:not(:disabled) { transform:translateY(0); }
         .r-btn:disabled { background:#e2e8f0;color:#94a3b8;cursor:not-allowed;box-shadow:none; }
@@ -184,7 +184,7 @@ const AdminLogin = ({ setAdmin }) => {
         .r-divider::before,.r-divider::after { content:'';flex:1;height:1.5px;background:#f1f5f9; }
 
         .r-footer { text-align:center;font-size:0.83rem;color:#94a3b8;margin-top:20px; }
-        .r-footer a { color:#D26600;font-weight:700;text-decoration:none; }
+        .r-footer a { color:#f58021;font-weight:700;text-decoration:none; }
         .r-footer a:hover { text-decoration:underline; }
 
         .r-spinner { width:17px;height:17px;border:2.5px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:loginSpin 0.7s linear infinite;display:inline-block; }

@@ -66,7 +66,7 @@ const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav, isMobile }, ref) =
       style={{
         position: "fixed", top: 0, left: 0,
         width: sidebarW, height: "100vh",
-        background: "linear-gradient(180deg,#0a0f1e 0%,#0f172a 60%,#111827 100%)",
+        background: "linear-gradient(180deg,#0a0f1e 0%,#0f172a 50%,#130800 100%)",
         zIndex: 10000,
         transition: "width 0.38s cubic-bezier(0.4,0,0.2,1)",
         display: "flex", flexDirection: "column",
@@ -84,9 +84,9 @@ const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav, isMobile }, ref) =
           text-decoration: none; transition: all 0.2s ease;
           position: relative; cursor: pointer;
         }
-        .snav-link:hover { background: rgba(255,255,255,0.06); }
-        .snav-link.active { background: linear-gradient(135deg,rgba(210,102,0,0.18),rgba(234,124,26,0.08)); }
-        .snav-link.active .snav-icon { color: #f59e0b; filter: drop-shadow(0 0 6px rgba(245,158,11,0.4)); }
+        .snav-link.active { background: linear-gradient(135deg,rgba(245,128,33,0.2),rgba(210,102,0,0.08)); border: 1px solid rgba(245,128,33,0.15); }
+        .snav-link.active .snav-icon { color: #f58021; filter: drop-shadow(0 0 8px rgba(245,128,33,0.6)); }
+        .snav-link:hover { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.04); }
         .snav-icon { transition: all 0.2s ease; flex-shrink: 0; }
         @keyframes snav-fade { from { opacity:0; transform:translateX(-6px); } to { opacity:1; transform:translateX(0); } }
         .snav-label { animation: snav-fade 0.22s ease both; white-space: nowrap; overflow: hidden; }
@@ -98,9 +98,9 @@ const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav, isMobile }, ref) =
       <div style={{ padding: "16px 14px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.06)", minHeight: 70, flexShrink: 0 }}>
         <div style={{
           width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-          background: "linear-gradient(135deg,#D26600,#f59e0b)",
+          background: "linear-gradient(135deg,#D26600,#f58021,#ffa726)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 4px 16px rgba(210,102,0,0.4),inset 0 1px 0 rgba(255,255,255,0.2)",
+          boxShadow: "0 4px 20px rgba(245,128,33,0.5),inset 0 1px 0 rgba(255,255,255,0.25)",
           fontSize: "1.3rem", fontWeight: 900, color: "#fff", letterSpacing: "-1px",
         }}>S</div>
         {isOpen && (
@@ -108,7 +108,7 @@ const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav, isMobile }, ref) =
             <div style={{ color: "#fff", fontSize: "1rem", fontWeight: 800, letterSpacing: "-0.4px", lineHeight: 1.2, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
               SatsangSeva
             </div>
-            <div style={{ color: "#f59e0b", fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", marginTop: 2 }}>
+            <div style={{ background: "linear-gradient(90deg,#f58021,#ffa726)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", marginTop: 2 }}>
               Admin Portal
             </div>
           </div>
@@ -136,9 +136,9 @@ const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav, isMobile }, ref) =
               style={{ justifyContent: collapsed ? "center" : "flex-start" }}
             >
               {active && (
-                <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 22, borderRadius: "0 4px 4px 0", background: "linear-gradient(180deg,#f59e0b,#D26600)", boxShadow: "2px 0 12px rgba(245,158,11,0.5)" }} />
+                <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 22, borderRadius: "0 4px 4px 0", background: "linear-gradient(180deg,#ffa726,#f58021,#D26600)", boxShadow: "2px 0 16px rgba(245,128,33,0.7)" }} />
               )}
-              <span className="snav-icon" style={{ color: active ? "#f59e0b" : "rgba(255,255,255,0.45)", position: "relative", display: "flex" }}>
+              <span className="snav-icon" style={{ color: active ? "#f58021" : "rgba(255,255,255,0.45)", position: "relative", display: "flex" }}>
                 {icon}
                 {collapsed && badge > 0 && (
                   <span style={{ position: "absolute", top: -3, right: -3, width: 8, height: 8, borderRadius: "50%", background: "#ef4444", border: "1.5px solid #0a0f1e" }} />

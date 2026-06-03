@@ -37,7 +37,7 @@ const AdminSignup = () => {
   };
 
   return (
-    <div className="admin-login-container">
+    <div className="admin-login-container" style={{ background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", minHeight: "100vh" }}>
       <form className="admin-login-form" onSubmit={handleSubmit}>
         <h2 className="text-center"><span className="text-tomato">Admin</span> Signup</h2>
         <label htmlFor="name">Name:</label>

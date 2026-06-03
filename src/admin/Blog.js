@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, TablePagination,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
@@ -15,11 +15,15 @@ import { useSortable, SortCell, PlainCell } from "./sortable";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
 
+const PAGE_SIZE = 15;
+
 const Blog = () => {
   const url = process.env.REACT_APP_BACKEND;
   const navigate = useNavigate();
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const { sorted, orderBy, order, handleSort } = useSortable(blogs, "createdAt", "desc");
 
   useEffect(() => {
@@ -41,20 +45,20 @@ const Blog = () => {
   };
 
   return (
-    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
         <Box>
           <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>Blogs</Typography>
           <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", mt: 0.3 }}>{blogs.length} published posts</Typography>
         </Box>
-        <button onClick={() => navigate("/admin/createblog")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#D26600,#ea7c1a)", color: "#fff", fontWeight: 700, fontSize: "0.84rem", cursor: "pointer", fontFamily: "var(--font-admin)", boxShadow: "0 4px 14px rgba(210,102,0,0.3)" }}>
+        <button onClick={() => navigate("/admin/createblog")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#D26600,#f58021,#ffa726)", color: "#fff", fontWeight: 700, fontSize: "0.84rem", cursor: "pointer", fontFamily: "var(--font-admin)", boxShadow: "0 4px 18px rgba(245,128,33,0.35)" }}>
           <AddIcon style={{ fontSize: 18 }} /> New Blog Post
         </button>
       </Box>
 
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer>
-          <Table>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 320px)", overflowX: "auto" }}>
+          <Table stickyHeader>
             <TableHead>
               <TableRow>
                 <SortCell label="ID"        field="blogId"     orderBy={orderBy} order={order} onSort={handleSort} />
@@ -70,7 +74,7 @@ const Blog = () => {
                 <TableRow><TableCell colSpan={6} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>Loading blogs…</TableCell></TableRow>
               ) : blogs.length === 0 ? (
                 <TableRow><TableCell colSpan={6} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>No blog posts yet</TableCell></TableRow>
-              ) : sorted.map(blog => (
+              ) : sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(blog => (
                 <TableRow key={blog._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
                   <TableCell sx={cellSx}>
                     <Tooltip title="Click to copy" arrow>
@@ -109,6 +113,10 @@ const Blog = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
+          <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>Showing {Math.min(page * rowsPerPage + 1, sorted.length)}–{Math.min((page + 1) * rowsPerPage, sorted.length)} of {sorted.length}</Typography>
+          <TablePagination component="div" count={sorted.length} page={page} onPageChange={(_, p) => setPage(p)} rowsPerPage={rowsPerPage} onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }} rowsPerPageOptions={[10, 25, 50]} sx={{ border: "none", "& .MuiTablePagination-toolbar": { px: 0 }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" } }} />
+        </Box>
       </Paper>
     </Box>
   );

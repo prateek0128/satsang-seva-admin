@@ -46,7 +46,7 @@ const AdminLayout = () => {
   const sidebarWidth = isMobile ? 0 : (isOpen ? 260 : 72);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc', fontFamily: "'Plus Jakarta Sans','Inter',-apple-system,sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(145deg, #fff8f2 0%, #fff3e6 25%, #fef9f5 55%, #fff0e0 80%, #fdf5ee 100%)', backgroundAttachment: 'fixed', fontFamily: "'Plus Jakarta Sans','Inter',-apple-system,sans-serif" }}>
       <Sidenav isOpen={isOpen} setIsOpen={setIsOpen} toggleNav={toggleNav} closeNav={closeNav} ref={navRef} isMobile={isMobile} />
 
       {/* Mobile overlay */}

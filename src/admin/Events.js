@@ -7,7 +7,7 @@ import Loader from "../components/Loader";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Chip, Tooltip, IconButton, Box, Typography, TextField, Select,
-  MenuItem, FormControl, Pagination,
+  MenuItem, FormControl, TablePagination,
 } from "@mui/material";
 import InputAdornment from "@mui/material/InputAdornment";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
@@ -32,7 +32,8 @@ const Events = () => {
   const [allEvents, setAllEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [draftsCount, setDraftsCount] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filters, setFilters] = useState({ eventName: "", host: "", place: "", category: "", status: "all", language: "", type: "all" });
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const Events = () => {
       .finally(() => setLoading(false));
   }, [url]);
 
-  const setF = (key, val) => { setFilters(f => ({ ...f, [key]: val })); setPage(1); };
+  const setF = (key, val) => { setFilters(f => ({ ...f, [key]: val })); setPage(0); };
 
   const baseFiltered = useMemo(() => allEvents.filter(e => {
     const s = filters;
@@ -64,8 +65,7 @@ const Events = () => {
 
   const { sorted: filtered, orderBy, order, handleSort } = useSortable(baseFiltered, "startDate", "asc");
 
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const paged = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const stats = useMemo(() => ({
     total: allEvents.length,
@@ -104,7 +104,7 @@ const Events = () => {
   };
 
   return (
-    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       {loading && <Loader />}
 
       {/* Header */}
@@ -121,7 +121,7 @@ const Events = () => {
           { label: "Popular Events", value: stats.popular, color: "#D26600", border: "#D26600" },
           { label: "Draft Events", value: stats.drafts, color: "#64748b", border: "#94a3b8", click: () => navigate("/admin/drafts") },
         ].map((s, i) => (
-          <Paper key={i} elevation={0} onClick={s.click} sx={{ flex: 1, minWidth: 160, p: "16px 20px", borderRadius: "14px", border: `1px solid #e2e8f0`, borderLeft: `4px solid ${s.border}`, cursor: s.click ? "pointer" : "default", transition: "all 0.2s", "&:hover": s.click ? { boxShadow: "0 4px 16px rgba(0,0,0,0.08)", transform: "translateY(-1px)" } : {} }}>
+          <Paper key={i} elevation={0} onClick={s.click} sx={{ flex: 1, minWidth: 160, p: "16px 20px", borderRadius: "14px", border: `1px solid #e2e8f0`, borderLeft: `4px solid ${s.border}`, background: `linear-gradient(135deg,#fff,#fffaf5)`, cursor: s.click ? "pointer" : "default", transition: "all 0.2s", "&:hover": s.click ? { boxShadow: "0 4px 20px rgba(245,128,33,0.15)", transform: "translateY(-2px)" } : {} }}>
             <Typography sx={{ fontSize: "0.68rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", mb: 0.5 }}>{s.label}</Typography>
             <Typography sx={{ fontSize: "1.6rem", fontWeight: 900, color: s.color, letterSpacing: "-1px", fontFamily: "var(--font-admin)" }}>{s.value}</Typography>
           </Paper>
@@ -140,7 +140,7 @@ const Events = () => {
             )}
           </Box>
           {Object.values(filters).some(v => v && v !== "all") && (
-            <Box component="button" onClick={() => { setFilters({ eventName: "", host: "", place: "", category: "", status: "all", language: "", type: "all" }); setPage(1); }}
+            <Box component="button" onClick={() => { setFilters({ eventName: "", host: "", place: "", category: "", status: "all", language: "", type: "all" }); setPage(0); }}
               sx={{ display: "flex", alignItems: "center", gap: 0.5, fontSize: "0.72rem", fontWeight: 600, color: "#ef4444", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "6px", px: 1.2, py: 0.4, cursor: "pointer", "&:hover": { background: "#fee2e2" }, transition: "all 0.15s" }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               Clear all
@@ -175,8 +175,8 @@ const Events = () => {
 
       {/* Table */}
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer>
-          <Table>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 380px)", overflowX: "auto" }}>
+          <Table stickyHeader>
             <TableHead>
               <TableRow>
                 <SortCell label="Event ID"    field="eventId"   orderBy={orderBy} order={order} onSort={handleSort} />
@@ -281,14 +281,20 @@ const Events = () => {
         </TableContainer>
 
         {/* Footer */}
-        <Box sx={{ px: 2.5, py: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
-          <Typography sx={{ fontSize: "0.82rem", color: "#64748b", fontFamily: "var(--font-admin)" }}>
-            Page {page} of {pageCount || 1} ({filtered.length} events)
+        <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
+          <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>
+            Showing {Math.min(page * rowsPerPage + 1, filtered.length)}–{Math.min((page + 1) * rowsPerPage, filtered.length)} of {filtered.length}
           </Typography>
-          {pageCount > 1 && (
-            <Pagination count={pageCount} page={page} onChange={(_, v) => setPage(v)} size="small"
-              sx={{ "& .MuiPaginationItem-root": { fontFamily: "var(--font-admin)", fontWeight: 600, borderRadius: "8px", fontSize: "0.78rem" }, "& .Mui-selected": { background: "#D26600 !important", color: "#fff" } }} />
-          )}
+          <TablePagination
+            component="div"
+            count={filtered.length}
+            page={page}
+            onPageChange={(_, p) => setPage(p)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+            rowsPerPageOptions={[10, 25, 50]}
+            sx={{ border: "none", "& .MuiTablePagination-toolbar": { px: 0 }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" } }}
+          />
         </Box>
       </Paper>
     </Box>

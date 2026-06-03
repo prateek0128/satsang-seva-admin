@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, LinearProgress,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, LinearProgress, Pagination,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
@@ -15,11 +15,14 @@ import { useSortable, SortCell, PlainCell } from "./sortable";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
 
+const PAGE_SIZE = 15;
+
 const DraftEvents = () => {
   const url = process.env.REACT_APP_BACKEND;
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const { sorted, orderBy, order, handleSort } = useSortable(events, "updatedAt", "desc");
 
   const headers = () => {
@@ -47,7 +50,7 @@ const DraftEvents = () => {
   };
 
   return (
-    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
           <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>Draft Events</Typography>
@@ -57,8 +60,8 @@ const DraftEvents = () => {
       </Box>
 
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer>
-          <Table>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 300px)", overflowX: "auto" }}>
+          <Table stickyHeader>
             <TableHead>
               <TableRow>
                 <SortCell label="Event ID"     field="eventId"   orderBy={orderBy} order={order} onSort={handleSort} />
@@ -81,7 +84,7 @@ const DraftEvents = () => {
                     <Typography sx={{ color: "#cbd5e1", fontSize: "0.78rem", mt: 0.5 }}>All event listings are complete.</Typography>
                   </TableCell>
                 </TableRow>
-              ) : sorted.map(ev => (
+              ) : sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(ev => (
                 <TableRow key={ev._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
                   <TableCell sx={cellSx}>
                     <Tooltip title="Click to copy" arrow>
@@ -95,17 +98,17 @@ const DraftEvents = () => {
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
                       <Box sx={{ width: 36, height: 36, borderRadius: "8px", overflow: "hidden", flexShrink: 0, background: "#fff7ed", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         {ev.eventPosters?.[0] ? <img src={ev.eventPosters[0].startsWith("http") ? ev.eventPosters[0] : `${url?.replace("/api/", "")}${ev.eventPosters[0]}`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} />
-                          : <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#D26600" }}>{ev.eventName?.[0] || "D"}</span>}
+                          : <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#f58021" }}>{ev.eventName?.[0] || "D"}</span>}
                       </Box>
                       <Typography sx={{ fontWeight: 600, color: "#0f172a", fontSize: "0.82rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{ev.eventName || "Untitled Draft"}</Typography>
                     </Box>
                   </TableCell>
-                  <TableCell sx={cellSx}>{ev.eventCategory?.[0] ? <Chip label={ev.eventCategory[0]} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#fff7ed", color: "#D26600", height: 22 }} /> : "—"}</TableCell>
+                  <TableCell sx={cellSx}>{ev.eventCategory?.[0] ? <Chip label={ev.eventCategory[0]} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#fff7ed", color: "#f58021", height: 22 }} /> : "—"}</TableCell>
                   <TableCell sx={cellSx}>{ev.user?.name || "—"}</TableCell>
                   <TableCell sx={cellSx}>{ev.user?.email || "—"}</TableCell>
                   <TableCell sx={{ ...cellSx, minWidth: 140 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <LinearProgress variant="determinate" value={ev.formProgress || 0} sx={{ flex: 1, height: 6, borderRadius: 3, background: "#f1f5f9", "& .MuiLinearProgress-bar": { background: "linear-gradient(90deg,#D26600,#f59e0b)", borderRadius: 3 } }} />
+                      <LinearProgress variant="determinate" value={ev.formProgress || 0} sx={{ flex: 1, height: 6, borderRadius: 3, background: "#f1f5f9", "& .MuiLinearProgress-bar": { background: "linear-gradient(90deg,#D26600,#f58021,#ffa726)", borderRadius: 3 } }} />
                       <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", minWidth: 32 }}>{ev.formProgress || 0}%</Typography>
                     </Box>
                   </TableCell>
@@ -123,6 +126,13 @@ const DraftEvents = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        {Math.ceil(sorted.length / PAGE_SIZE) > 1 && (
+          <Box sx={{ px: 2.5, py: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
+            <Typography sx={{ fontSize: "0.78rem", color: "#64748b" }}>Page {page} of {Math.ceil(sorted.length / PAGE_SIZE)} ({sorted.length} drafts)</Typography>
+            <Pagination count={Math.ceil(sorted.length / PAGE_SIZE)} page={page} onChange={(_, v) => setPage(v)} size="small"
+              sx={{ "& .MuiPaginationItem-root": { fontWeight: 600, borderRadius: "8px", fontSize: "0.78rem" }, "& .Mui-selected": { background: "linear-gradient(135deg,#D26600,#f58021) !important", color: "#fff", boxShadow: "0 2px 8px rgba(245,128,33,0.35)" } }} />
+          </Box>
+        )}
       </Paper>
     </Box>
   );

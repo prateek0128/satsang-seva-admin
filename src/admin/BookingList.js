@@ -7,7 +7,7 @@ import Loader from "../components/Loader";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Chip, Tooltip, IconButton, Box, Typography, TextField, Select,
-  MenuItem, FormControl, Button, Pagination,
+  MenuItem, FormControl, Button, TablePagination,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -69,7 +69,7 @@ const BookingList = () => {
   if (loading && page === 1 && bookings.length === 0) return <Loader />;
 
   return (
-    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2 }}>
         <Box>
           <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>All Bookings</Typography>
@@ -131,8 +131,8 @@ const BookingList = () => {
 
       {/* Table */}
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer>
-          <Table>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 360px)", overflowX: "auto" }}>
+          <Table stickyHeader>
             <TableHead>
               <TableRow>
                 <SortCell label="Booking ID" field="bookingId"  orderBy={orderBy} order={order} onSort={handleSort} />
@@ -187,14 +187,11 @@ const BookingList = () => {
             </TableBody>
           </Table>
         </TableContainer>
-      </Paper>
-
-      {pageCount > 1 && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-          <Pagination count={pageCount} page={page} onChange={(_, v) => setPage(v)} disabled={loading}
-            sx={{ "& .MuiPaginationItem-root": { fontFamily: "var(--font-admin)", fontWeight: 600, borderRadius: "8px" }, "& .Mui-selected": { background: "#D26600 !important", color: "#fff" } }} />
+        <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
+          <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>Showing {Math.min((page - 1) * 20 + 1, total)}–{Math.min(page * 20, total)} of {total}</Typography>
+          <TablePagination component="div" count={total} page={page - 1} onPageChange={(_, p) => setPage(p + 1)} rowsPerPage={20} rowsPerPageOptions={[20]} sx={{ border: "none", "& .MuiTablePagination-toolbar": { px: 0 }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" } }} />
         </Box>
-      )}
+      </Paper>
     </Box>
   );
 };

@@ -19,7 +19,7 @@ import PendingActionsIcon from "@mui/icons-material/PendingActionsRounded";
 import InputAdornment from "@mui/material/InputAdornment";
 import { useSortable, SortCell, PlainCell } from "./sortable";
 
-const BRAND = "#D26600";
+const BRAND = "#f58021";
 const cellSx = { fontSize: "0.82rem", color: "#334155", whiteSpace: "nowrap", py: 1.5, px: 2 };
 
 const StatCard = ({ label, value, icon, color, light, loading }) => (
@@ -29,11 +29,12 @@ const StatCard = ({ label, value, icon, color, light, loading }) => (
     display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0,
     position: "relative", overflow: "hidden",
     transition: "box-shadow 0.25s, transform 0.25s",
-    "&:hover": { boxShadow: `0 8px 28px rgba(0,0,0,0.09), 0 0 0 1px ${color}22`, transform: "translateY(-2px)" },
+    "&:hover": { boxShadow: `0 8px 28px rgba(245,128,33,0.15), 0 0 0 1px ${color}22`, transform: "translateY(-2px)" },
   }}>
-    <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${color},${color}66)`, borderRadius: "16px 16px 0 0" }} />
-    <Box sx={{ width: 46, height: 46, borderRadius: "13px", background: light, display: "flex", alignItems: "center", justifyContent: "center", color, flexShrink: 0, boxShadow: `0 4px 12px ${color}22` }}>
-      {icon}
+    <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${color},#f58021,#ffa726)`, borderRadius: "16px 16px 0 0" }} />
+    <Box sx={{ width: 46, height: 46, borderRadius: "13px", background: light, display: "flex", alignItems: "center", justifyContent: "center", color, flexShrink: 0, boxShadow: `0 4px 16px ${color}33`, position: "relative", overflow: "hidden" }}>
+      <Box sx={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 60%)", pointerEvents: "none" }} />
+      <Box sx={{ position: "relative", zIndex: 1 }}>{icon}</Box>
     </Box>
     <Box>
       <Typography sx={{ fontSize: "0.68rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</Typography>
@@ -114,7 +115,7 @@ const UserList = () => {
   ];
 
   return (
-    <Box sx={{ p: { xs: "16px", sm: "24px 28px" }, background: "#f8fafc", minHeight: "100vh" }}>
+    <Box sx={{ p: { xs: "16px", sm: "24px 28px" }, minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)" }}>
 
       {/* ── Breadcrumb + Header ── */}
       <Box sx={{ mb: 3 }}>
@@ -157,7 +158,7 @@ const UserList = () => {
           <ToggleButtonGroup size="small" value={filterType} exclusive onChange={(_, v) => { v && setFilterType(v); setPage(0); }}
             sx={{ background: "#f8fafc", borderRadius: "8px", p: "2px", border: "1px solid #e2e8f0", flexShrink: 0,
               "& .MuiToggleButton-root": { border: "none", borderRadius: "6px !important", fontSize: "0.75rem", fontWeight: 600, px: 1.8, py: 0.5, color: "#64748b", textTransform: "capitalize",
-                "&.Mui-selected": { background: BRAND, color: "#fff", "&:hover": { background: "#b85a00" } } } }}>
+                "&.Mui-selected": { background: "linear-gradient(135deg,#D26600,#f58021)", color: "#fff", boxShadow: "0 2px 8px rgba(245,128,33,0.3)", "&:hover": { background: "linear-gradient(135deg,#b35800,#D26600)" } } } }}>
             {["all", "host", "participant"].map(t => <ToggleButton key={t} value={t}>{t}</ToggleButton>)}
           </ToggleButtonGroup>
           <TextField size="small" placeholder="Search name, email, phone…" value={search} onChange={e => { setSearch(e.target.value); setPage(0); }}
@@ -168,7 +169,7 @@ const UserList = () => {
 
       {/* ── Table ── */}
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 420px)", overflowX: "auto" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 380px)", overflowX: "auto" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
@@ -245,10 +246,10 @@ const UserList = () => {
                         ) : (
                           <Box sx={{
                             width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-                            background: `linear-gradient(135deg,${BRAND},#f59e0b)`,
+                            background: `linear-gradient(135deg,#D26600,#f58021,#ffa726)`,
                             display: "flex", alignItems: "center", justifyContent: "center",
                             color: "#fff", fontSize: "0.75rem", fontWeight: 800,
-                            border: "2px solid #fff", boxShadow: `0 2px 8px ${BRAND}33`,
+                            border: "2px solid #fff", boxShadow: `0 2px 10px rgba(245,128,33,0.4)`,
                           }}>
                             {(user.name || "?")[0].toUpperCase()}
                           </Box>

@@ -5,8 +5,7 @@ import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, TextField,
-  ToggleButtonGroup, ToggleButton, Tab, Tabs,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, Tab, Tabs, TablePagination,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
@@ -16,6 +15,7 @@ import DeleteIcon from "@mui/icons-material/DeleteRounded";
 import { useSortable, SortCell, PlainCell } from "./sortable";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
+const PAGE_SIZE = 15;
 
 const Approvals = () => {
   const url = process.env.REACT_APP_BACKEND;
@@ -25,6 +25,10 @@ const Approvals = () => {
   const [hosts, setHosts] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [loadingHosts, setLoadingHosts] = useState(true);
+  const [evPage, setEvPage] = useState(0);
+  const [evRowsPerPage, setEvRowsPerPage] = useState(10);
+  const [hPage, setHPage] = useState(0);
+  const [hRowsPerPage, setHRowsPerPage] = useState(10);
   const { sorted: sortedEvents, orderBy: evOB, order: evO, handleSort: evSort } = useSortable(events, "createdAt", "desc");
   const { sorted: sortedHosts, orderBy: hOB, order: hO, handleSort: hSort } = useSortable(hosts, "createdAt", "desc");
 
@@ -71,8 +75,11 @@ const Approvals = () => {
     catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
 
+  const pagedEvents = sortedEvents.slice(evPage * evRowsPerPage, evPage * evRowsPerPage + evRowsPerPage);
+  const pagedHosts = sortedHosts.slice(hPage * hRowsPerPage, hPage * hRowsPerPage + hRowsPerPage);
+
   return (
-    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
           <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>Approvals</Typography>
@@ -81,15 +88,15 @@ const Approvals = () => {
         <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8" }}>Review and approve pending events and host profiles</Typography>
       </Box>
 
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, "& .MuiTab-root": { fontSize: "0.78rem", fontWeight: 700, textTransform: "capitalize", fontFamily: "var(--font-admin)", minWidth: 120 }, "& .Mui-selected": { color: "#D26600 !important" }, "& .MuiTabs-indicator": { background: "#D26600" } }}>
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, "& .MuiTab-root": { fontSize: "0.78rem", fontWeight: 700, textTransform: "capitalize", fontFamily: "var(--font-admin)", minWidth: 120 }, "& .Mui-selected": { color: "#f58021 !important" }, "& .MuiTabs-indicator": { background: "linear-gradient(90deg,#D26600,#f58021)" } }}>
         <Tab label={`Events${events.length ? ` (${events.length})` : ""}`} />
         <Tab label={`Hosts${hosts.length ? ` (${hosts.length})` : ""}`} />
       </Tabs>
 
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 340px)", overflowX: "auto" }}>
           {tab === 0 ? (
-            <Table>
+            <Table stickyHeader>
               <TableHead>
                 <TableRow>
                   <SortCell label="Event ID"   field="eventId"   orderBy={evOB} order={evO} onSort={evSort} />
@@ -106,9 +113,9 @@ const Approvals = () => {
               <TableBody>
                 {loadingEvents ? (
                   <TableRow><TableCell colSpan={9} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>Loading…</TableCell></TableRow>
-                ) : sortedEvents.length === 0 ? (
+                ) : pagedEvents.length === 0 ? (
                   <TableRow><TableCell colSpan={9} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>No events pending approval</TableCell></TableRow>
-                ) : sortedEvents.map(ev => (
+                ) : pagedEvents.map(ev => (
                   <TableRow key={ev._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
                     <TableCell sx={cellSx}>
                       <Tooltip title="Click to copy" arrow>
@@ -122,12 +129,12 @@ const Approvals = () => {
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
                         <Box sx={{ width: 36, height: 36, borderRadius: "8px", overflow: "hidden", flexShrink: 0, background: "#fff7ed", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           {ev.eventPosters?.[0] ? <img src={ev.eventPosters[0].startsWith("http") ? ev.eventPosters[0] : `${url?.replace("/api/", "")}${ev.eventPosters[0]}`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} />
-                            : <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#D26600" }}>{ev.eventName?.[0]}</span>}
+                            : <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#f58021" }}>{ev.eventName?.[0]}</span>}
                         </Box>
                         <Typography sx={{ fontWeight: 600, color: "#0f172a", fontSize: "0.82rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{ev.eventName || "—"}</Typography>
                       </Box>
                     </TableCell>
-                    <TableCell sx={cellSx}>{ev.eventCategory?.[0] ? <Chip label={ev.eventCategory[0]} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#fff7ed", color: "#D26600", height: 22 }} /> : "—"}</TableCell>
+                    <TableCell sx={cellSx}>{ev.eventCategory?.[0] ? <Chip label={ev.eventCategory[0]} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#fff7ed", color: "#f58021", height: 22 }} /> : "—"}</TableCell>
                     <TableCell sx={cellSx}>{ev.hostName || "—"}</TableCell>
                     <TableCell sx={cellSx}>{ev.hostWhatsapp ? <a href={`tel:+91${ev.hostWhatsapp}`} style={{ color: "#059669", textDecoration: "none" }}>{ev.hostWhatsapp}</a> : "—"}</TableCell>
                     <TableCell sx={cellSx}>{ev.startDate ? dayjs(ev.startDate).format("DD MMM YYYY") : "—"}</TableCell>
@@ -147,25 +154,25 @@ const Approvals = () => {
               </TableBody>
             </Table>
           ) : (
-            <Table>
+            <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <SortCell label="User ID"   field="userId"      orderBy={hOB} order={hO} onSort={hSort} />
-                  <SortCell label="Host"      field="name"        orderBy={hOB} order={hO} onSort={hSort} />
+                  <SortCell label="User ID"   field="userId"       orderBy={hOB} order={hO} onSort={hSort} />
+                  <SortCell label="Host"      field="name"         orderBy={hOB} order={hO} onSort={hSort} />
                   <SortCell label="Type"      field="performerType" orderBy={hOB} order={hO} onSort={hSort} />
-                  <SortCell label="Email"     field="email"       orderBy={hOB} order={hO} onSort={hSort} />
-                  <SortCell label="Phone"     field="phone"       orderBy={hOB} order={hO} onSort={hSort} />
+                  <SortCell label="Email"     field="email"        orderBy={hOB} order={hO} onSort={hSort} />
+                  <SortCell label="Phone"     field="phone"        orderBy={hOB} order={hO} onSort={hSort} />
                   <PlainCell label="Location" />
-                  <SortCell label="Submitted" field="createdAt"   orderBy={hOB} order={hO} onSort={hSort} />
+                  <SortCell label="Submitted" field="createdAt"    orderBy={hOB} order={hO} onSort={hSort} />
                   <PlainCell label="Actions" />
                 </TableRow>
               </TableHead>
               <TableBody>
                 {loadingHosts ? (
                   <TableRow><TableCell colSpan={8} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>Loading…</TableCell></TableRow>
-                ) : sortedHosts.length === 0 ? (
+                ) : pagedHosts.length === 0 ? (
                   <TableRow><TableCell colSpan={8} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>No hosts pending approval</TableCell></TableRow>
-                ) : sortedHosts.map(h => (
+                ) : pagedHosts.map(h => (
                   <TableRow key={h._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
                     <TableCell sx={cellSx}>
                       <Tooltip title="Click to copy" arrow>
@@ -179,7 +186,7 @@ const Approvals = () => {
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
                         <Box sx={{ width: 32, height: 32, borderRadius: "50%", background: "#f1f5f9", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {h.profilePicture ? <img src={h.profilePicture.startsWith("http") ? h.profilePicture : `${url.replace("/api/", "")}${h.profilePicture}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
-                            : <span style={{ fontWeight: 700, color: "#D26600" }}>{h.name?.[0]}</span>}
+                            : <span style={{ fontWeight: 700, color: "#f58021" }}>{h.name?.[0]}</span>}
                         </Box>
                         <Box><Typography sx={{ fontWeight: 600, color: "#0f172a", fontSize: "0.82rem" }}>{h.name || "—"}</Typography><Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{h.profileType}</Typography></Box>
                       </Box>
@@ -202,6 +209,19 @@ const Approvals = () => {
             </Table>
           )}
         </TableContainer>
+
+        {tab === 0 && (
+          <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
+            <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>Showing {Math.min(evPage * evRowsPerPage + 1, sortedEvents.length)}–{Math.min((evPage + 1) * evRowsPerPage, sortedEvents.length)} of {sortedEvents.length}</Typography>
+            <TablePagination component="div" count={sortedEvents.length} page={evPage} onPageChange={(_, p) => setEvPage(p)} rowsPerPage={evRowsPerPage} onRowsPerPageChange={e => { setEvRowsPerPage(parseInt(e.target.value, 10)); setEvPage(0); }} rowsPerPageOptions={[10, 25, 50]} sx={{ border: "none", "& .MuiTablePagination-toolbar": { px: 0 }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" } }} />
+          </Box>
+        )}
+        {tab === 1 && (
+          <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
+            <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>Showing {Math.min(hPage * hRowsPerPage + 1, sortedHosts.length)}–{Math.min((hPage + 1) * hRowsPerPage, sortedHosts.length)} of {sortedHosts.length}</Typography>
+            <TablePagination component="div" count={sortedHosts.length} page={hPage} onPageChange={(_, p) => setHPage(p)} rowsPerPage={hRowsPerPage} onRowsPerPageChange={e => { setHRowsPerPage(parseInt(e.target.value, 10)); setHPage(0); }} rowsPerPageOptions={[10, 25, 50]} sx={{ border: "none", "& .MuiTablePagination-toolbar": { px: 0 }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" } }} />
+          </Box>
+        )}
       </Paper>
     </Box>
   );

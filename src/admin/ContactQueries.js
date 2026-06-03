@@ -5,7 +5,7 @@ import { toast, confirmDialog } from "../components/Popup";
 import Loader from "../components/Loader";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, TextField,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, TextField, Pagination,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import DeleteIcon from "@mui/icons-material/DeleteRounded";
@@ -29,6 +29,8 @@ const typeColors = {
 
 const QUERY_TYPES = ["all", "contact", "help", "experience", "report", "feedback", "messages"];
 
+const PAGE_SIZE = 15;
+
 const ContactQueries = () => {
   const url = process.env.REACT_APP_BACKEND;
   const [queries, setQueries] = useState([]);
@@ -37,6 +39,7 @@ const ContactQueries = () => {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -71,10 +74,15 @@ const ContactQueries = () => {
         return matchSearch && matchType;
       });
 
+  // reset page on filter change
+  React.useEffect(() => { setPage(1); }, [search, filterType]);
+
   const { sorted: filtered, orderBy, order, handleSort } = useSortable(baseFiltered, "createdAt", "desc");
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3, flexWrap: "wrap", gap: 2 }}>
         <Box>
           <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>Contact Queries</Typography>
@@ -82,7 +90,7 @@ const ContactQueries = () => {
         </Box>
         <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
           <ToggleButtonGroup size="small" value={filterType} exclusive onChange={(_, v) => v && setFilterType(v)}
-            sx={{ background: "#f1f5f9", borderRadius: "10px", p: "3px", border: "1px solid #e2e8f0", flexWrap: "wrap", "& .MuiToggleButton-root": { border: "none", borderRadius: "8px !important", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.6, color: "#64748b", textTransform: "capitalize", fontFamily: "var(--font-admin)", "&.Mui-selected": { background: "#D26600", color: "#fff", "&:hover": { background: "#b85a00" } } } }}>
+            sx={{ background: "#f1f5f9", borderRadius: "10px", p: "3px", border: "1px solid #e2e8f0", flexWrap: "wrap", "& .MuiToggleButton-root": { border: "none", borderRadius: "8px !important", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.6, color: "#64748b", textTransform: "capitalize", fontFamily: "var(--font-admin)", "&.Mui-selected": { background: "linear-gradient(135deg,#D26600,#f58021)", color: "#fff", "&:hover": { background: "linear-gradient(135deg,#b35800,#D26600)" } } } }}>
             {QUERY_TYPES.map(t => <ToggleButton key={t} value={t}>{t}</ToggleButton>)}
           </ToggleButtonGroup>
           <TextField size="small" placeholder="Search…" value={search} onChange={e => setSearch(e.target.value)}
@@ -92,8 +100,8 @@ const ContactQueries = () => {
       </Box>
 
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer>
-          <Table>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 320px)", overflowX: "auto" }}>
+          <Table stickyHeader>
             <TableHead>
               <TableRow>
                 <SortCell label="Date"    field="createdAt" orderBy={orderBy} order={order} onSort={handleSort} />
@@ -110,7 +118,7 @@ const ContactQueries = () => {
                 <TableRow><TableCell colSpan={7} sx={{ textAlign: "center", py: 6 }}><Loader /></TableCell></TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={7} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>No queries found</TableCell></TableRow>
-              ) : filtered.map(q => {
+              ) : paged.map(q => {
                 const qType = q.queryType || "Contact";
                 const tc = typeColors[qType] || typeColors.Contact;
                 return (
@@ -164,6 +172,13 @@ const ContactQueries = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        {pageCount > 1 && (
+          <Box sx={{ px: 2.5, py: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
+            <Typography sx={{ fontSize: "0.78rem", color: "#64748b" }}>Page {page} of {pageCount} ({filtered.length} queries)</Typography>
+            <Pagination count={pageCount} page={page} onChange={(_, v) => setPage(v)} size="small"
+              sx={{ "& .MuiPaginationItem-root": { fontWeight: 600, borderRadius: "8px", fontSize: "0.78rem" }, "& .Mui-selected": { background: "linear-gradient(135deg,#D26600,#f58021) !important", color: "#fff", boxShadow: "0 2px 8px rgba(245,128,33,0.35)" } }} />
+          </Box>
+        )}
       </Paper>
 
       {selectedMessage && (

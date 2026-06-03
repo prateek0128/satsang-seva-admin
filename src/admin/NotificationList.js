@@ -74,11 +74,11 @@ const NotificationList = () => {
   const { sorted: sortedDrafts, orderBy: dOB, order: dO, handleSort: dSort } = useSortable(received.draftEvents, "updatedAt", "desc");
 
   return (
-    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)", mb: 0.5 }}>Notification History</Typography>
       <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", mb: 2.5 }}>Track all sent and received notifications</Typography>
 
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, "& .MuiTab-root": { fontSize: "0.78rem", fontWeight: 700, textTransform: "none", fontFamily: "var(--font-admin)", minWidth: 160 }, "& .Mui-selected": { color: "#D26600 !important" }, "& .MuiTabs-indicator": { background: "#D26600" } }}>
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, "& .MuiTab-root": { fontSize: "0.78rem", fontWeight: 700, textTransform: "none", fontFamily: "var(--font-admin)", minWidth: 160 }, "& .Mui-selected": { color: "#f58021 !important" }, "& .MuiTabs-indicator": { background: "linear-gradient(90deg,#D26600,#f58021)" } }}>
         <Tab label="Sent Notifications" />
         <Tab label={`Received${totalReceived ? ` (${totalReceived})` : ""}`} />
       </Tabs>
@@ -86,8 +86,8 @@ const NotificationList = () => {
       {tab === 0 ? (
         <>
           <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", mb: 3 }}>
-            <TableContainer>
-              <Table>
+            <TableContainer sx={{ maxHeight: "calc(100vh - 340px)", overflowX: "auto" }}>
+              <Table stickyHeader>
                 <TableHead>
                   <TableRow>
                     <SortCell label="User"   field="user.name"  orderBy={orderBy} order={order} onSort={handleSort} />
@@ -134,7 +134,7 @@ const NotificationList = () => {
           </Paper>
           {pageCount > 1 && (
             <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <Pagination count={pageCount} page={sentPage} onChange={(_, v) => setSentPage(v)} sx={{ "& .MuiPaginationItem-root": { fontFamily: "var(--font-admin)", fontWeight: 600, borderRadius: "8px" }, "& .Mui-selected": { background: "#D26600 !important", color: "#fff" } }} />
+              <Pagination count={pageCount} page={sentPage} onChange={(_, v) => setSentPage(v)} sx={{ "& .MuiPaginationItem-root": { fontFamily: "var(--font-admin)", fontWeight: 600, borderRadius: "8px" }, "& .Mui-selected": { background: "linear-gradient(135deg,#D26600,#f58021) !important", color: "#fff", boxShadow: "0 2px 8px rgba(245,128,33,0.3)" } }} />
             </Box>
           )}
         </>
