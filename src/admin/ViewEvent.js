@@ -5,15 +5,35 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast, confirmDialog } from "../components/Popup";
 import Loader from "../components/Loader";
 
+// ─── SVG Icons ────────────────────────────────────────────────────────────────
+const SvgEye       = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+const SvgTicket    = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
+const SvgCurrency  = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
+const SvgCalendar  = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+const SvgClock     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+const SvgUser      = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+const SvgPin       = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+const SvgPhone     = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.59 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l.96-.96a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>;
+const SvgUsers     = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+const SvgMic       = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>;
+const SvgChat      = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+const SvgHandshake = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>;
+const SvgLock      = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+const SvgLink      = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>;
+const SvgStar      = ({ filled }) => <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+const SvgCheck     = () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+const SvgClock2    = () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+
+// ─── Reusable Components ──────────────────────────────────────────────────────
 const Badge = ({ children, bg, color }) => (
-  <span style={{ padding: "4px 14px", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700, background: bg, color, textTransform: "uppercase", letterSpacing: "0.06em", display: "inline-block" }}>
+  <span style={{ padding: "4px 14px", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700, background: bg, color, textTransform: "uppercase", letterSpacing: "0.06em", display: "inline-flex", alignItems: "center", gap: 5 }}>
     {children}
   </span>
 );
 
 const StatCard = ({ icon, label, value, color, bg }) => (
-  <div style={{ background: bg, borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", gap: 16, border: `1px solid ${bg === "#fff" ? "#e2e8f0" : "transparent"}` }}>
-    <div style={{ width: 48, height: 48, borderRadius: 14, background: color + "20", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", flexShrink: 0 }}>{icon}</div>
+  <div style={{ background: bg, borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", gap: 16, border: "1px solid rgba(0,0,0,0.06)" }}>
+    <div style={{ width: 48, height: 48, borderRadius: 14, background: color + "20", display: "flex", alignItems: "center", justifyContent: "center", color, flexShrink: 0 }}>{icon}</div>
     <div>
       <p style={{ margin: 0, fontSize: "1.6rem", fontWeight: 800, color, lineHeight: 1 }}>{value}</p>
       <p style={{ margin: "4px 0 0", fontSize: "0.72rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</p>
@@ -35,7 +55,7 @@ const InfoItem = ({ icon, label, value }) => {
   if (!value) return null;
   return (
     <div style={{ display: "flex", gap: 14, padding: "12px 0", borderBottom: "1px solid #f8fafc" }}>
-      <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", flexShrink: 0 }}>{icon}</div>
+      <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", flexShrink: 0 }}>{icon}</div>
       <div>
         <p style={{ margin: 0, fontSize: "0.68rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</p>
         <p style={{ margin: "3px 0 0", fontSize: "0.9rem", fontWeight: 600, color: "#0f172a", wordBreak: "break-word" }}>{value}</p>
@@ -44,6 +64,7 @@ const InfoItem = ({ icon, label, value }) => {
   );
 };
 
+// ─── Main Component ───────────────────────────────────────────────────────────
 const ViewEvent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -93,7 +114,7 @@ const ViewEvent = () => {
       const token = localStorage.getItem("token");
       const res = await axios.post(`${url}admin/events/${event._id}/toggle-popular`, {}, { headers: { Authorization: `Bearer ${token}` } });
       setEvent(prev => ({ ...prev, isPopular: res.data.data.isPopular }));
-      toast(res.data.data.isPopular ? "Marked as Popular ⭐" : "Removed from Popular", "success");
+      toast(res.data.data.isPopular ? "Marked as Popular" : "Removed from Popular", "success");
     } catch { toast("Failed to update popularity", "error"); }
   };
 
@@ -140,16 +161,30 @@ const ViewEvent = () => {
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 40px 36px" }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
             {event.eventCategory?.map((cat, i) => <Badge key={i} bg="#D26600" color="#fff">{cat}</Badge>)}
-            <Badge bg={event.approved ? "#16a34a" : "#f59e0b"} color="#fff">{event.approved ? "✓ Approved" : "⏳ Pending"}</Badge>
+            <Badge bg={event.approved ? "#16a34a" : "#f59e0b"} color="#fff">
+              {event.approved ? <><SvgCheck /> Approved</> : <><SvgClock2 /> Pending</>}
+            </Badge>
             {isPast && <Badge bg="#475569" color="#fff">Past Event</Badge>}
-            {event.isPopular && <Badge bg="#7c3aed" color="#fff">⭐ Popular</Badge>}
+            {event.isPopular && <Badge bg="#7c3aed" color="#fff"><SvgStar filled /> Popular</Badge>}
             <Badge bg={isFree ? "#15803d" : "#b45309"} color="#fff">{isFree ? "FREE ENTRY" : `₹${event.eventPrice}`}</Badge>
           </div>
           <h1 style={{ margin: 0, color: "#fff", fontSize: "2.2rem", fontWeight: 900, lineHeight: 1.2, textShadow: "0 2px 16px rgba(0,0,0,0.5)", maxWidth: 700 }}>{event.eventName}</h1>
           <div style={{ display: "flex", gap: 20, marginTop: 12, flexWrap: "wrap" }}>
-            {event.hostName && <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 6 }}>🧑‍💼 {event.hostName}</span>}
-            {event.city && <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 6 }}>📍 {event.city}{event.country ? `, ${event.country}` : ""}</span>}
-            {event.startDate && <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 6 }}>📅 {dayjs(event.startDate).format("DD MMM YYYY")}</span>}
+            {event.hostName && (
+              <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 6 }}>
+                <SvgUser /> {event.hostName}
+              </span>
+            )}
+            {event.city && (
+              <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 6 }}>
+                <SvgPin /> {event.city}{event.country ? `, ${event.country}` : ""}
+              </span>
+            )}
+            {event.startDate && (
+              <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 6 }}>
+                <SvgCalendar /> {dayjs(event.startDate).format("DD MMM YYYY")}
+              </span>
+            )}
             <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8rem" }}>ID: {event.eventId || event._id?.slice(-8)}</span>
           </div>
         </div>
@@ -160,10 +195,10 @@ const ViewEvent = () => {
 
         {/* Stats Row */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
-          <StatCard icon="👁️" label="Total Views" value={event.viewCount || 0} color="#1e40af" bg="#eff6ff" />
-          <StatCard icon="🎟️" label="Bookings" value={event.bookings?.length || 0} color="#7c3aed" bg="#f5f3ff" />
-          <StatCard icon="💰" label="Entry Fee" value={isFree ? "FREE" : `₹${event.eventPrice}`} color={isFree ? "#15803d" : "#D26600"} bg={isFree ? "#f0fdf4" : "#fff7ed"} />
-          <StatCard icon="📅" label="Duration" value={event.startDate && event.endDate ? `${dayjs(event.endDate).diff(dayjs(event.startDate), "day") + 1} Days` : "1 Day"} color="#0369a1" bg="#f0f9ff" />
+          <StatCard icon={<SvgEye />}      label="Total Views" value={event.viewCount || 0}                                                                                          color="#1e40af" bg="#eff6ff" />
+          <StatCard icon={<SvgTicket />}   label="Bookings"    value={event.bookings?.length || 0}                                                                                   color="#7c3aed" bg="#f5f3ff" />
+          <StatCard icon={<SvgCurrency />} label="Entry Fee"   value={isFree ? "FREE" : `₹${event.eventPrice}`}                                                                     color={isFree ? "#15803d" : "#D26600"} bg={isFree ? "#f0fdf4" : "#fff7ed"} />
+          <StatCard icon={<SvgCalendar />} label="Duration"    value={event.startDate && event.endDate ? `${dayjs(event.endDate).diff(dayjs(event.startDate), "day") + 1} Days` : "1 Day"} color="#0369a1" bg="#f0f9ff" />
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24, alignItems: "start" }}>
@@ -171,25 +206,36 @@ const ViewEvent = () => {
           {/* Left Column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-            {/* About */}
             {event.eventDesc && (
               <SectionCard title="About this Event">
                 <p style={{ margin: 0, fontSize: "0.95rem", color: "#334155", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{event.eventDesc}</p>
               </SectionCard>
             )}
 
-            {/* Date & Time */}
+            {/* Date & Schedule */}
             <SectionCard title="Date & Schedule">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <div style={{ background: "#fff7ed", borderRadius: 14, padding: "18px 20px", border: "1px solid #fed7aa" }}>
-                  <p style={{ margin: "0 0 6px", fontSize: "0.68rem", fontWeight: 700, color: "#D26600", textTransform: "uppercase", letterSpacing: "0.06em" }}>🗓️ Start Date</p>
+                  <p style={{ margin: "0 0 6px", fontSize: "0.68rem", fontWeight: 700, color: "#D26600", textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: 5 }}>
+                    <SvgCalendar /> Start Date
+                  </p>
                   <p style={{ margin: 0, fontSize: "1rem", fontWeight: 800, color: "#0f172a" }}>{event.startDate ? dayjs(event.startDate).format("ddd, DD MMM YYYY") : "—"}</p>
-                  {event.startTime && <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#D26600", fontWeight: 600 }}>⏰ {event.startTime}</p>}
+                  {event.startTime && (
+                    <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#D26600", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+                      <SvgClock /> {event.startTime}
+                    </p>
+                  )}
                 </div>
                 <div style={{ background: "#f0fdf4", borderRadius: 14, padding: "18px 20px", border: "1px solid #bbf7d0" }}>
-                  <p style={{ margin: "0 0 6px", fontSize: "0.68rem", fontWeight: 700, color: "#15803d", textTransform: "uppercase", letterSpacing: "0.06em" }}>🏁 End Date</p>
+                  <p style={{ margin: "0 0 6px", fontSize: "0.68rem", fontWeight: 700, color: "#15803d", textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: 5 }}>
+                    <SvgCalendar /> End Date
+                  </p>
                   <p style={{ margin: 0, fontSize: "1rem", fontWeight: 800, color: "#0f172a" }}>{event.endDate ? dayjs(event.endDate).format("ddd, DD MMM YYYY") : "—"}</p>
-                  {event.endTime && <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#15803d", fontWeight: 600 }}>⏰ {event.endTime}</p>}
+                  {event.endTime && (
+                    <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#15803d", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+                      <SvgClock /> {event.endTime}
+                    </p>
+                  )}
                 </div>
               </div>
             </SectionCard>
@@ -258,23 +304,26 @@ const ViewEvent = () => {
                   </button>
                 )}
                 <button onClick={handleTogglePopular} style={{ width: "100%", padding: "13px", borderRadius: 12, border: `1px solid ${event.isPopular ? "#fde68a" : "#e2e8f0"}`, background: event.isPopular ? "#fffbeb" : "#f8fafc", color: event.isPopular ? "#d97706" : "#64748b", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  {event.isPopular ? "★ Unmark Popular" : "☆ Mark as Popular"}
+                  <SvgStar filled={event.isPopular} />
+                  {event.isPopular ? "Unmark Popular" : "Mark as Popular"}
                 </button>
               </div>
             </div>
 
             {/* Event Details */}
             <SectionCard title="Event Details">
-              <InfoItem icon="🎙️" label="Performer" value={event.performerName} />
-              <InfoItem icon="🧑‍💼" label="Host" value={event.hostName} />
-              <InfoItem icon="📱" label="Host WhatsApp" value={event.hostWhatsapp ? `+91 ${event.hostWhatsapp}` : null} />
-              <InfoItem icon="🤝" label="Sponsor" value={event.sponserName} />
-              <InfoItem icon="🗣️" label="Language" value={event.eventLang} />
-              <InfoItem icon="👥" label="Expected Attendees" value={event.noOfAttendees} />
-              <InfoItem icon="🔒" label="Visibility" value={event.visibility} />
+              <InfoItem icon={<SvgMic />}       label="Performer"          value={event.performerName} />
+              <InfoItem icon={<SvgUser />}       label="Host"               value={event.hostName} />
+              <InfoItem icon={<SvgPhone />}      label="Host WhatsApp"      value={event.hostWhatsapp ? `+91 ${event.hostWhatsapp}` : null} />
+              <InfoItem icon={<SvgHandshake />}  label="Sponsor"            value={event.sponserName} />
+              <InfoItem icon={<SvgChat />}       label="Language"           value={event.eventLang} />
+              <InfoItem icon={<SvgUsers />}      label="Expected Attendees" value={event.noOfAttendees} />
+              <InfoItem icon={<SvgLock />}       label="Visibility"         value={event.visibility} />
               {event.eventLink && (
                 <div style={{ display: "flex", gap: 14, padding: "12px 0" }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", flexShrink: 0 }}>🔗</div>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", flexShrink: 0 }}>
+                    <SvgLink />
+                  </div>
                   <div>
                     <p style={{ margin: 0, fontSize: "0.68rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>Event Link</p>
                     <a href={event.eventLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.85rem", fontWeight: 600, color: "#2563eb", wordBreak: "break-all" }}>{event.eventLink}</a>
@@ -287,7 +336,9 @@ const ViewEvent = () => {
             {fullAddress && (
               <SectionCard title="Location">
                 <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", flexShrink: 0 }}>📍</div>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", color: "#ef4444", flexShrink: 0 }}>
+                    <SvgPin />
+                  </div>
                   <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155", lineHeight: 1.6, fontWeight: 500 }}>{fullAddress}</p>
                 </div>
                 <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`} target="_blank" rel="noopener noreferrer"

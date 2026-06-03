@@ -3,162 +3,128 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
+import {
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, LinearProgress,
+} from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
+import EditIcon from "@mui/icons-material/EditRounded";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActiveRounded";
+import DeleteIcon from "@mui/icons-material/DeleteRounded";
+import { useSortable, SortCell, PlainCell } from "./sortable";
 
-const S = {
-  page: { padding: "28px 32px", background: "#f8fafc", minHeight: "100vh", fontFamily: "'Inter',-apple-system,sans-serif" },
-  card: { background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", overflow: "hidden" },
-  th: { padding: "11px 16px", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap", textAlign: "left" },
-  td: { padding: "12px 16px", fontSize: "0.82rem", color: "#334155", borderBottom: "1px solid #f1f5f9", verticalAlign: "middle", whiteSpace: "nowrap" },
-  iconBtn: (bg, color) => ({ width: 30, height: 30, borderRadius: 8, border: `1px solid ${bg}`, background: bg, color, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "opacity 0.15s" }),
-};
+const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
 
 const DraftEvents = () => {
   const url = process.env.REACT_APP_BACKEND;
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const { sorted, orderBy, order, handleSort } = useSortable(events, "updatedAt", "desc");
 
-  const getHeaders = () => {
+  const headers = () => {
     const token = localStorage.getItem("token");
     return { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) };
   };
 
-  useEffect(() => { fetchDraftEvents(); }, []);
+  useEffect(() => {
+    axios.get(`${url}admin/events/drafts`, { headers: headers() })
+      .then(r => setEvents(r.data.data?.events || []))
+      .catch(e => toast(e.response?.data?.message || e.message, "error"))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const fetchDraftEvents = async () => {
-    try {
-      const res = await axios.get(`${url}admin/events/drafts`, { headers: getHeaders() });
-      setEvents(res.data.data?.events || []);
-    } catch (e) {
-      toast(e.response?.data?.message || e.message, "error");
-    } finally { setLoading(false); }
+  const handleRemind = async (ev) => {
+    if (!await confirmDialog(`Send reminder to ${ev.user?.name || "the host"} for "${ev.eventName || "this draft"}"?`)) return;
+    try { await axios.post(`${url}admin/events/drafts/${ev._id}/remind`, {}, { headers: headers() }); toast("Reminder sent", "success"); }
+    catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
 
-  const handleRemind = async (event) => {
-    const ok = await confirmDialog(`Send a reminder to ${event.user?.name || "the host"} to complete "${event.eventName || 'this draft'}"?`);
-    if (!ok) return;
-    try {
-      await axios.post(`${url}admin/events/drafts/${event._id}/remind`, {}, { headers: getHeaders() });
-      toast("Reminder sent successfully", "success");
-    } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
-  };
-
-  const handleDelete = async (event) => {
-    const ok = await confirmDialog(`Delete draft "${event.eventName || 'this draft'}"? This cannot be undone.`);
-    if (!ok) return;
-    try {
-      await axios.delete(`${url}events/${event._id}`, { headers: getHeaders() });
-      setEvents(prev => prev.filter(e => e._id !== event._id));
-      toast("Draft deleted", "success");
-    } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
+  const handleDelete = async (ev) => {
+    if (!await confirmDialog(`Delete draft "${ev.eventName || "this draft"}"?`)) return;
+    try { await axios.delete(`${url}events/${ev._id}`, { headers: headers() }); setEvents(p => p.filter(x => x._id !== ev._id)); toast("Draft deleted", "success"); }
+    catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
 
   return (
-    <div style={S.page}>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-          <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.3px" }}>Draft Events</h1>
-          {events.length > 0 && (
-            <span style={{ fontSize: "0.7rem", fontWeight: 700, background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: 6 }}>
-              {events.length} drafts
-            </span>
-          )}
-        </div>
-        <p style={{ margin: 0, fontSize: "0.8rem", color: "#94a3b8" }}>View incomplete event listings and prompt hosts to finish them.</p>
-      </div>
+    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
+          <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>Draft Events</Typography>
+          {events.length > 0 && <Chip label={`${events.length} drafts`} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#fef3c7", color: "#92400e", height: 22 }} />}
+        </Box>
+        <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8" }}>View incomplete event listings and prompt hosts to finish them.</Typography>
+      </Box>
 
-      <div style={S.card}>
-        {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: "0.875rem" }}>Loading draft events...</div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  {["Event ID", "Event", "Category", "Host", "Host Email", "Last Updated", "Actions"].map(h => (
-                    <th key={h} style={S.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {events.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} style={{ ...S.td, textAlign: "center", padding: "48px 16px" }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        <p style={{ margin: 0, fontWeight: 600, color: "#94a3b8", fontSize: "0.875rem" }}>No drafts found</p>
-                        <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.78rem" }}>Users have completed all their event listings.</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : events.map(event => (
-                  <tr key={event._id}
-                    onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                    style={{ transition: "background 0.12s" }}>
-                    <td style={S.td}>
-                      <span style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "#64748b", fontWeight: 700 }}>
-                        {event.eventId || "—"}
-                      </span>
-                    </td>
-                    <td style={{ ...S.td, maxWidth: 200 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        {event.eventPosters?.[0] ? (
-                          <div style={{ width: 36, height: 36, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "#f1f5f9", position: "relative" }}>
-                            <img src={event.eventPosters[0].startsWith("http") ? event.eventPosters[0] : `${url?.replace("/api/", "")}${event.eventPosters[0]}`}
-                              alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                              onError={e => { e.target.style.display = "none"; }} />
-                          </div>
-                        ) : (
-                          <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fff7ed", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#D26600" }}>{event.eventName?.[0] || 'D'}</span>
-                          </div>
-                        )}
-                        <div style={{ minWidth: 0 }}>
-                          <p style={{ margin: 0, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{event.eventName || "Untitled Draft"}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={S.td}>
-                      {event.eventCategory?.length > 0 ? (
-                        <span style={{ fontSize: "0.7rem", fontWeight: 600, background: "#fff7ed", color: "#D26600", border: "1px solid #fed7aa", borderRadius: 6, padding: "2px 8px" }}>
-                          {event.eventCategory[0]}
-                        </span>
-                      ) : "—"}
-                    </td>
-                    <td style={{ ...S.td, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{event.user?.name || "—"}</td>
-                    <td style={S.td}>{event.user?.email || "—"}</td>
-                    <td style={S.td}>{event.updatedAt ? dayjs(event.updatedAt).format("DD MMM YYYY, HH:mm") : "—"}</td>
-                    <td style={{ ...S.td, whiteSpace: "nowrap" }}>
-                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                        <button onClick={() => window.open(`/event/${event._id}`, "_blank")}
-                          style={S.iconBtn("#f9fafb", "#374151")} title="View">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        </button>
-                        <button onClick={() => navigate(`/admin/updateevent/${event._id}`)}
-                          style={S.iconBtn("#f0fdf4", "#16a34a")} title="Edit">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <button onClick={() => handleRemind(event)}
-                          style={S.iconBtn("#eff6ff", "#2563eb")} title="Send Reminder">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg>
-                        </button>
-                        <button onClick={() => handleDelete(event)}
-                          style={S.iconBtn("#fef2f2", "#dc2626")} title="Delete">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+      <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <SortCell label="Event ID"     field="eventId"   orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Event"        field="eventName" orderBy={orderBy} order={order} onSort={handleSort} />
+                <PlainCell label="Category" />
+                <SortCell label="Host"         field="user.name" orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Host Email"   field="user.email" orderBy={orderBy} order={order} onSort={handleSort} />
+                <PlainCell label="Progress" />
+                <SortCell label="Last Updated" field="updatedAt" orderBy={orderBy} order={order} onSort={handleSort} />
+                <PlainCell label="Actions" />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow><TableCell colSpan={8} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>Loading draft events…</TableCell></TableRow>
+              ) : events.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} sx={{ textAlign: "center", py: 8 }}>
+                    <Typography sx={{ color: "#94a3b8", fontWeight: 600 }}>No drafts found</Typography>
+                    <Typography sx={{ color: "#cbd5e1", fontSize: "0.78rem", mt: 0.5 }}>All event listings are complete.</Typography>
+                  </TableCell>
+                </TableRow>
+              ) : sorted.map(ev => (
+                <TableRow key={ev._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+                  <TableCell sx={cellSx}>
+                    <Tooltip title="Click to copy" arrow>
+                      <Box component="span" onClick={() => { navigator.clipboard.writeText(ev.eventId || ev._id || ""); toast("Event ID copied", "success"); }}
+                        sx={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b", fontWeight: 700, cursor: "pointer", px: 1, py: 0.3, borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "inline-block", "&:hover": { background: "#f1f5f9", color: "#334155" }, transition: "all 0.15s" }}>
+                        {ev.eventId || "—"}
+                      </Box>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell sx={{ ...cellSx, maxWidth: 200 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+                      <Box sx={{ width: 36, height: 36, borderRadius: "8px", overflow: "hidden", flexShrink: 0, background: "#fff7ed", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {ev.eventPosters?.[0] ? <img src={ev.eventPosters[0].startsWith("http") ? ev.eventPosters[0] : `${url?.replace("/api/", "")}${ev.eventPosters[0]}`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} />
+                          : <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#D26600" }}>{ev.eventName?.[0] || "D"}</span>}
+                      </Box>
+                      <Typography sx={{ fontWeight: 600, color: "#0f172a", fontSize: "0.82rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{ev.eventName || "Untitled Draft"}</Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={cellSx}>{ev.eventCategory?.[0] ? <Chip label={ev.eventCategory[0]} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#fff7ed", color: "#D26600", height: 22 }} /> : "—"}</TableCell>
+                  <TableCell sx={cellSx}>{ev.user?.name || "—"}</TableCell>
+                  <TableCell sx={cellSx}>{ev.user?.email || "—"}</TableCell>
+                  <TableCell sx={{ ...cellSx, minWidth: 140 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <LinearProgress variant="determinate" value={ev.formProgress || 0} sx={{ flex: 1, height: 6, borderRadius: 3, background: "#f1f5f9", "& .MuiLinearProgress-bar": { background: "linear-gradient(90deg,#D26600,#f59e0b)", borderRadius: 3 } }} />
+                      <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", minWidth: 32 }}>{ev.formProgress || 0}%</Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={cellSx}>{ev.updatedAt ? dayjs(ev.updatedAt).format("DD MMM YYYY, HH:mm") : "—"}</TableCell>
+                  <TableCell sx={cellSx}>
+                    <Box sx={{ display: "flex", gap: 0.6 }}>
+                      <Tooltip title="View"><IconButton size="small" onClick={() => window.open(`/event/${ev._id}`, "_blank")} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      <Tooltip title="Send Reminder"><IconButton size="small" onClick={() => handleRemind(ev)} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><NotificationsActiveIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      <Tooltip title="Delete"><IconButton size="small" onClick={() => handleDelete(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    </Box>
   );
 };
 

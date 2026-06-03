@@ -1,138 +1,116 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
+import {
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Chip, Tooltip, IconButton, Box, Typography,
+} from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
+import EditIcon from "@mui/icons-material/EditRounded";
+import DeleteIcon from "@mui/icons-material/DeleteRounded";
+import AddIcon from "@mui/icons-material/AddRounded";
+import { useSortable, SortCell, PlainCell } from "./sortable";
 
-const S = {
-  page: { padding: "28px 32px", background: "#f8fafc", minHeight: "100vh", fontFamily: "'Inter',-apple-system,sans-serif" },
-  card: { background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", overflow: "hidden" },
-  th: { padding: "11px 16px", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap", textAlign: "left" },
-  td: { padding: "14px 16px", fontSize: "0.82rem", color: "#334155", borderBottom: "1px solid #f1f5f9", verticalAlign: "middle", whiteSpace: "nowrap" },
-  iconBtn: (bg, color) => ({ width: 30, height: 30, borderRadius: 8, border: `1px solid ${bg}`, background: bg, color, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "opacity 0.15s" }),
-};
+const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
 
 const Blog = () => {
   const url = process.env.REACT_APP_BACKEND;
   const navigate = useNavigate();
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { sorted, orderBy, order, handleSort } = useSortable(blogs, "createdAt", "desc");
 
   useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await axios.get(`${url}blogs`, { headers });
-        setBlogs(res.data.data || res.data.blogs || []);
-      } catch (e) {
-        toast(e.response?.data?.message || e.message, "error");
-      } finally { setLoading(false); }
-    };
-    fetchBlogs();
+    const token = localStorage.getItem("token");
+    axios.get(`${url}blogs`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setBlogs(r.data.data || r.data.blogs || []))
+      .catch(e => toast(e.response?.data?.message || e.message, "error"))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleDelete = async (id) => {
-    const ok = await confirmDialog("Delete this blog? This action is irreversible.");
-    if (!ok) return;
+    if (!await confirmDialog("Delete this blog? This action is irreversible.")) return;
     try {
       const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      await axios.delete(`${url}blogs/${id}`, { headers });
-      setBlogs(blogs.filter(b => b._id !== id));
-      toast("Blog deleted successfully", "success");
-    } catch (e) {
-      toast(e.response?.data?.message || e.message, "error");
-    }
+      await axios.delete(`${url}blogs/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      setBlogs(b => b.filter(x => x._id !== id));
+      toast("Blog deleted", "success");
+    } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
 
   return (
-    <div style={S.page}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h1 style={{ margin: "0 0 4px", fontSize: "1.25rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.3px" }}>Blogs</h1>
-          <p style={{ margin: 0, fontSize: "0.8rem", color: "#94a3b8" }}>{blogs.length} published posts</p>
-        </div>
-        <button onClick={() => navigate("/admin/createblog")}
-          style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: "#D26600", color: "#fff", fontWeight: 600, fontSize: "0.82rem", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 8px rgba(210,102,0,0.25)", transition: "background 0.15s" }}
-          onMouseEnter={e => e.currentTarget.style.background = "#b85a00"}
-          onMouseLeave={e => e.currentTarget.style.background = "#D26600"}>
-          + New Blog Post
+    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
+        <Box>
+          <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>Blogs</Typography>
+          <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", mt: 0.3 }}>{blogs.length} published posts</Typography>
+        </Box>
+        <button onClick={() => navigate("/admin/createblog")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#D26600,#ea7c1a)", color: "#fff", fontWeight: 700, fontSize: "0.84rem", cursor: "pointer", fontFamily: "var(--font-admin)", boxShadow: "0 4px 14px rgba(210,102,0,0.3)" }}>
+          <AddIcon style={{ fontSize: 18 }} /> New Blog Post
         </button>
-      </div>
+      </Box>
 
-      <div style={S.card}>
-        {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: "0.875rem" }}>Loading blogs...</div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  {["ID", "Title", "Preview", "Shared By", "Published", "Actions"].map(h => (
-                    <th key={h} style={S.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {blogs.length === 0 ? (
-                  <tr><td colSpan={6} style={{ ...S.td, textAlign: "center", padding: 40, color: "#94a3b8" }}>No blog posts yet</td></tr>
-                ) : blogs.map(blog => (
-                  <tr key={blog._id}
-                    onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                    style={{ transition: "background 0.12s" }}>
-                    <td style={S.td}>
-                      <span onClick={() => navigator.clipboard.writeText(blog.blogId || blog._id)} title="Copy ID"
-                        style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#D26600", cursor: "pointer", background: "#fff7ed", padding: "2px 7px", borderRadius: "5px", border: "1px solid #ffedd5", fontWeight: 700 }}>
-                        {blog.blogId || `...${blog._id?.slice(-6)}`}
-                      </span>
-                    </td>
-                    <td style={{ ...S.td, maxWidth: 220 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        {blog.images?.[0] ? (
-                          <img src={blog.images[0]} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover", flexShrink: 0 }}
-                            onError={e => { e.target.style.display = "none"; }} />
-                        ) : (
-                          <div style={{ width: 36, height: 36, borderRadius: 8, background: "#f1f5f9", flexShrink: 0 }} />
-                        )}
-                        <span style={{ fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {blog.title || "—"}
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{ ...S.td, maxWidth: 300, color: "#64748b" }}>
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
-                        {blog.content ? blog.content.substring(0, 80) + "..." : "—"}
-                      </span>
-                    </td>
-                    <td style={S.td}>
-                      <span style={{ fontSize: "0.82rem", color: blog.uploadedBy ? "#334155" : "#94a3b8", fontWeight: blog.uploadedBy ? 600 : 400 }}>
-                        {blog.uploadedBy || "—"}
-                      </span>
-                    </td>
-                    <td style={S.td}>{blog.createdAt ? dayjs(blog.createdAt).format("DD MMM YYYY") : "—"}</td>
-                    <td style={S.td}>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button style={S.iconBtn("#f0fdf4", "#16a34a")} title="Edit" onClick={() => navigate(`/admin/editblog/${blog._id}`)}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <button style={S.iconBtn("#eff6ff", "#2563eb")} title="View" onClick={() => navigate(`/admin/viewblog/${blog._id}`)}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        </button>
-                        <button style={S.iconBtn("#fef2f2", "#dc2626")} title="Delete" onClick={() => handleDelete(blog._id)}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+      <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <SortCell label="ID"        field="blogId"     orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Title"     field="title"      orderBy={orderBy} order={order} onSort={handleSort} />
+                <PlainCell label="Preview" />
+                <SortCell label="Shared By" field="uploadedBy" orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Published" field="createdAt"  orderBy={orderBy} order={order} onSort={handleSort} />
+                <PlainCell label="Actions" />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow><TableCell colSpan={6} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>Loading blogs…</TableCell></TableRow>
+              ) : blogs.length === 0 ? (
+                <TableRow><TableCell colSpan={6} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>No blog posts yet</TableCell></TableRow>
+              ) : sorted.map(blog => (
+                <TableRow key={blog._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+                  <TableCell sx={cellSx}>
+                    <Tooltip title="Click to copy" arrow>
+                      <Box component="span" onClick={() => { navigator.clipboard.writeText(blog.blogId || blog._id || ""); toast("Blog ID copied", "success"); }}
+                        sx={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b", fontWeight: 700, cursor: "pointer", px: 1, py: 0.3, borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "inline-block", "&:hover": { background: "#f1f5f9", color: "#334155" }, transition: "all 0.15s" }}>
+                        {blog.blogId || blog._id || "—"}
+                      </Box>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell sx={{ ...cellSx, maxWidth: 220 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+                      {blog.images?.[0] ? (
+                        <img src={blog.images[0]} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} onError={e => e.target.style.display = "none"} />
+                      ) : (
+                        <Box sx={{ width: 36, height: 36, borderRadius: "8px", background: "#f1f5f9", flexShrink: 0 }} />
+                      )}
+                      <Typography sx={{ fontWeight: 600, color: "#0f172a", fontSize: "0.82rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{blog.title || "—"}</Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={{ ...cellSx, maxWidth: 300, color: "#64748b" }}>
+                    <Typography sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.82rem", color: "#64748b" }}>
+                      {blog.content ? blog.content.substring(0, 80) + "…" : "—"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell sx={cellSx}><Typography sx={{ fontSize: "0.82rem", fontWeight: blog.uploadedBy ? 600 : 400, color: blog.uploadedBy ? "#334155" : "#94a3b8" }}>{blog.uploadedBy || "—"}</Typography></TableCell>
+                  <TableCell sx={cellSx}>{blog.createdAt ? dayjs(blog.createdAt).format("DD MMM YYYY") : "—"}</TableCell>
+                  <TableCell sx={cellSx}>
+                    <Box sx={{ display: "flex", gap: 0.6 }}>
+                      <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/editblog/${blog._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      <Tooltip title="View"><IconButton size="small" onClick={() => navigate(`/admin/viewblog/${blog._id}`)} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      <Tooltip title="Delete"><IconButton size="small" onClick={() => handleDelete(blog._id)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    </Box>
   );
 };
 

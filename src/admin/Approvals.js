@@ -3,264 +3,207 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
+import {
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, TextField,
+  ToggleButtonGroup, ToggleButton, Tab, Tabs,
+} from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
+import EditIcon from "@mui/icons-material/EditRounded";
+import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
+import CancelIcon from "@mui/icons-material/CancelRounded";
+import DeleteIcon from "@mui/icons-material/DeleteRounded";
+import { useSortable, SortCell, PlainCell } from "./sortable";
 
-const S = {
-  page: { padding: "28px 32px", background: "#f8fafc", minHeight: "100vh", fontFamily: "'Inter',-apple-system,sans-serif" },
-  card: { background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", overflow: "hidden" },
-  th: { padding: "11px 16px", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap", textAlign: "left" },
-  td: { padding: "12px 16px", fontSize: "0.82rem", color: "#334155", borderBottom: "1px solid #f1f5f9", verticalAlign: "middle", whiteSpace: "nowrap" },
-  iconBtn: (bg, color) => ({ width: 30, height: 30, borderRadius: 8, border: `1px solid ${bg}`, background: bg, color, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "opacity 0.15s" }),
-};
+const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
 
 const Approvals = () => {
   const url = process.env.REACT_APP_BACKEND;
   const navigate = useNavigate();
-  const [tab, setTab] = useState("events");
+  const [tab, setTab] = useState(0);
   const [events, setEvents] = useState([]);
   const [hosts, setHosts] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [loadingHosts, setLoadingHosts] = useState(true);
+  const { sorted: sortedEvents, orderBy: evOB, order: evO, handleSort: evSort } = useSortable(events, "createdAt", "desc");
+  const { sorted: sortedHosts, orderBy: hOB, order: hO, handleSort: hSort } = useSortable(hosts, "createdAt", "desc");
 
-  const getHeaders = () => {
+  const headers = () => {
     const token = localStorage.getItem("token");
     return { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) };
   };
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await axios.get(`${url}admin/events/pending`, { headers: getHeaders() });
-        setEvents(res.data.data?.events || []);
-      } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
-      finally { setLoadingEvents(false); }
-    };
-    const fetchHosts = async () => {
-      try {
-        const res = await axios.get(`${url}admin/host-approvals-pending`, { headers: getHeaders() });
-        setHosts(res.data.data?.users || []);
-      } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
-      finally { setLoadingHosts(false); }
-    };
-    fetchEvents();
-    fetchHosts();
+    axios.get(`${url}admin/events/pending`, { headers: headers() })
+      .then(r => setEvents(r.data.data?.events || []))
+      .catch(e => toast(e.response?.data?.message || e.message, "error"))
+      .finally(() => setLoadingEvents(false));
+    axios.get(`${url}admin/host-approvals-pending`, { headers: headers() })
+      .then(r => setHosts(r.data.data?.users || []))
+      .catch(e => toast(e.response?.data?.message || e.message, "error"))
+      .finally(() => setLoadingHosts(false));
   }, [url]);
 
-  // Event actions
-  const handleApproveEvent = async (event) => {
-    const ok = await confirmDialog(`Approve "${event.eventName}"?`);
-    if (!ok) return;
-    try {
-      await axios.put(`${url}admin/approve/${event._id}`, {}, { headers: getHeaders() });
-      setEvents(events.filter(e => e._id !== event._id));
-      toast("Event approved successfully", "success");
-    } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
+  const approveEvent = async (ev) => {
+    if (!await confirmDialog(`Approve "${ev.eventName}"?`)) return;
+    try { await axios.put(`${url}admin/approve/${ev._id}`, {}, { headers: headers() }); setEvents(e => e.filter(x => x._id !== ev._id)); toast("Event approved", "success"); }
+    catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
-
-  const handleRejectEvent = async (event) => {
-    const ok = await confirmDialog(`Reject "${event.eventName}"?`);
-    if (!ok) return;
-    try {
-      await axios.put(`${url}admin/reject/${event._id}`, {}, { headers: getHeaders() });
-      setEvents(events.filter(e => e._id !== event._id));
-      toast("Event rejected", "info");
-    } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
+  const rejectEvent = async (ev) => {
+    if (!await confirmDialog(`Reject "${ev.eventName}"?`)) return;
+    try { await axios.put(`${url}admin/reject/${ev._id}`, {}, { headers: headers() }); setEvents(e => e.filter(x => x._id !== ev._id)); toast("Event rejected", "info"); }
+    catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
-
-  const handleDeleteEvent = async (event) => {
-    const ok = await confirmDialog(`Delete "${event.eventName}"? This cannot be undone.`);
-    if (!ok) return;
-    try {
-      await axios.delete(`${url}events/${event._id}`, { headers: getHeaders() });
-      setEvents(events.filter(e => e._id !== event._id));
-      toast("Event deleted", "success");
-    } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
+  const deleteEvent = async (ev) => {
+    if (!await confirmDialog(`Delete "${ev.eventName}"?`)) return;
+    try { await axios.delete(`${url}events/${ev._id}`, { headers: headers() }); setEvents(e => e.filter(x => x._id !== ev._id)); toast("Event deleted", "success"); }
+    catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
-
-  // Host actions
-  const handleApproveHost = async (host) => {
-    const ok = await confirmDialog(`Approve host "${host.name}"?`);
-    if (!ok) return;
-    try {
-      await axios.put(`${url}admin/approve-host/${host._id}`, {}, { headers: getHeaders() });
-      setHosts(hosts.filter(h => h._id !== host._id));
-      toast("Host approved successfully", "success");
-    } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
+  const approveHost = async (h) => {
+    if (!await confirmDialog(`Approve host "${h.name}"?`)) return;
+    try { await axios.put(`${url}admin/approve-host/${h._id}`, {}, { headers: headers() }); setHosts(hh => hh.filter(x => x._id !== h._id)); toast("Host approved", "success"); }
+    catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
-
-  const handleRejectHost = async (host) => {
+  const rejectHost = async (h) => {
     const reason = window.prompt("Reason for rejection:");
     if (reason === null) return;
-    try {
-      await axios.put(`${url}admin/reject-host/${host._id}`, { reason }, { headers: getHeaders() });
-      setHosts(hosts.filter(h => h._id !== host._id));
-      toast("Host rejected", "info");
-    } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
+    try { await axios.put(`${url}admin/reject-host/${h._id}`, { reason }, { headers: headers() }); setHosts(hh => hh.filter(x => x._id !== h._id)); toast("Host rejected", "info"); }
+    catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
 
   return (
-    <div style={S.page}>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-          <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.3px" }}>Approvals</h1>
-          {(events.length + hosts.length) > 0 && (
-            <span style={{ fontSize: "0.7rem", fontWeight: 700, background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: 6 }}>
-              {events.length + hosts.length} pending
-            </span>
+    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
+          <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>Approvals</Typography>
+          {(events.length + hosts.length) > 0 && <Chip label={`${events.length + hosts.length} pending`} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#fef3c7", color: "#92400e", height: 22 }} />}
+        </Box>
+        <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8" }}>Review and approve pending events and host profiles</Typography>
+      </Box>
+
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, "& .MuiTab-root": { fontSize: "0.78rem", fontWeight: 700, textTransform: "capitalize", fontFamily: "var(--font-admin)", minWidth: 120 }, "& .Mui-selected": { color: "#D26600 !important" }, "& .MuiTabs-indicator": { background: "#D26600" } }}>
+        <Tab label={`Events${events.length ? ` (${events.length})` : ""}`} />
+        <Tab label={`Hosts${hosts.length ? ` (${hosts.length})` : ""}`} />
+      </Tabs>
+
+      <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+        <TableContainer>
+          {tab === 0 ? (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <SortCell label="Event ID"   field="eventId"   orderBy={evOB} order={evO} onSort={evSort} />
+                  <SortCell label="Event"      field="eventName" orderBy={evOB} order={evO} onSort={evSort} />
+                  <PlainCell label="Category" />
+                  <SortCell label="Host"       field="hostName"  orderBy={evOB} order={evO} onSort={evSort} />
+                  <PlainCell label="Contact" />
+                  <SortCell label="Start Date" field="startDate" orderBy={evOB} order={evO} onSort={evSort} />
+                  <SortCell label="End Date"   field="endDate"   orderBy={evOB} order={evO} onSort={evSort} />
+                  <SortCell label="Submitted"  field="createdAt" orderBy={evOB} order={evO} onSort={evSort} />
+                  <PlainCell label="Actions" />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loadingEvents ? (
+                  <TableRow><TableCell colSpan={9} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>Loading…</TableCell></TableRow>
+                ) : sortedEvents.length === 0 ? (
+                  <TableRow><TableCell colSpan={9} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>No events pending approval</TableCell></TableRow>
+                ) : sortedEvents.map(ev => (
+                  <TableRow key={ev._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+                    <TableCell sx={cellSx}>
+                      <Tooltip title="Click to copy" arrow>
+                        <Box component="span" onClick={() => { navigator.clipboard.writeText(ev.eventId || ev._id || ""); toast("Event ID copied", "success"); }}
+                          sx={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b", fontWeight: 700, cursor: "pointer", px: 1, py: 0.3, borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "inline-block", "&:hover": { background: "#f1f5f9", color: "#334155" }, transition: "all 0.15s" }}>
+                          {ev.eventId || "—"}
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell sx={{ ...cellSx, maxWidth: 200 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+                        <Box sx={{ width: 36, height: 36, borderRadius: "8px", overflow: "hidden", flexShrink: 0, background: "#fff7ed", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {ev.eventPosters?.[0] ? <img src={ev.eventPosters[0].startsWith("http") ? ev.eventPosters[0] : `${url?.replace("/api/", "")}${ev.eventPosters[0]}`} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} />
+                            : <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#D26600" }}>{ev.eventName?.[0]}</span>}
+                        </Box>
+                        <Typography sx={{ fontWeight: 600, color: "#0f172a", fontSize: "0.82rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{ev.eventName || "—"}</Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={cellSx}>{ev.eventCategory?.[0] ? <Chip label={ev.eventCategory[0]} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#fff7ed", color: "#D26600", height: 22 }} /> : "—"}</TableCell>
+                    <TableCell sx={cellSx}>{ev.hostName || "—"}</TableCell>
+                    <TableCell sx={cellSx}>{ev.hostWhatsapp ? <a href={`tel:+91${ev.hostWhatsapp}`} style={{ color: "#059669", textDecoration: "none" }}>{ev.hostWhatsapp}</a> : "—"}</TableCell>
+                    <TableCell sx={cellSx}>{ev.startDate ? dayjs(ev.startDate).format("DD MMM YYYY") : "—"}</TableCell>
+                    <TableCell sx={cellSx}>{ev.endDate ? dayjs(ev.endDate).format("DD MMM YYYY") : "—"}</TableCell>
+                    <TableCell sx={cellSx}>{ev.createdAt ? dayjs(ev.createdAt).format("DD MMM YYYY") : "—"}</TableCell>
+                    <TableCell sx={cellSx}>
+                      <Box sx={{ display: "flex", gap: 0.6 }}>
+                        <Tooltip title="View"><IconButton size="small" onClick={() => window.open(`${process.env.REACT_APP_FRONTEND}/event/${ev._id}`, "_blank")} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        <Tooltip title="Approve"><IconButton size="small" onClick={() => approveEvent(ev)} sx={{ background: "#f0fdf4", color: "#059669", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        <Tooltip title="Reject"><IconButton size="small" onClick={() => rejectEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        <Tooltip title="Delete"><IconButton size="small" onClick={() => deleteEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <SortCell label="User ID"   field="userId"      orderBy={hOB} order={hO} onSort={hSort} />
+                  <SortCell label="Host"      field="name"        orderBy={hOB} order={hO} onSort={hSort} />
+                  <SortCell label="Type"      field="performerType" orderBy={hOB} order={hO} onSort={hSort} />
+                  <SortCell label="Email"     field="email"       orderBy={hOB} order={hO} onSort={hSort} />
+                  <SortCell label="Phone"     field="phone"       orderBy={hOB} order={hO} onSort={hSort} />
+                  <PlainCell label="Location" />
+                  <SortCell label="Submitted" field="createdAt"   orderBy={hOB} order={hO} onSort={hSort} />
+                  <PlainCell label="Actions" />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loadingHosts ? (
+                  <TableRow><TableCell colSpan={8} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>Loading…</TableCell></TableRow>
+                ) : sortedHosts.length === 0 ? (
+                  <TableRow><TableCell colSpan={8} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>No hosts pending approval</TableCell></TableRow>
+                ) : sortedHosts.map(h => (
+                  <TableRow key={h._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+                    <TableCell sx={cellSx}>
+                      <Tooltip title="Click to copy" arrow>
+                        <Box component="span" onClick={() => { navigator.clipboard.writeText(h.userId || h._id || ""); toast("User ID copied", "success"); }}
+                          sx={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b", fontWeight: 700, cursor: "pointer", px: 1, py: 0.3, borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "inline-block", "&:hover": { background: "#f1f5f9", color: "#334155" }, transition: "all 0.15s" }}>
+                          {h.userId || "—"}
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell sx={cellSx}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+                        <Box sx={{ width: 32, height: 32, borderRadius: "50%", background: "#f1f5f9", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {h.profilePicture ? <img src={h.profilePicture.startsWith("http") ? h.profilePicture : `${url.replace("/api/", "")}${h.profilePicture}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                            : <span style={{ fontWeight: 700, color: "#D26600" }}>{h.name?.[0]}</span>}
+                        </Box>
+                        <Box><Typography sx={{ fontWeight: 600, color: "#0f172a", fontSize: "0.82rem" }}>{h.name || "—"}</Typography><Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{h.profileType}</Typography></Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={cellSx}><Chip label={h.performerType || "Host"} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#f0f9ff", color: "#0369a1", height: 22, textTransform: "capitalize" }} /></TableCell>
+                    <TableCell sx={cellSx}>{h.email || "—"}</TableCell>
+                    <TableCell sx={cellSx}>{h.phone || "—"}</TableCell>
+                    <TableCell sx={cellSx}>{h.address?.city || h.address?.state || "—"}</TableCell>
+                    <TableCell sx={cellSx}>{dayjs(h.createdAt).format("DD MMM YYYY")}</TableCell>
+                    <TableCell sx={cellSx}>
+                      <Box sx={{ display: "flex", gap: 0.6 }}>
+                        <Tooltip title="View"><IconButton size="small" onClick={() => navigate(`/admin/userdetails/${h._id}`)} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        <Tooltip title="Approve"><IconButton size="small" onClick={() => approveHost(h)} sx={{ background: "#f0fdf4", color: "#059669", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        <Tooltip title="Reject"><IconButton size="small" onClick={() => rejectHost(h)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
-        </div>
-        <p style={{ margin: 0, fontSize: "0.8rem", color: "#94a3b8" }}>Review and approve pending events and host profiles</p>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: "flex", background: "#f1f5f9", padding: "4px", borderRadius: "10px", gap: "4px", marginBottom: 20, width: "fit-content" }}>
-        {["events", "hosts"].map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{
-            padding: "6px 20px", borderRadius: "8px", border: "none", fontSize: "0.75rem", fontWeight: 700,
-            cursor: "pointer", textTransform: "capitalize", transition: "all 0.2s",
-            background: tab === t ? "#fff" : "transparent",
-            color: tab === t ? "#D26600" : "#64748b",
-            boxShadow: tab === t ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-          }}>
-            {t === "events" ? `Events${events.length ? ` (${events.length})` : ""}` : `Hosts${hosts.length ? ` (${hosts.length})` : ""}`}
-          </button>
-        ))}
-      </div>
-
-      <div style={S.card}>
-        {tab === "events" ? (
-          loadingEvents ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>Loading pending events...</div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>{["Event ID", "Event", "Category", "Host", "Contact", "Start Date", "End Date", "Submitted", "Actions"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
-                </thead>
-                <tbody>
-                  {events.length === 0 ? (
-                    <tr><td colSpan={9} style={{ ...S.td, textAlign: "center", padding: "48px 16px", color: "#94a3b8" }}>No events pending approval</td></tr>
-                  ) : events.map(event => (
-                    <tr key={event._id}
-                      onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      style={{ transition: "background 0.12s" }}>
-                      <td style={S.td}><span style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "#64748b", fontWeight: 700 }}>{event.eventId || "—"}</span></td>
-                      <td style={{ ...S.td, maxWidth: 200 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          {event.eventPosters?.[0] ? (
-                            <div style={{ width: 36, height: 36, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
-                              <img src={event.eventPosters[0].startsWith("http") ? event.eventPosters[0] : `${url?.replace("/api/", "")}${event.eventPosters[0]}`}
-                                alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
-                            </div>
-                          ) : (
-                            <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fff7ed", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#D26600" }}>{event.eventName?.[0]}</span>
-                            </div>
-                          )}
-                          <p style={{ margin: 0, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{event.eventName || "—"}</p>
-                        </div>
-                      </td>
-                      <td style={S.td}>
-                        {event.eventCategory?.length > 0 ? (
-                          <span style={{ fontSize: "0.7rem", fontWeight: 600, background: "#fff7ed", color: "#D26600", border: "1px solid #fed7aa", borderRadius: 6, padding: "2px 8px" }}>{event.eventCategory[0]}</span>
-                        ) : "—"}
-                      </td>
-                      <td style={{ ...S.td, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{event.hostName || "—"}</td>
-                      <td style={S.td}>
-                        {event.hostWhatsapp ? <a href={`tel:+91${event.hostWhatsapp}`} style={{ color: "#059669", fontWeight: 500, textDecoration: "none", fontSize: "0.8rem" }}>{event.hostWhatsapp}</a> : "—"}
-                      </td>
-                      <td style={S.td}>{event.startDate ? dayjs(event.startDate).format("DD MMM YYYY") : "—"}</td>
-                      <td style={S.td}>{event.endDate ? dayjs(event.endDate).format("DD MMM YYYY") : "—"}</td>
-                      <td style={S.td}>{event.createdAt ? dayjs(event.createdAt).format("DD MMM YYYY") : "—"}</td>
-                      <td style={{ ...S.td, whiteSpace: "nowrap" }}>
-                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                          <button style={S.iconBtn("#f9fafb", "#374151")} title="View" onClick={() => window.open(`${process.env.REACT_APP_FRONTEND}/event/${event._id}`, "_blank")}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                          </button>
-                          <button style={S.iconBtn("#f0fdf4", "#16a34a")} title="Edit" onClick={() => navigate(`/admin/updateevent/${event._id}`)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                          </button>
-                          <button style={S.iconBtn("#f0fdf4", "#059669")} title="Approve" onClick={() => handleApproveEvent(event)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          </button>
-                          <button style={S.iconBtn("#fef2f2", "#dc2626")} title="Reject" onClick={() => handleRejectEvent(event)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
-                          <button style={S.iconBtn("#fef2f2", "#dc2626")} title="Delete" onClick={() => handleDeleteEvent(event)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
-        ) : (
-          loadingHosts ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>Loading pending hosts...</div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>{["User ID", "Host", "Type", "Email", "Phone", "Location", "Submitted", "Actions"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
-                </thead>
-                <tbody>
-                  {hosts.length === 0 ? (
-                    <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", padding: "48px 16px", color: "#94a3b8" }}>No hosts pending approval</td></tr>
-                  ) : hosts.map(host => (
-                    <tr key={host._id}
-                      onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      style={{ transition: "background 0.12s" }}>
-                      <td style={S.td}><span style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "#64748b", fontWeight: 700 }}>{host.userId || "—"}</span></td>
-                      <td style={{ ...S.td, maxWidth: 200 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                            {host.profilePicture ? (
-                              <img src={host.profilePicture.startsWith("http") ? host.profilePicture : `${url.replace("/api/", "")}${host.profilePicture}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
-                            ) : (
-                              <span style={{ fontWeight: 700, color: "#D26600" }}>{host.name?.[0]}</span>
-                            )}
-                          </div>
-                          <div>
-                            <p style={{ margin: 0, fontWeight: 600, color: "#0f172a" }}>{host.name || "—"}</p>
-                            <p style={{ margin: 0, fontSize: "0.7rem", color: "#94a3b8" }}>{host.profileType}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={S.td}>
-                        <span style={{ fontSize: "0.7rem", fontWeight: 600, background: "#f0f9ff", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: 6, padding: "2px 8px", textTransform: "capitalize" }}>
-                          {host.performerType || "Host"}
-                        </span>
-                      </td>
-                      <td style={S.td}>{host.email || "—"}</td>
-                      <td style={S.td}>{host.phone || "—"}</td>
-                      <td style={S.td}>{host.address?.city || host.address?.state || "—"}</td>
-                      <td style={S.td}>{dayjs(host.createdAt).format("DD MMM YYYY")}</td>
-                      <td style={{ ...S.td, whiteSpace: "nowrap" }}>
-                        <div style={{ display: "flex", gap: 6 }}>
-                          <button style={S.iconBtn("#f9fafb", "#374151")} title="View" onClick={() => navigate(`/admin/userdetails/${host._id}`)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                          </button>
-                          <button style={S.iconBtn("#f0fdf4", "#059669")} title="Approve" onClick={() => handleApproveHost(host)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          </button>
-                          <button style={S.iconBtn("#fef2f2", "#dc2626")} title="Reject" onClick={() => handleRejectHost(host)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
-        )}
-      </div>
-    </div>
+        </TableContainer>
+      </Paper>
+    </Box>
   );
 };
 

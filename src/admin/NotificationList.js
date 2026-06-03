@@ -3,53 +3,42 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { toast } from "../components/Popup";
 import Loader from "../components/Loader";
+import {
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, Tab, Tabs, Pagination,
+} from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
+import CheckCircleIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import ScheduleIcon from "@mui/icons-material/ScheduleRounded";
+import PeopleIcon from "@mui/icons-material/PeopleRounded";
+import EventIcon from "@mui/icons-material/EventRounded";
+import DraftsIcon from "@mui/icons-material/EditNoteRounded";
+import { useSortable, SortCell, PlainCell } from "./sortable";
 
-const S = {
-  container: { padding: "32px", background: "#f8fafc", minHeight: "100vh", fontFamily: "'Inter', sans-serif" },
-  title: { fontSize: "1.25rem", fontWeight: 800, color: "#0f172a", margin: "0 0 4px" },
-  sub: { margin: "0 0 20px", fontSize: "0.8rem", color: "#94a3b8" },
-  card: { background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", overflow: "hidden", marginBottom: 24 },
-  sectionTitle: { padding: "14px 16px", borderBottom: "1px solid #e2e8f0", fontSize: "0.8rem", fontWeight: 700, color: "#0f172a", background: "#f8fafc", display: "flex", alignItems: "center", gap: 8 },
-  badge: (color) => ({ fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: 6, background: color + "18", color }),
-  th: { padding: "11px 16px", background: "#f8fafc", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap", textAlign: "left" },
-  td: { padding: "12px 16px", fontSize: "0.82rem", color: "#334155", borderBottom: "1px solid #f1f5f9", verticalAlign: "top", whiteSpace: "nowrap" },
-  typeBadge: (type) => ({
-    padding: "3px 8px", borderRadius: 6, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase",
-    background: type === "broadcast" ? "#eff6ff" : type === "event_approved" ? "#f0fdf4" : type === "event_submitted" ? "#fff7ed" : type === "event_draft" ? "#f5f3ff" : type === "host_submitted" ? "#f0f9ff" : "#fef2f2",
-    color: type === "broadcast" ? "#2563eb" : type === "event_approved" ? "#166534" : type === "event_submitted" ? "#D26600" : type === "event_draft" ? "#7c3aed" : type === "host_submitted" ? "#0369a1" : "#991b1b",
-  }),
-  pageBtn: (active) => ({ padding: "6px 14px", borderRadius: 8, border: "1px solid #e2e8f0", background: active ? "#D26600" : "#fff", color: active ? "#fff" : "#64748b", fontWeight: 600, cursor: "pointer", fontSize: "0.8rem" }),
-};
+const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
 
-const IconEye = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-  </svg>
-);
-const IconClock = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-  </svg>
-);
-const IconUser = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-  </svg>
-);
-const IconCalendar = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-  </svg>
-);
-const IconFile = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-  </svg>
+const typeColor = (type) => ({
+  broadcast:       { bg: "#eff6ff", color: "#2563eb" },
+  event_approved:  { bg: "#f0fdf4", color: "#166534" },
+  event_submitted: { bg: "#fff7ed", color: "#D26600" },
+  event_draft:     { bg: "#f5f3ff", color: "#7c3aed" },
+  host_submitted:  { bg: "#f0f9ff", color: "#0369a1" },
+})[type] || { bg: "#fef2f2", color: "#991b1b" };
+
+const SectionCard = ({ icon, title, count, accentColor, children }) => (
+  <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", mb: 3 }}>
+    <Box sx={{ px: 2.5, py: 1.5, borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 1.5, background: "#f8fafc" }}>
+      <Box sx={{ color: accentColor, display: "flex" }}>{icon}</Box>
+      <Typography sx={{ fontWeight: 800, color: "#0f172a", fontSize: "0.85rem", fontFamily: "var(--font-admin)", flex: 1 }}>{title}</Typography>
+      <Chip label={`${count}`} size="small" sx={{ fontSize: "0.65rem", fontWeight: 800, height: 20, background: accentColor + "18", color: accentColor }} />
+    </Box>
+    <TableContainer><Table>{children}</Table></TableContainer>
+  </Paper>
 );
 
 const NotificationList = () => {
   const url = process.env.REACT_APP_BACKEND;
-  const [tab, setTab] = useState("sent");
+  const [tab, setTab] = useState(0);
   const [sent, setSent] = useState([]);
   const [received, setReceived] = useState({ pendingHosts: [], pendingEvents: [], draftEvents: [] });
   const [loadingSent, setLoadingSent] = useState(true);
@@ -57,248 +46,211 @@ const NotificationList = () => {
   const [sentTotal, setSentTotal] = useState(0);
   const [sentPage, setSentPage] = useState(1);
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const { sorted: sortedSent, orderBy, order, handleSort } = useSortable(sent, "createdAt", "desc");
 
-  const getHeaders = () => {
-    const token = localStorage.getItem("token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+  const h = () => { const t = localStorage.getItem("token"); return t ? { Authorization: `Bearer ${t}` } : {}; };
 
   useEffect(() => {
-    const fetch = async () => {
-      setLoadingSent(true);
-      try {
-        const res = await axios.get(`${url}admin/notifications`, { headers: getHeaders(), params: { page: sentPage, limit: 20 } });
-        if (res.data.status === "success") { setSent(res.data.data.notifications); setSentTotal(res.data.data.total); }
-      } catch { toast("Error fetching sent notifications", "error"); }
-      finally { setLoadingSent(false); }
-    };
-    fetch();
+    setLoadingSent(true);
+    axios.get(`${url}admin/notifications`, { headers: h(), params: { page: sentPage, limit: 20 } })
+      .then(r => { if (r.data.status === "success") { setSent(r.data.data.notifications); setSentTotal(r.data.data.total); } })
+      .catch(() => toast("Error fetching notifications", "error"))
+      .finally(() => setLoadingSent(false));
   }, [sentPage, url]);
 
   useEffect(() => {
-    if (tab !== "received") return;
-    const fetch = async () => {
-      setLoadingReceived(true);
-      try {
-        const res = await axios.get(`${url}admin/notifications/received`, { headers: getHeaders() });
-        if (res.data.status === "success") setReceived(res.data.data);
-      } catch { toast("Error fetching received notifications", "error"); }
-      finally { setLoadingReceived(false); }
-    };
-    fetch();
+    if (tab !== 1) return;
+    setLoadingReceived(true);
+    axios.get(`${url}admin/notifications/received`, { headers: h() })
+      .then(r => { if (r.data.status === "success") setReceived(r.data.data); })
+      .catch(() => toast("Error fetching received", "error"))
+      .finally(() => setLoadingReceived(false));
   }, [tab, url]);
 
-  const Pagination = ({ total, page, setPage }) => {
-    const pages = Math.ceil(total / 20);
-    if (pages <= 1) return null;
-    return (
-      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 20 }}>
-        {Array.from({ length: pages }).map((_, i) => (
-          <button key={i} style={S.pageBtn(page === i + 1)} onClick={() => setPage(i + 1)}>{i + 1}</button>
-        ))}
-      </div>
-    );
-  };
-
   const totalReceived = received.pendingHosts.length + received.pendingEvents.length + received.draftEvents.length;
+  const pageCount = Math.ceil(sentTotal / 20);
+  const { sorted: sortedHosts, orderBy: hOB, order: hO, handleSort: hSort } = useSortable(received.pendingHosts, "createdAt", "desc");
+  const { sorted: sortedEvents, orderBy: eOB, order: eO, handleSort: eSort } = useSortable(received.pendingEvents, "createdAt", "desc");
+  const { sorted: sortedDrafts, orderBy: dOB, order: dO, handleSort: dSort } = useSortable(received.draftEvents, "updatedAt", "desc");
 
   return (
-    <div style={S.container}>
-      <h1 style={S.title}>Notification History</h1>
-      <p style={S.sub}>Track all sent and received notifications</p>
+    <Box sx={{ p: "28px 32px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "var(--font-admin)" }}>
+      <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)", mb: 0.5 }}>Notification History</Typography>
+      <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", mb: 2.5 }}>Track all sent and received notifications</Typography>
 
-      <div style={{ display: "flex", background: "#f1f5f9", padding: "4px", borderRadius: 10, gap: 4, marginBottom: 20, width: "fit-content" }}>
-        {["sent", "received"].map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{
-            padding: "6px 20px", borderRadius: 8, border: "none", fontSize: "0.75rem", fontWeight: 700,
-            cursor: "pointer", transition: "all 0.2s",
-            background: tab === t ? "#fff" : "transparent",
-            color: tab === t ? "#D26600" : "#64748b",
-            boxShadow: tab === t ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-          }}>
-            {t === "sent" ? "Sent Notifications" : `Received Notifications${totalReceived ? ` (${totalReceived})` : ""}`}
-          </button>
-        ))}
-      </div>
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, "& .MuiTab-root": { fontSize: "0.78rem", fontWeight: 700, textTransform: "none", fontFamily: "var(--font-admin)", minWidth: 160 }, "& .Mui-selected": { color: "#D26600 !important" }, "& .MuiTabs-indicator": { background: "#D26600" } }}>
+        <Tab label="Sent Notifications" />
+        <Tab label={`Received${totalReceived ? ` (${totalReceived})` : ""}`} />
+      </Tabs>
 
-      {tab === "sent" ? (
+      {tab === 0 ? (
         <>
-          <div style={S.card}>
-            {loadingSent ? <div style={{ padding: 40, textAlign: "center" }}><Loader /></div> : (
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr>{["User", "Type", "Title", "Message", "Date", "Status"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {sent.length === 0 ? (
-                      <tr><td colSpan={6} style={{ ...S.td, textAlign: "center", padding: 40, color: "#94a3b8" }}>No notifications sent</td></tr>
-                    ) : sent.map(n => (
-                      <tr key={n._id}
-                        onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <td style={S.td}>
-                          <div style={{ fontWeight: 600 }}>{n.user?.name || "N/A"}</div>
-                          <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{n.user?.userId || ""}</div>
-                        </td>
-                        <td style={S.td}><span style={S.typeBadge(n.type)}>{n.type}</span></td>
-                        <td style={{ ...S.td, fontWeight: 700 }}>{n.title}</td>
-                        <td style={{ ...S.td, maxWidth: 300, fontSize: "0.8rem", color: "#64748b" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
-                              {n.message}
-                            </div>
-                            <button 
-                              onClick={() => setSelectedMessage(n.message)} 
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "#D26600", padding: 0, display: "flex" }}
-                              title="View full message"
-                            >
-                              <IconEye />
-                            </button>
-                          </div>
-                        </td>
-                        <td style={{ ...S.td, whiteSpace: "nowrap" }}>{dayjs(n.createdAt).format("DD MMM, hh:mm A")}</td>
-                        <td style={S.td}>
+          <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", mb: 3 }}>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <SortCell label="User"   field="user.name"  orderBy={orderBy} order={order} onSort={handleSort} />
+                    <SortCell label="Type"   field="type"       orderBy={orderBy} order={order} onSort={handleSort} />
+                    <SortCell label="Title"  field="title"      orderBy={orderBy} order={order} onSort={handleSort} />
+                    <PlainCell label="Message" />
+                    <SortCell label="Date"   field="createdAt"  orderBy={orderBy} order={order} onSort={handleSort} />
+                    <SortCell label="Status" field="isRead"     orderBy={orderBy} order={order} onSort={handleSort} />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loadingSent ? (
+                    <TableRow><TableCell colSpan={6} sx={{ textAlign: "center", py: 6 }}><Loader /></TableCell></TableRow>
+                  ) : sent.length === 0 ? (
+                    <TableRow><TableCell colSpan={6} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>No notifications sent</TableCell></TableRow>
+                  ) : sortedSent.map(n => {
+                    const tc = typeColor(n.type);
+                    return (
+                      <TableRow key={n._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+                        <TableCell sx={cellSx}>
+                          <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{n.user?.name || "N/A"}</Typography>
+                          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{n.user?.userId || ""}</Typography>
+                        </TableCell>
+                        <TableCell sx={cellSx}><Chip label={n.type} size="small" sx={{ fontSize: "0.65rem", fontWeight: 700, height: 20, background: tc.bg, color: tc.color, textTransform: "uppercase", letterSpacing: "0.04em" }} /></TableCell>
+                        <TableCell sx={{ ...cellSx, fontWeight: 700, color: "#0f172a" }}>{n.title}</TableCell>
+                        <TableCell sx={{ ...cellSx, maxWidth: 280 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Typography sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.8rem", color: "#64748b", flex: 1 }}>{n.message}</Typography>
+                            <Tooltip title="View full"><IconButton size="small" onClick={() => setSelectedMessage(n.message)} sx={{ p: 0.3, color: "#D26600", flexShrink: 0 }}><VisibilityIcon sx={{ fontSize: 14 }} /></IconButton></Tooltip>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ ...cellSx, whiteSpace: "nowrap" }}>{dayjs(n.createdAt).format("DD MMM, hh:mm A")}</TableCell>
+                        <TableCell sx={cellSx}>
                           {n.isRead
-                            ? <span style={{ color: "#166534", fontWeight: 700, fontSize: "0.75rem", display: "flex", alignItems: "center", gap: 4 }}><IconEye /> Read</span>
-                            : <span style={{ color: "#94a3b8", fontWeight: 500, fontSize: "0.75rem", display: "flex", alignItems: "center", gap: 4 }}><IconClock /> Unread</span>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-          <Pagination total={sentTotal} page={sentPage} setPage={setSentPage} />
+                            ? <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "#166534" }}><CheckCircleIcon sx={{ fontSize: 14 }} /><Typography sx={{ fontSize: "0.75rem", fontWeight: 700 }}>Read</Typography></Box>
+                            : <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "#94a3b8" }}><ScheduleIcon sx={{ fontSize: 14 }} /><Typography sx={{ fontSize: "0.75rem", fontWeight: 500 }}>Unread</Typography></Box>}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+          {pageCount > 1 && (
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              <Pagination count={pageCount} page={sentPage} onChange={(_, v) => setSentPage(v)} sx={{ "& .MuiPaginationItem-root": { fontFamily: "var(--font-admin)", fontWeight: 600, borderRadius: "8px" }, "& .Mui-selected": { background: "#D26600 !important", color: "#fff" } }} />
+            </Box>
+          )}
         </>
-      ) : (
-        loadingReceived ? <div style={{ padding: 40, textAlign: "center" }}><Loader /></div> : (
-          <>
-            {/* Pending Hosts */}
-            <div style={S.card}>
-              <div style={S.sectionTitle}>
-                <IconUser /> Host Approval Requests
-                <span style={S.badge("#d97706")}>{received.pendingHosts.length} pending</span>
-              </div>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr>{["Name", "Email", "Phone", "Profile Type", "Submitted"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {received.pendingHosts.length === 0 ? (
-                      <tr><td colSpan={5} style={{ ...S.td, textAlign: "center", padding: 32, color: "#94a3b8" }}>No pending host approvals</td></tr>
-                    ) : received.pendingHosts.map(h => (
-                      <tr key={h._id}
-                        onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <td style={{ ...S.td, fontWeight: 600 }}>{h.name || "—"}</td>
-                        <td style={S.td}>{h.email || "—"}</td>
-                        <td style={S.td}>{h.phone || "—"}</td>
-                        <td style={S.td}>
-                          <span style={{ fontSize: "0.7rem", fontWeight: 600, background: "#f0f9ff", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: 6, padding: "2px 8px", textTransform: "capitalize" }}>
-                            {h.performerType || h.profileType || "Host"}
-                          </span>
-                        </td>
-                        <td style={{ ...S.td, whiteSpace: "nowrap" }}>{dayjs(h.createdAt).format("DD MMM YYYY, hh:mm A")}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+      ) : loadingReceived ? <Box sx={{ py: 6, textAlign: "center" }}><Loader /></Box> : (
+        <>
+          {/* Pending Hosts */}
+          <SectionCard icon={<PeopleIcon fontSize="small" />} title="Host Approval Requests" count={received.pendingHosts.length} accentColor="#d97706">
+            <TableHead><TableRow>
+              <SortCell label="Name"       field="name"        orderBy={hOB} order={hO} onSort={hSort} />
+              <SortCell label="Email"      field="email"       orderBy={hOB} order={hO} onSort={hSort} />
+              <SortCell label="Phone"      field="phone"       orderBy={hOB} order={hO} onSort={hSort} />
+              <SortCell label="Profile Type" field="performerType" orderBy={hOB} order={hO} onSort={hSort} />
+              <SortCell label="Submitted"  field="createdAt"   orderBy={hOB} order={hO} onSort={hSort} />
+            </TableRow></TableHead>
+            <TableBody>
+              {received.pendingHosts.length === 0 ? (
+                <TableRow><TableCell colSpan={5} sx={{ textAlign: "center", py: 4, color: "#94a3b8" }}>No pending host approvals</TableCell></TableRow>
+              ) : sortedHosts.map(h => (
+                <TableRow key={h._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+                  <TableCell sx={{ ...cellSx, fontWeight: 600 }}>{h.name || "—"}</TableCell>
+                  <TableCell sx={cellSx}>{h.email || "—"}</TableCell>
+                  <TableCell sx={cellSx}>{h.phone || "—"}</TableCell>
+                  <TableCell sx={cellSx}><Chip label={h.performerType || h.profileType || "Host"} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 20, background: "#f0f9ff", color: "#0369a1", textTransform: "capitalize" }} /></TableCell>
+                  <TableCell sx={cellSx}>{dayjs(h.createdAt).format("DD MMM YYYY, hh:mm A")}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </SectionCard>
 
-            {/* Pending Events */}
-            <div style={S.card}>
-              <div style={S.sectionTitle}>
-                <IconCalendar /> Event Approval Requests
-                <span style={S.badge("#059669")}>{received.pendingEvents.length} pending</span>
-              </div>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr>{["Event ID", "Event Name", "Category", "Host", "Start Date", "Submitted"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {received.pendingEvents.length === 0 ? (
-                      <tr><td colSpan={6} style={{ ...S.td, textAlign: "center", padding: 32, color: "#94a3b8" }}>No pending event approvals</td></tr>
-                    ) : received.pendingEvents.map(e => (
-                      <tr key={e._id}
-                        onMouseEnter={ev => ev.currentTarget.style.background = "#fafafa"}
-                        onMouseLeave={ev => ev.currentTarget.style.background = "transparent"}>
-                        <td style={S.td}><span style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "#64748b", fontWeight: 700 }}>{e.eventId || "—"}</span></td>
-                        <td style={{ ...S.td, fontWeight: 600 }}>{e.eventName}</td>
-                        <td style={S.td}>
-                          {e.eventCategory?.[0] && <span style={{ fontSize: "0.7rem", fontWeight: 600, background: "#fff7ed", color: "#D26600", border: "1px solid #fed7aa", borderRadius: 6, padding: "2px 8px" }}>{e.eventCategory[0]}</span>}
-                        </td>
-                        <td style={S.td}>{e.hostName || e.user?.name || "—"}</td>
-                        <td style={{ ...S.td, whiteSpace: "nowrap" }}>{e.startDate ? dayjs(e.startDate).format("DD MMM YYYY") : "—"}</td>
-                        <td style={{ ...S.td, whiteSpace: "nowrap" }}>{dayjs(e.createdAt).format("DD MMM YYYY, hh:mm A")}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          {/* Pending Events */}
+          <SectionCard icon={<EventIcon fontSize="small" />} title="Event Approval Requests" count={received.pendingEvents.length} accentColor="#059669">
+            <TableHead><TableRow>
+              <SortCell label="Event ID"   field="eventId"    orderBy={eOB} order={eO} onSort={eSort} />
+              <SortCell label="Event Name" field="eventName"  orderBy={eOB} order={eO} onSort={eSort} />
+              <PlainCell label="Category" />
+              <SortCell label="Host"       field="hostName"   orderBy={eOB} order={eO} onSort={eSort} />
+              <SortCell label="Start Date" field="startDate"  orderBy={eOB} order={eO} onSort={eSort} />
+              <SortCell label="Submitted"  field="createdAt"  orderBy={eOB} order={eO} onSort={eSort} />
+            </TableRow></TableHead>
+            <TableBody>
+              {received.pendingEvents.length === 0 ? (
+                <TableRow><TableCell colSpan={6} sx={{ textAlign: "center", py: 4, color: "#94a3b8" }}>No pending event approvals</TableCell></TableRow>
+              ) : sortedEvents.map(e => (
+                <TableRow key={e._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+                  <TableCell sx={cellSx}>
+                      <Tooltip title="Click to copy" arrow>
+                        <Box component="span" onClick={() => { navigator.clipboard.writeText(e.eventId || e._id || ""); toast("Event ID copied", "success"); }}
+                          sx={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b", fontWeight: 700, cursor: "pointer", px: 1, py: 0.3, borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "inline-block", "&:hover": { background: "#f1f5f9", color: "#334155" }, transition: "all 0.15s" }}>
+                          {e.eventId || "—"}
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                  <TableCell sx={{ ...cellSx, fontWeight: 600 }}>{e.eventName}</TableCell>
+                  <TableCell sx={cellSx}>{e.eventCategory?.[0] ? <Chip label={e.eventCategory[0]} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#fff7ed", color: "#D26600", height: 20 }} /> : "—"}</TableCell>
+                  <TableCell sx={cellSx}>{e.hostName || e.user?.name || "—"}</TableCell>
+                  <TableCell sx={cellSx}>{e.startDate ? dayjs(e.startDate).format("DD MMM YYYY") : "—"}</TableCell>
+                  <TableCell sx={cellSx}>{dayjs(e.createdAt).format("DD MMM YYYY, hh:mm A")}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </SectionCard>
 
-            {/* Draft Events */}
-            <div style={S.card}>
-              <div style={S.sectionTitle}>
-                <IconFile /> Draft Events
-                <span style={S.badge("#7c3aed")}>{received.draftEvents.length} drafts</span>
-              </div>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr>{["Event ID", "Event Name", "Category", "Host", "Progress", "Last Updated"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {received.draftEvents.length === 0 ? (
-                      <tr><td colSpan={6} style={{ ...S.td, textAlign: "center", padding: 32, color: "#94a3b8" }}>No draft events</td></tr>
-                    ) : received.draftEvents.map(e => (
-                      <tr key={e._id}
-                        onMouseEnter={ev => ev.currentTarget.style.background = "#fafafa"}
-                        onMouseLeave={ev => ev.currentTarget.style.background = "transparent"}>
-                        <td style={S.td}><span style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "#64748b", fontWeight: 700 }}>{e.eventId || "—"}</span></td>
-                        <td style={{ ...S.td, fontWeight: 600 }}>{e.eventName}</td>
-                        <td style={S.td}>
-                          {e.eventCategory?.[0] && <span style={{ fontSize: "0.7rem", fontWeight: 600, background: "#fff7ed", color: "#D26600", border: "1px solid #fed7aa", borderRadius: 6, padding: "2px 8px" }}>{e.eventCategory[0]}</span>}
-                        </td>
-                        <td style={S.td}>{e.hostName || e.user?.name || "—"}</td>
-                        <td style={S.td}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <div style={{ flex: 1, height: 6, background: "#f1f5f9", borderRadius: 3, overflow: "hidden" }}>
-                              <div style={{ width: `${e.formProgress || 0}%`, height: "100%", background: "#D26600", borderRadius: 3 }} />
-                            </div>
-                            <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#64748b" }}>{e.formProgress || 0}%</span>
-                          </div>
-                        </td>
-                        <td style={{ ...S.td, whiteSpace: "nowrap" }}>{dayjs(e.updatedAt || e.createdAt).format("DD MMM YYYY, hh:mm A")}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )
+          {/* Draft Events */}
+          <SectionCard icon={<DraftsIcon fontSize="small" />} title="Draft Events" count={received.draftEvents.length} accentColor="#7c3aed">
+            <TableHead><TableRow>
+              <SortCell label="Event ID"     field="eventId"   orderBy={dOB} order={dO} onSort={dSort} />
+              <SortCell label="Event Name"   field="eventName" orderBy={dOB} order={dO} onSort={dSort} />
+              <PlainCell label="Category" />
+              <SortCell label="Host"         field="hostName"  orderBy={dOB} order={dO} onSort={dSort} />
+              <PlainCell label="Progress" />
+              <SortCell label="Last Updated" field="updatedAt" orderBy={dOB} order={dO} onSort={dSort} />
+            </TableRow></TableHead>
+            <TableBody>
+              {received.draftEvents.length === 0 ? (
+                <TableRow><TableCell colSpan={6} sx={{ textAlign: "center", py: 4, color: "#94a3b8" }}>No draft events</TableCell></TableRow>
+              ) : sortedDrafts.map(e => (
+                <TableRow key={e._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+                  <TableCell sx={cellSx}>
+                      <Tooltip title="Click to copy" arrow>
+                        <Box component="span" onClick={() => { navigator.clipboard.writeText(e.eventId || e._id || ""); toast("Event ID copied", "success"); }}
+                          sx={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b", fontWeight: 700, cursor: "pointer", px: 1, py: 0.3, borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "inline-block", "&:hover": { background: "#f1f5f9", color: "#334155" }, transition: "all 0.15s" }}>
+                          {e.eventId || "—"}
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                  <TableCell sx={{ ...cellSx, fontWeight: 600 }}>{e.eventName}</TableCell>
+                  <TableCell sx={cellSx}>{e.eventCategory?.[0] ? <Chip label={e.eventCategory[0]} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, background: "#fff7ed", color: "#D26600", height: 20 }} /> : "—"}</TableCell>
+                  <TableCell sx={cellSx}>{e.hostName || e.user?.name || "—"}</TableCell>
+                  <TableCell sx={{ ...cellSx, minWidth: 120 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box sx={{ flex: 1, height: 6, background: "#f1f5f9", borderRadius: 3, overflow: "hidden" }}>
+                        <Box sx={{ width: `${e.formProgress || 0}%`, height: "100%", background: "linear-gradient(90deg,#7c3aed,#a78bfa)", borderRadius: 3 }} />
+                      </Box>
+                      <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", minWidth: 30 }}>{e.formProgress || 0}%</Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={cellSx}>{dayjs(e.updatedAt || e.createdAt).format("DD MMM YYYY, hh:mm A")}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </SectionCard>
+        </>
       )}
-      
+
       {selectedMessage && (
-        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-          <div style={{ background: "#fff", padding: 24, borderRadius: 12, maxWidth: 500, width: "90%", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
-            <h3 style={{ margin: "0 0 16px", fontSize: "1.1rem", color: "#0f172a" }}>Message Details</h3>
-            <div style={{ fontSize: "0.9rem", color: "#334155", lineHeight: 1.5, whiteSpace: "pre-wrap", maxHeight: "60vh", overflowY: "auto" }}>
-              {selectedMessage}
-            </div>
-            <div style={{ marginTop: 24, textAlign: "right" }}>
-              <button onClick={() => setSelectedMessage(null)} style={{ padding: "8px 16px", background: "#f1f5f9", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600, color: "#475569" }}>Close</button>
-            </div>
-          </div>
-        </div>
+        <Box sx={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
+          <Paper sx={{ p: 3, borderRadius: "16px", maxWidth: 500, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <Typography sx={{ fontSize: "1rem", fontWeight: 800, color: "#0f172a", mb: 2, fontFamily: "var(--font-admin)" }}>Message Details</Typography>
+            <Typography sx={{ fontSize: "0.875rem", color: "#334155", lineHeight: 1.7, whiteSpace: "pre-wrap", maxHeight: "60vh", overflowY: "auto" }}>{selectedMessage}</Typography>
+            <Box sx={{ mt: 3, textAlign: "right" }}>
+              <button onClick={() => setSelectedMessage(null)} style={{ padding: "8px 20px", background: "#f1f5f9", border: "none", borderRadius: 10, cursor: "pointer", fontWeight: 700, color: "#475569", fontFamily: "var(--font-admin)" }}>Close</button>
+            </Box>
+          </Paper>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 

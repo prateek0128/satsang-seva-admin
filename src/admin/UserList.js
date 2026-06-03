@@ -3,124 +3,62 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
+import {
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, TextField,
+  ToggleButtonGroup, ToggleButton, Skeleton, TablePagination,
+} from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
+import EditIcon from "@mui/icons-material/EditRounded";
+import DeleteIcon from "@mui/icons-material/DeleteRounded";
+import SearchIcon from "@mui/icons-material/SearchRounded";
+import PeopleIcon from "@mui/icons-material/PeopleRounded";
+import HowToRegIcon from "@mui/icons-material/HowToRegRounded";
+import SupervisedUserCircleIcon from "@mui/icons-material/SupervisedUserCircleRounded";
+import PendingActionsIcon from "@mui/icons-material/PendingActionsRounded";
+import InputAdornment from "@mui/material/InputAdornment";
+import { useSortable, SortCell, PlainCell } from "./sortable";
 
-const S = {
-  page: {
-    padding: "28px 32px",
-    background: "#f8fafc",
-    minHeight: "100vh",
-    fontFamily: "'Inter',-apple-system,sans-serif",
-  },
-  header: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: 24,
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  title: {
-    margin: "0 0 4px",
-    fontSize: "1.25rem",
-    fontWeight: 800,
-    color: "#0f172a",
-    letterSpacing: "-0.3px",
-  },
-  sub: { margin: 0, fontSize: "0.8rem", color: "#94a3b8" },
-  card: {
-    background: "#fff",
-    borderRadius: 14,
-    border: "1px solid #e2e8f0",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-    overflow: "hidden",
-  },
-  th: {
-    padding: "11px 16px",
-    fontSize: "0.7rem",
-    fontWeight: 700,
-    color: "#64748b",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    background: "#f8fafc",
-    borderBottom: "1px solid #e2e8f0",
-    whiteSpace: "nowrap",
-    textAlign: "left",
-  },
-  td: {
-    padding: "12px 16px",
-    fontSize: "0.82rem",
-    color: "#334155",
-    borderBottom: "1px solid #f1f5f9",
-    verticalAlign: "middle",
-    whiteSpace: "nowrap",
-  },
-  iconBtn: (bg, color) => ({
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    border: `1px solid ${bg}`,
-    background: bg,
-    color,
-    cursor: "pointer",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    transition: "opacity 0.15s",
-  }),
-  badge: (type) => ({
-    display: "inline-block",
-    fontSize: "0.68rem",
-    fontWeight: 600,
-    padding: "2px 8px",
-    borderRadius: 6,
-    background:
-      type === "admin" ? "#fef3c7" : type === "host" ? "#eff6ff" : "#f0fdf4",
-    color:
-      type === "admin" ? "#92400e" : type === "host" ? "#1d4ed8" : "#166534",
-  }),
-  performerBadge: (type) => ({
-    display: "inline-block",
-    fontSize: "0.68rem",
-    fontWeight: 600,
-    padding: "2px 8px",
-    borderRadius: 6,
-    textTransform: "capitalize",
-    background:
-      type?.toLowerCase() === "artist"
-        ? "#fce7f3"
-        : type?.toLowerCase() === "orator"
-          ? "#ede9fe"
-          : "#f1f5f9",
-    color:
-      type?.toLowerCase() === "artist"
-        ? "#be185d"
-        : type?.toLowerCase() === "orator"
-          ? "#6d28d9"
-          : "#475569",
-  }),
-  approvedBadge: (approved) => ({
-    display: "inline-block",
-    fontSize: "0.68rem",
-    fontWeight: 600,
-    padding: "2px 8px",
-    borderRadius: 6,
-    background: approved ? "#f0fdf4" : "#fef2f2",
-    color: approved ? "#166534" : "#991b1b",
-    border: approved ? "1px solid #bcf0da" : "1px solid #fecaca",
-  }),
-  filterTab: (active) => ({
-    padding: "8px 16px",
-    fontSize: "0.82rem",
-    fontWeight: 600,
-    cursor: "pointer",
-    borderRadius: "8px",
-    background: active ? "#D26600" : "transparent",
-    color: active ? "#fff" : "#64748b",
-    border: "none",
-    transition: "all 0.2s",
-  }),
-};
+const BRAND = "#D26600";
+const cellSx = { fontSize: "0.82rem", color: "#334155", whiteSpace: "nowrap", py: 1.5, px: 2 };
+
+const StatCard = ({ label, value, icon, color, light, loading }) => (
+  <Box sx={{
+    background: "#fff", borderRadius: "16px", p: "20px 22px",
+    border: "1px solid #e8edf5", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+    display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0,
+    position: "relative", overflow: "hidden",
+    transition: "box-shadow 0.25s, transform 0.25s",
+    "&:hover": { boxShadow: `0 8px 28px rgba(0,0,0,0.09), 0 0 0 1px ${color}22`, transform: "translateY(-2px)" },
+  }}>
+    <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${color},${color}66)`, borderRadius: "16px 16px 0 0" }} />
+    <Box sx={{ width: 46, height: 46, borderRadius: "13px", background: light, display: "flex", alignItems: "center", justifyContent: "center", color, flexShrink: 0, boxShadow: `0 4px 12px ${color}22` }}>
+      {icon}
+    </Box>
+    <Box>
+      <Typography sx={{ fontSize: "0.68rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</Typography>
+      {loading
+        ? <Skeleton width={48} height={32} sx={{ borderRadius: "6px" }} />
+        : <Typography sx={{ fontSize: "1.6rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-1.5px", lineHeight: 1.1 }}>{value?.toLocaleString() ?? "—"}</Typography>
+      }
+    </Box>
+  </Box>
+);
+
+const badgeColor = (type) =>
+  type === "admin"   ? { bg: "#fef3c7", color: "#92400e", border: "#fde68a" } :
+  type === "host"    ? { bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe" } :
+                       { bg: "#f0fdf4", color: "#166534", border: "#bbf7d0" };
+
+const SkeletonRow = () => (
+  <TableRow>
+    {Array.from({ length: 9 }).map((_, i) => (
+      <TableCell key={i} sx={{ py: 1.5, px: 2 }}>
+        <Skeleton variant={i === 1 ? "circular" : "text"} width={i === 1 ? 32 : "80%"} height={i === 1 ? 32 : 18} />
+      </TableCell>
+    ))}
+  </TableRow>
+);
 
 const UserList = () => {
   const navigate = useNavigate();
@@ -129,472 +67,322 @@ const UserList = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [sortConfig, setSortConfig] = useState({
-    key: "createdAt",
-    direction: "desc",
-  });
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetch = async () => {
       try {
         const token = localStorage.getItem("token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await axios.get(url + "users", { headers });
+        const res = await axios.get(url + "users", { headers: { Authorization: `Bearer ${token}` } });
         setUsers(res.data.data?.users || res.data.users || []);
-      } catch (e) {
-        toast("Error fetching users: " + e.message, "error");
-      } finally {
-        setLoading(false);
-      }
+      } catch (e) { toast("Error fetching users", "error"); }
+      finally { setLoading(false); }
     };
-    fetchUsers();
+    fetch();
   }, []);
 
-  const requestSort = (key) => {
-    let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
-
   const handleDelete = async (user) => {
-    const ok = await confirmDialog(
-      `Delete ${user.name || "this user"}? This action is irreversible.`,
-    );
-    if (!ok) return;
+    if (!await confirmDialog(`Delete ${user.name || "this user"}?`)) return;
     try {
       const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      await axios.delete(url + "admin/user/" + user._id, { headers });
-      setUsers(users.filter((u) => u._id !== user._id));
-      toast("User deleted successfully", "success");
-    } catch (e) {
-      toast(e.response?.data?.message || e.message, "error");
-    }
+      await axios.delete(url + "admin/user/" + user._id, { headers: { Authorization: `Bearer ${token}` } });
+      setUsers(u => u.filter(x => x._id !== user._id));
+      toast("User deleted", "success");
+    } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
 
-  const getSortedUsers = (usersToSort) => {
-    const sorted = [...usersToSort].sort((a, b) => {
-      const aValue = a[sortConfig.key] || "";
-      const bValue = b[sortConfig.key] || "";
-
-      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
-      return 0;
-    });
-    return sorted;
-  };
-
-  const filtered = users.filter((u) => {
-    const matchesSearch =
-      !search ||
-      u.name?.toLowerCase().includes(search.toLowerCase()) ||
-      u.email?.toLowerCase().includes(search.toLowerCase()) ||
-      u.phone?.includes(search);
-
-    const matchesFilter = filterType === "all" || u.userType === filterType;
-
-    return matchesSearch && matchesFilter;
+  const baseFiltered = users.filter(u => {
+    const s = search.toLowerCase();
+    const matchSearch = !s || u.name?.toLowerCase().includes(s) || u.email?.toLowerCase().includes(s) || u.phone?.includes(s);
+    const matchType = filterType === "all" || u.userType === filterType;
+    return matchSearch && matchType;
   });
 
-  const sortedAndFiltered = getSortedUsers(filtered);
+  const { sorted: allFiltered, orderBy, order, handleSort } = useSortable(baseFiltered, "createdAt", "desc");
+  const filtered = allFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
-  const headers = [
-    { label: "User ID", key: "userId" },
-    { label: "Name", key: "name" },
-    { label: "Type", key: "userType" },
-    { label: "Performer Type", key: "performerType" },
-    { label: "Approved", key: "approved" },
-    { label: "Email", key: "email" },
-    { label: "Phone", key: "phone" },
-    { label: "Registered", key: "createdAt" },
-    { label: "Actions", key: null },
+  const totalHosts = users.filter(u => u.userType === "host").length;
+  const totalParticipants = users.filter(u => u.userType === "participant").length;
+  const pendingHosts = users.filter(u => u.userType === "host" && !u.approved).length;
+
+  const stats = [
+    { label: "Total Users",    value: users.length,      icon: <PeopleIcon sx={{ fontSize: 20 }} />,                color: "#2563eb", light: "#eff6ff" },
+    { label: "Hosts",          value: totalHosts,         icon: <SupervisedUserCircleIcon sx={{ fontSize: 20 }} />, color: BRAND,     light: "#fff7ed" },
+    { label: "Participants",   value: totalParticipants,  icon: <HowToRegIcon sx={{ fontSize: 20 }} />,             color: "#059669", light: "#f0fdf4" },
+    { label: "Pending Hosts",  value: pendingHosts,       icon: <PendingActionsIcon sx={{ fontSize: 20 }} />,       color: "#7c3aed", light: "#f5f3ff" },
   ];
 
   return (
-    <div style={S.page}>
-      <div style={S.header}>
-        <div>
-          <h1 style={S.title}>Users</h1>
-          <p style={S.sub}>{users.length} total registered users</p>
-        </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <div
-            style={{
-              display: "flex",
-              background: "#f1f5f9",
-              padding: "4px",
-              borderRadius: "10px",
-              border: "1px solid #e2e8f0",
-            }}
-          >
-            {["all", "host", "participant"].map((type) => (
-              <button
-                key={type}
-                onClick={() => setFilterType(type)}
-                style={S.filterTab(filterType === type)}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </button>
-            ))}
-          </div>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email or phone..."
-            style={{
-              padding: "9px 14px",
-              borderRadius: 8,
-              border: "1px solid #e2e8f0",
-              fontSize: "0.82rem",
-              color: "#334155",
-              outline: "none",
-              width: 260,
-              fontFamily: "inherit",
-              background: "#fff",
-            }}
-            onFocus={(e) => (e.target.style.borderColor = "#D26600")}
-            onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
-          />
-        </div>
-      </div>
+    <Box sx={{ p: { xs: "16px", sm: "24px 28px" }, background: "#f8fafc", minHeight: "100vh" }}>
 
-      <div style={S.card}>
-        {loading ? (
-          <div
-            style={{
-              padding: 40,
-              textAlign: "center",
-              color: "#94a3b8",
-              fontSize: "0.875rem",
-            }}
-          >
-            Loading users...
-          </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  {headers.map((h) => (
-                    <th
-                      key={h.label}
-                      style={{
-                        ...S.th,
-                        cursor: h.key ? "pointer" : "default",
-                        userSelect: "none",
-                      }}
-                      onClick={() => h.key && requestSort(h.key)}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                      >
-                        {h.label}
-                        {h.key && sortConfig.key === h.key && (
-                          <span>
-                            {sortConfig.direction === "asc" ? "↑" : "↓"}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedAndFiltered.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={9}
-                      style={{
-                        ...S.td,
-                        textAlign: "center",
-                        padding: 40,
-                        color: "#94a3b8",
-                      }}
-                    >
-                      No users found
-                    </td>
-                  </tr>
-                ) : (
-                  sortedAndFiltered.map((user) => (
-                    <tr
-                      key={user._id}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = "#fafafa")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "transparent")
-                      }
-                      style={{ transition: "background 0.12s" }}
-                    >
-                      <td style={S.td}>
-                        <span
-                          onClick={() =>
-                            navigator.clipboard.writeText(
-                              user.userId || user._id,
-                            )
-                          }
-                          title="Copy ID"
-                          style={{
-                            fontFamily: "monospace",
-                            fontSize: "0.72rem",
-                            color: "#64748b",
-                            fontWeight: 600,
-                            cursor: "pointer",
+      {/* ── Breadcrumb + Header ── */}
+      <Box sx={{ mb: 3 }}>
+        <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: "#94a3b8", mb: 0.5, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          Admin / Users
+        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 2 }}>
+          <Box>
+            <Typography sx={{ fontSize: "1.5rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.05em", lineHeight: 1.2 }}>
+              User Management
+            </Typography>
+            <Typography sx={{ fontSize: "0.82rem", color: "#64748b", mt: 0.4, fontWeight: 500 }}>
+              {loading ? "Loading…" : `${users.length} total registered users`}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* ── Stat Cards ── */}
+      <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+        {stats.map((s, i) => <StatCard key={i} loading={loading} {...s} />)}
+      </Box>
+
+      {/* ── Filters Bar ── */}
+      <Box sx={{ background: "#fff", border: "1px solid #e8edf5", borderRadius: "14px", mb: 2, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", overflow: "hidden" }}>
+        <Box sx={{ px: 2, py: 1.2, borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <SearchIcon sx={{ fontSize: 15, color: "#94a3b8" }} />
+            <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Filters</Typography>
+          </Box>
+          {(search || filterType !== "all") && (
+            <Box component="button" onClick={() => { setSearch(""); setFilterType("all"); setPage(0); }}
+              sx={{ display: "flex", alignItems: "center", gap: 0.5, fontSize: "0.72rem", fontWeight: 600, color: "#ef4444", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "6px", px: 1.2, py: 0.4, cursor: "pointer", "&:hover": { background: "#fee2e2" }, transition: "all 0.15s" }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Clear
+            </Box>
+          )}
+        </Box>
+        <Box sx={{ p: "12px 16px", display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
+          <ToggleButtonGroup size="small" value={filterType} exclusive onChange={(_, v) => { v && setFilterType(v); setPage(0); }}
+            sx={{ background: "#f8fafc", borderRadius: "8px", p: "2px", border: "1px solid #e2e8f0", flexShrink: 0,
+              "& .MuiToggleButton-root": { border: "none", borderRadius: "6px !important", fontSize: "0.75rem", fontWeight: 600, px: 1.8, py: 0.5, color: "#64748b", textTransform: "capitalize",
+                "&.Mui-selected": { background: BRAND, color: "#fff", "&:hover": { background: "#b85a00" } } } }}>
+            {["all", "host", "participant"].map(t => <ToggleButton key={t} value={t}>{t}</ToggleButton>)}
+          </ToggleButtonGroup>
+          <TextField size="small" placeholder="Search name, email, phone…" value={search} onChange={e => { setSearch(e.target.value); setPage(0); }}
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 15, color: "#94a3b8" }} /></InputAdornment> }}
+            sx={{ flex: 1, minWidth: 220, "& .MuiOutlinedInput-root": { borderRadius: "8px", fontSize: "0.82rem", height: 36, "&.Mui-focused fieldset": { borderColor: BRAND } } }} />
+        </Box>
+      </Box>
+
+      {/* ── Table ── */}
+      <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 420px)", overflowX: "auto" }}>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <SortCell label="User ID"    field="userId"       orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Name"       field="name"         orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Type"       field="userType"     orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Performer"  field="performerType" orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Approved"   field="approved"     orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Email"      field="email"        orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Phone"      field="phone"        orderBy={orderBy} order={order} onSort={handleSort} />
+                <SortCell label="Registered" field="createdAt"    orderBy={orderBy} order={order} onSort={handleSort} />
+                <PlainCell label="Actions" />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: rowsPerPage }).map((_, i) => <SkeletonRow key={i} />)
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} sx={{ textAlign: "center", py: 8 }}>
+                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
+                      <Box sx={{ width: 56, height: 56, borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <PeopleIcon sx={{ fontSize: 28, color: "#cbd5e1" }} />
+                      </Box>
+                      <Typography sx={{ fontWeight: 700, color: "#334155", fontSize: "0.9rem" }}>No users found</Typography>
+                      <Typography sx={{ color: "#94a3b8", fontSize: "0.8rem" }}>
+                        {search ? "Try adjusting your search or filter" : "No users have registered yet"}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ) : filtered.map(user => {
+                const bc = badgeColor(user.userType);
+                return (
+                  <TableRow
+                    key={user._id}
+                    hover
+                    sx={{
+                      "&:hover": { background: "#fafbff" },
+                      "&:hover .row-actions": { opacity: 1 },
+                      transition: "background 0.15s",
+                      cursor: "default",
+                    }}
+                  >
+                    {/* User ID */}
+                    <TableCell sx={cellSx}>
+                      <Tooltip title="Click to copy">
+                        <Box
+                          component="span"
+                          onClick={() => { navigator.clipboard.writeText(user.userId || user._id); toast("ID copied", "success"); }}
+                          sx={{
+                            fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b",
+                            fontWeight: 700, cursor: "pointer", px: 1, py: 0.3,
+                            borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0",
+                            "&:hover": { background: "#f1f5f9", color: "#334155" },
+                            transition: "all 0.15s",
                           }}
                         >
-                          {user.userId || "—"}
-                        </span>
-                      </td>
-                      <td style={S.td}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                          }}
-                        >
-                          {user.profilePicture ? (
-                            <img
-                              src={
-                                user.profilePicture.startsWith("http")
-                                  ? user.profilePicture
-                                  : `${url.replace("/api/", "/")}${user.profilePicture}`
-                              }
-                              alt={user.name}
-                              style={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                                flexShrink: 0,
-                              }}
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                                e.target.nextSibling.style.display = "flex";
-                              }}
-                            />
-                          ) : null}
-                          <div
-                            style={{
-                              display: user.profilePicture ? "none" : "flex",
-                              width: 32,
-                              height: 32,
-                              borderRadius: "50%",
-                              background:
-                                "linear-gradient(135deg,#D26600,#f59e0b)",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: "#fff",
-                              fontSize: "0.75rem",
-                              fontWeight: 700,
-                              flexShrink: 0,
-                            }}
-                          >
-                            {(user.name || "?")[0].toUpperCase()}
-                          </div>
-                          <span style={{ fontWeight: 600, color: "#0f172a" }}>
-                            {user.name || "—"}
-                          </span>
-                        </div>
-                      </td>
-                      <td style={S.td}>
-                        <span style={S.badge(user.userType)}>
-                          {user.userType || "—"}
-                        </span>
-                      </td>
-                      <td style={S.td}>
-                        <span
-                          style={
-                            user.performerType
-                              ? S.performerBadge(user.performerType)
-                              : { fontSize: "0.75rem", color: "#475569" }
-                          }
-                        >
-                          {user.performerType || "—"}
-                        </span>
-                      </td>
-                      <td style={S.td}>
-                        {user.userType === "host" ? (
-                          <div>
-                            <span style={S.approvedBadge(user.approved)}>
-                              {user.approved ? "Approved" : "Pending"}
-                            </span>
-                            {user.approved && user.approvedAt && (
-                              <div style={{ marginTop: 4 }}>
-                                <div
-                                  style={{
-                                    fontSize: "0.72rem",
-                                    color: "#64748b",
-                                  }}
-                                >
-                                  {dayjs(user.approvedAt).format("DD MMM YYYY")}
-                                </div>
-                                <div
-                                  style={{
-                                    fontSize: "0.72rem",
-                                    color: "#94a3b8",
-                                  }}
-                                >
-                                  {dayjs(user.approvedAt).format("hh:mm A")}
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                          {user.userId || user._id || "—"}
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+
+                    {/* Name + Avatar */}
+                    <TableCell sx={cellSx}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+                        {user.profilePicture ? (
+                          <Box component="img"
+                            src={user.profilePicture.startsWith("http") ? user.profilePicture : `${url.replace("/api/", "/")}${user.profilePicture}`}
+                            alt=""
+                            onError={e => e.target.style.display = "none"}
+                            sx={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "2px solid #e2e8f0", flexShrink: 0 }}
+                          />
                         ) : (
-                          <span
-                            style={{ fontSize: "0.75rem", color: "#94a3b8" }}
-                          >
-                            —
-                          </span>
+                          <Box sx={{
+                            width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                            background: `linear-gradient(135deg,${BRAND},#f59e0b)`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: "#fff", fontSize: "0.75rem", fontWeight: 800,
+                            border: "2px solid #fff", boxShadow: `0 2px 8px ${BRAND}33`,
+                          }}>
+                            {(user.name || "?")[0].toUpperCase()}
+                          </Box>
                         )}
-                      </td>
-                      <td
-                        style={{
-                          ...S.td,
-                          maxWidth: 200,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        <span
-                          onClick={() =>
-                            navigator.clipboard.writeText(user.email || "")
-                          }
-                          title="Copy"
-                          style={{ cursor: "pointer" }}
+                        <Box>
+                          <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem", lineHeight: 1.2 }}>
+                            {user.name || "—"}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+
+                    {/* Type */}
+                    <TableCell sx={cellSx}>
+                      <Chip
+                        label={user.userType || "—"}
+                        size="small"
+                        sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: bc.bg, color: bc.color, border: `1px solid ${bc.border}` }}
+                      />
+                    </TableCell>
+
+                    {/* Performer */}
+                    <TableCell sx={cellSx}>
+                      {user.performerType
+                        ? <Chip label={user.performerType} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, textTransform: "capitalize", background: "#fce7f3", color: "#be185d", border: "1px solid #fbcfe8" }} />
+                        : <Typography component="span" sx={{ color: "#cbd5e1", fontSize: "0.8rem" }}>—</Typography>
+                      }
+                    </TableCell>
+
+                    {/* Approved */}
+                    <TableCell sx={cellSx}>
+                      {user.userType === "host" ? (
+                        <Chip
+                          label={user.approved ? "Approved" : "Pending"}
+                          size="small"
+                          sx={{
+                            fontSize: "0.68rem", fontWeight: 700, height: 22,
+                            background: user.approved ? "#f0fdf4" : "#fef2f2",
+                            color: user.approved ? "#166534" : "#991b1b",
+                            border: `1px solid ${user.approved ? "#bbf7d0" : "#fecaca"}`,
+                          }}
+                        />
+                      ) : <Typography component="span" sx={{ color: "#cbd5e1", fontSize: "0.8rem" }}>—</Typography>}
+                    </TableCell>
+
+                    {/* Email */}
+                    <TableCell sx={{ ...cellSx, maxWidth: 180 }}>
+                      <Tooltip title="Click to copy">
+                        <Box
+                          component="span"
+                          onClick={() => { navigator.clipboard.writeText(user.email || ""); toast("Email copied", "success"); }}
+                          sx={{
+                            cursor: "pointer", display: "block", overflow: "hidden",
+                            textOverflow: "ellipsis", color: "#475569",
+                            "&:hover": { color: "#2563eb", textDecoration: "underline" },
+                            transition: "color 0.15s",
+                          }}
                         >
                           {user.email || "—"}
-                        </span>
-                      </td>
-                      <td style={S.td}>
-                        <span
-                          onClick={() =>
-                            navigator.clipboard.writeText(user.phone || "")
-                          }
-                          title="Copy"
-                          style={{ cursor: "pointer" }}
-                        >
-                          {user.phone || "—"}
-                        </span>
-                      </td>
-                      <td style={S.td}>
-                        {user.createdAt ? (
-                          <div>
-                            <div>
-                              {dayjs(user.createdAt).format("DD MMM YYYY")}
-                            </div>
-                            <div
-                              style={{ fontSize: "0.72rem", color: "#94a3b8" }}
-                            >
-                              {dayjs(user.createdAt).format("hh:mm A")}
-                            </div>
-                          </div>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td style={S.td}>
-                        <div style={{ fontWeight: 500 }}>
-                          {user.createdAt
-                            ? dayjs(user.createdAt).format("DD MMM YYYY")
-                            : "—"}
-                        </div>
-                        {user.createdAt && (
-                          <div
-                            style={{
-                              fontSize: "0.72rem",
-                              color: "#94a3b8",
-                              marginTop: "2px",
-                            }}
-                          >
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+
+                    {/* Phone */}
+                    <TableCell sx={cellSx}>
+                      <Typography sx={{ color: "#475569", fontSize: "0.82rem" }}>{user.phone || "—"}</Typography>
+                    </TableCell>
+
+                    {/* Date */}
+                    <TableCell sx={cellSx}>
+                      {user.createdAt ? (
+                        <Box>
+                          <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
+                            {dayjs(user.createdAt).format("DD MMM YYYY")}
+                          </Typography>
+                          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>
                             {dayjs(user.createdAt).format("hh:mm A")}
-                          </div>
-                        )}
-                      </td>
-                      <td style={S.td}>
-                        <div style={{ display: "flex", gap: 6 }}>
-                          <button
-                            style={S.iconBtn("#eff6ff", "#2563eb")}
-                            title="View Details"
-                            onClick={() =>
-                              navigate(`/admin/userdetails/${user._id}`)
-                            }
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          </button>
-                          <button
-                            style={S.iconBtn("#f0fdf4", "#16a34a")}
-                            title="Edit User"
-                            onClick={() =>
-                              navigate(`/admin/updateuser/${user._id}`)
-                            }
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </button>
-                          <button
-                            style={S.iconBtn("#fef2f2", "#dc2626")}
-                            title="Delete User"
-                            onClick={() => handleDelete(user)}
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                              <path d="M10 11v6" />
-                              <path d="M14 11v6" />
-                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+                          </Typography>
+                        </Box>
+                      ) : "—"}
+                    </TableCell>
+
+                    {/* Actions */}
+                    <TableCell sx={cellSx}>
+                      <Box className="row-actions" sx={{ display: "flex", gap: 0.6, opacity: { xs: 1, md: 0.6 }, transition: "opacity 0.2s" }}>
+                        <Tooltip title="View Profile" arrow>
+                          <IconButton size="small" onClick={() => navigate(`/admin/userdetails/${user._id}`)}
+                            sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#dbeafe", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
+                            <VisibilityIcon sx={{ fontSize: 15 }} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Edit User" arrow>
+                          <IconButton size="small" onClick={() => navigate(`/admin/updateuser/${user._id}`)}
+                            sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#dcfce7", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
+                            <EditIcon sx={{ fontSize: 15 }} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete User" arrow>
+                          <IconButton size="small" onClick={() => handleDelete(user)}
+                            sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#fee2e2", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
+                            <DeleteIcon sx={{ fontSize: 15 }} />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Pagination */}
+        <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
+          <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>
+            Showing {Math.min(page * rowsPerPage + 1, allFiltered.length)}–{Math.min((page + 1) * rowsPerPage, allFiltered.length)} of {allFiltered.length}
+          </Typography>
+          <TablePagination
+            component="div"
+            count={allFiltered.length}
+            page={page}
+            onPageChange={(_, p) => setPage(p)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+            rowsPerPageOptions={[10, 25, 50]}
+            sx={{
+              border: "none",
+              "& .MuiTablePagination-toolbar": { px: 0 },
+              "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" },
+            }}
+          />
+        </Box>
+      </Paper>
+    </Box>
   );
 };
 

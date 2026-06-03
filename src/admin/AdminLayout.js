@@ -1,39 +1,37 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Sidenav from "./Sidenav"
+import Sidenav from "./Sidenav";
 import TopNav from './TopNav';
 
 const AdminLayout = () => {
-  const navRef = useRef(null)
-  const navigate = useNavigate()
+  const navRef = useRef(null);
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  
-  const toggleNav = () => setIsOpen(!isOpen);
-  const closeNav = () => {
-    if (window.innerWidth < 1024) setIsOpen(false);
-  };
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  const toggleNav = () => setIsOpen(o => !o);
+  const closeNav = () => { if (isMobile) setIsOpen(false); };
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024) setIsOpen(false);
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) setIsOpen(false);
     };
     window.addEventListener('resize', handleResize);
-    handleResize(); // Initial check
+    handleResize();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const admin = localStorage.getItem("admin");
-    if (!token || !admin) {
-      navigate("/admin");
-      return;
-    }
+    if (!token || !admin) { navigate("/admin"); return; }
 
     const interceptor = axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
+      r => r,
+      error => {
         if (error.response?.status === 401 || error.response?.status === 403) {
           localStorage.removeItem("token");
           localStorage.removeItem("admin");
@@ -42,48 +40,45 @@ const AdminLayout = () => {
         return Promise.reject(error);
       }
     );
-
     return () => axios.interceptors.response.eject(interceptor);
   }, [navigate]);
 
-  const sidebarWidth = isOpen ? 260 : 80;
+  const sidebarWidth = isMobile ? 0 : (isOpen ? 260 : 72);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc', fontFamily: "'Inter', sans-serif" }}>
-      <Sidenav isOpen={isOpen} setIsOpen={setIsOpen} toggleNav={toggleNav} closeNav={closeNav} ref={navRef} />
-      
-      {/* Main Wrapper */}
-      <div style={{ 
-        marginLeft: sidebarWidth, 
-        flex: 1, 
-        display: 'flex', 
-        flexDirection: 'column', 
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc', fontFamily: "'Plus Jakarta Sans','Inter',-apple-system,sans-serif" }}>
+      <Sidenav isOpen={isOpen} setIsOpen={setIsOpen} toggleNav={toggleNav} closeNav={closeNav} ref={navRef} isMobile={isMobile} />
+
+      {/* Mobile overlay */}
+      {isMobile && isOpen && (
+        <div
+          onClick={closeNav}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9999, backdropFilter: 'blur(2px)', transition: 'opacity 0.3s' }}
+        />
+      )}
+
+      <div style={{
+        marginLeft: sidebarWidth,
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'margin-left 0.38s cubic-bezier(0.4,0,0.2,1)',
         minWidth: 0,
-        position: 'relative'
       }}>
         <TopNav isOpen={isOpen} toggleNav={toggleNav} />
-        
-        <main style={{ 
-          flex: 1, 
-          padding: '24px', 
-          overflowY: 'auto',
-          animation: 'fadeIn 0.5s ease-out'
-        }}>
+        <main style={{ flex: 1, overflowY: 'auto', animation: 'fadeIn 0.35s ease-out' }}>
           <Outlet />
         </main>
-        
-        <style>{`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          ::-webkit-scrollbar { width: 6px; }
-          ::-webkit-scrollbar-track { background: #f1f5f9; }
-          ::-webkit-scrollbar-thumb { background: #cbd5e1; borderRadius: 10px; }
-          ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        `}</style>
       </div>
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        * { box-sizing: border-box; }
+      `}</style>
     </div>
   );
 };
