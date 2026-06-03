@@ -5,8 +5,9 @@ import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, Tab, Tabs, TablePagination,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, Tab, Tabs,
 } from "@mui/material";
+import AdminTablePagination from "./AdminTablePagination";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
 import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
@@ -31,6 +32,8 @@ const Approvals = () => {
   const [hRowsPerPage, setHRowsPerPage] = useState(10);
   const { sorted: sortedEvents, orderBy: evOB, order: evO, handleSort: evSort } = useSortable(events, "createdAt", "desc");
   const { sorted: sortedHosts, orderBy: hOB, order: hO, handleSort: hSort } = useSortable(hosts, "createdAt", "desc");
+  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
+  const isSuperAdmin = adminData.designation === "superAdmin";
 
   const headers = () => {
     const token = localStorage.getItem("token");
@@ -146,7 +149,9 @@ const Approvals = () => {
                         <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                         <Tooltip title="Approve"><IconButton size="small" onClick={() => approveEvent(ev)} sx={{ background: "#f0fdf4", color: "#059669", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                         <Tooltip title="Reject"><IconButton size="small" onClick={() => rejectEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                        <Tooltip title="Delete"><IconButton size="small" onClick={() => deleteEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        {isSuperAdmin && (
+                          <Tooltip title="Delete"><IconButton size="small" onClick={() => deleteEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        )}
                       </Box>
                     </TableCell>
                   </TableRow>
@@ -211,16 +216,22 @@ const Approvals = () => {
         </TableContainer>
 
         {tab === 0 && (
-          <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
-            <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>Showing {Math.min(evPage * evRowsPerPage + 1, sortedEvents.length)}–{Math.min((evPage + 1) * evRowsPerPage, sortedEvents.length)} of {sortedEvents.length}</Typography>
-            <TablePagination component="div" count={sortedEvents.length} page={evPage} onPageChange={(_, p) => setEvPage(p)} rowsPerPage={evRowsPerPage} onRowsPerPageChange={e => { setEvRowsPerPage(parseInt(e.target.value, 10)); setEvPage(0); }} rowsPerPageOptions={[10, 25, 50]} sx={{ border: "none", "& .MuiTablePagination-toolbar": { px: 0 }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" } }} />
-          </Box>
+          <AdminTablePagination
+            count={sortedEvents.length}
+            page={evPage}
+            rowsPerPage={evRowsPerPage}
+            onPageChange={(_, p) => setEvPage(p)}
+            onRowsPerPageChange={e => { setEvRowsPerPage(parseInt(e.target.value, 10)); setEvPage(0); }}
+          />
         )}
         {tab === 1 && (
-          <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
-            <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>Showing {Math.min(hPage * hRowsPerPage + 1, sortedHosts.length)}–{Math.min((hPage + 1) * hRowsPerPage, sortedHosts.length)} of {sortedHosts.length}</Typography>
-            <TablePagination component="div" count={sortedHosts.length} page={hPage} onPageChange={(_, p) => setHPage(p)} rowsPerPage={hRowsPerPage} onRowsPerPageChange={e => { setHRowsPerPage(parseInt(e.target.value, 10)); setHPage(0); }} rowsPerPageOptions={[10, 25, 50]} sx={{ border: "none", "& .MuiTablePagination-toolbar": { px: 0 }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" } }} />
-          </Box>
+          <AdminTablePagination
+            count={sortedHosts.length}
+            page={hPage}
+            rowsPerPage={hRowsPerPage}
+            onPageChange={(_, p) => setHPage(p)}
+            onRowsPerPageChange={e => { setHRowsPerPage(parseInt(e.target.value, 10)); setHPage(0); }}
+          />
         )}
       </Paper>
     </Box>

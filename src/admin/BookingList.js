@@ -7,8 +7,9 @@ import Loader from "../components/Loader";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Chip, Tooltip, IconButton, Box, Typography, TextField, Select,
-  MenuItem, FormControl, Button, TablePagination,
+  MenuItem, FormControl, Button,
 } from "@mui/material";
+import AdminTablePagination from "./AdminTablePagination";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import InputAdornment from "@mui/material/InputAdornment";
 import SearchIcon from "@mui/icons-material/SearchRounded";
@@ -187,10 +188,14 @@ const BookingList = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
-          <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>Showing {Math.min((page - 1) * 20 + 1, total)}–{Math.min(page * 20, total)} of {total}</Typography>
-          <TablePagination component="div" count={total} page={page - 1} onPageChange={(_, p) => setPage(p + 1)} rowsPerPage={20} rowsPerPageOptions={[20]} sx={{ border: "none", "& .MuiTablePagination-toolbar": { px: 0 }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" } }} />
-        </Box>
+        <AdminTablePagination
+          count={total}
+          page={page - 1}
+          rowsPerPage={20}
+          rowsPerPageOptions={[20]}
+          onPageChange={(_, p) => setPage(p + 1)}
+          onRowsPerPageChange={() => {}}
+        />
       </Paper>
     </Box>
   );

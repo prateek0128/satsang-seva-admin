@@ -5,8 +5,9 @@ import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, TablePagination,
+  Paper, Chip, Tooltip, IconButton, Box, Typography,
 } from "@mui/material";
+import AdminTablePagination from "./AdminTablePagination";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
 import DeleteIcon from "@mui/icons-material/DeleteRounded";
@@ -25,6 +26,8 @@ const Blog = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const { sorted, orderBy, order, handleSort } = useSortable(blogs, "createdAt", "desc");
+  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
+  const isSuperAdmin = adminData.designation === "superAdmin";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -105,7 +108,9 @@ const Blog = () => {
                     <Box sx={{ display: "flex", gap: 0.6 }}>
                       <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/editblog/${blog._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                       <Tooltip title="View"><IconButton size="small" onClick={() => navigate(`/admin/viewblog/${blog._id}`)} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                      <Tooltip title="Delete"><IconButton size="small" onClick={() => handleDelete(blog._id)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      {isSuperAdmin && (
+                        <Tooltip title="Delete"><IconButton size="small" onClick={() => handleDelete(blog._id)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -113,10 +118,13 @@ const Blog = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
-          <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>Showing {Math.min(page * rowsPerPage + 1, sorted.length)}–{Math.min((page + 1) * rowsPerPage, sorted.length)} of {sorted.length}</Typography>
-          <TablePagination component="div" count={sorted.length} page={page} onPageChange={(_, p) => setPage(p)} rowsPerPage={rowsPerPage} onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }} rowsPerPageOptions={[10, 25, 50]} sx={{ border: "none", "& .MuiTablePagination-toolbar": { px: 0 }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" } }} />
-        </Box>
+        <AdminTablePagination
+          count={sorted.length}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={(_, p) => setPage(p)}
+          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+        />
       </Paper>
     </Box>
   );

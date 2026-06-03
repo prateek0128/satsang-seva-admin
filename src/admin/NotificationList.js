@@ -5,8 +5,9 @@ import { toast } from "../components/Popup";
 import Loader from "../components/Loader";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, Tab, Tabs, Pagination,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, Tab, Tabs,
 } from "@mui/material";
+import AdminTablePagination from "./AdminTablePagination";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import CheckCircleIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import ScheduleIcon from "@mui/icons-material/ScheduleRounded";
@@ -44,7 +45,8 @@ const NotificationList = () => {
   const [loadingSent, setLoadingSent] = useState(true);
   const [loadingReceived, setLoadingReceived] = useState(false);
   const [sentTotal, setSentTotal] = useState(0);
-  const [sentPage, setSentPage] = useState(1);
+  const [sentPage, setSentPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const { sorted: sortedSent, orderBy, order, handleSort } = useSortable(sent, "createdAt", "desc");
 
@@ -52,11 +54,11 @@ const NotificationList = () => {
 
   useEffect(() => {
     setLoadingSent(true);
-    axios.get(`${url}admin/notifications`, { headers: h(), params: { page: sentPage, limit: 20 } })
+    axios.get(`${url}admin/notifications`, { headers: h(), params: { page: sentPage + 1, limit: rowsPerPage } })
       .then(r => { if (r.data.status === "success") { setSent(r.data.data.notifications); setSentTotal(r.data.data.total); } })
       .catch(() => toast("Error fetching notifications", "error"))
       .finally(() => setLoadingSent(false));
-  }, [sentPage, url]);
+  }, [sentPage, rowsPerPage, url]);
 
   useEffect(() => {
     if (tab !== 1) return;
@@ -68,7 +70,6 @@ const NotificationList = () => {
   }, [tab, url]);
 
   const totalReceived = received.pendingHosts.length + received.pendingEvents.length + received.draftEvents.length;
-  const pageCount = Math.ceil(sentTotal / 20);
   const { sorted: sortedHosts, orderBy: hOB, order: hO, handleSort: hSort } = useSortable(received.pendingHosts, "createdAt", "desc");
   const { sorted: sortedEvents, orderBy: eOB, order: eO, handleSort: eSort } = useSortable(received.pendingEvents, "createdAt", "desc");
   const { sorted: sortedDrafts, orderBy: dOB, order: dO, handleSort: dSort } = useSortable(received.draftEvents, "updatedAt", "desc");
@@ -131,12 +132,15 @@ const NotificationList = () => {
                 </TableBody>
               </Table>
             </TableContainer>
+            {/* Pagination */}
+            <AdminTablePagination
+              count={sentTotal}
+              page={sentPage}
+              rowsPerPage={rowsPerPage}
+              onPageChange={(_, p) => setSentPage(p)}
+              onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setSentPage(0); }}
+            />
           </Paper>
-          {pageCount > 1 && (
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <Pagination count={pageCount} page={sentPage} onChange={(_, v) => setSentPage(v)} sx={{ "& .MuiPaginationItem-root": { fontFamily: "var(--font-admin)", fontWeight: 600, borderRadius: "8px" }, "& .Mui-selected": { background: "linear-gradient(135deg,#D26600,#f58021) !important", color: "#fff", boxShadow: "0 2px 8px rgba(245,128,33,0.3)" } }} />
-            </Box>
-          )}
         </>
       ) : loadingReceived ? <Box sx={{ py: 6, textAlign: "center" }}><Loader /></Box> : (
         <>

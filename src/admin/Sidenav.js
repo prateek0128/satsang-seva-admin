@@ -11,6 +11,7 @@ import DraftsIcon from "@mui/icons-material/EditNoteRounded";
 import SupportIcon from "@mui/icons-material/SupportAgentRounded";
 import BookingsIcon from "@mui/icons-material/BookOnlineRounded";
 import NotificationsIcon from "@mui/icons-material/NotificationsRounded";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettingsRounded";
 import { Tooltip } from "@mui/material";
 import { confirmDialog } from "../components/Popup";
 import Badge from "../components/Badge";
@@ -20,6 +21,7 @@ const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav, isMobile }, ref) =
   const url = process.env.REACT_APP_BACKEND;
   const [contactCount, setContactCount] = useState(0);
   const [notifCount, setNotifCount] = useState(0);
+  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -49,6 +51,10 @@ const SideNavbar = forwardRef(({ isOpen, toggleNav, closeNav, isMobile }, ref) =
     { to: "/admin/notifications",   label: "Notifications",   icon: <NotificationsIcon fontSize="small" />, badge: notifCount },
     { to: "/admin/contact-queries", label: "Contact Queries", icon: <SupportIcon      fontSize="small" />, badge: contactCount },
   ];
+
+  if (adminData.designation === "superAdmin") {
+    navItems.push({ to: "/admin/admins", label: "Admin Users", icon: <AdminPanelSettingsIcon fontSize="small" /> });
+  }
 
   const handleLogOut = async () => {
     if (await confirmDialog("Are you sure you want to exit?")) {

@@ -5,8 +5,9 @@ import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, LinearProgress, Pagination,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, LinearProgress,
 } from "@mui/material";
+import AdminTablePagination from "./AdminTablePagination";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActiveRounded";
@@ -15,15 +16,16 @@ import { useSortable, SortCell, PlainCell } from "./sortable";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
 
-const PAGE_SIZE = 15;
-
 const DraftEvents = () => {
   const url = process.env.REACT_APP_BACKEND;
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const { sorted, orderBy, order, handleSort } = useSortable(events, "updatedAt", "desc");
+  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
+  const isSuperAdmin = adminData.designation === "superAdmin";
 
   const headers = () => {
     const token = localStorage.getItem("token");
@@ -84,7 +86,7 @@ const DraftEvents = () => {
                     <Typography sx={{ color: "#cbd5e1", fontSize: "0.78rem", mt: 0.5 }}>All event listings are complete.</Typography>
                   </TableCell>
                 </TableRow>
-              ) : sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(ev => (
+              ) : sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(ev => (
                 <TableRow key={ev._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
                   <TableCell sx={cellSx}>
                     <Tooltip title="Click to copy" arrow>
@@ -118,7 +120,9 @@ const DraftEvents = () => {
                       <Tooltip title="View"><IconButton size="small" onClick={() => window.open(`/event/${ev._id}`, "_blank")} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                       <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                       <Tooltip title="Send Reminder"><IconButton size="small" onClick={() => handleRemind(ev)} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><NotificationsActiveIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                      <Tooltip title="Delete"><IconButton size="small" onClick={() => handleDelete(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      {isSuperAdmin && (
+                        <Tooltip title="Delete"><IconButton size="small" onClick={() => handleDelete(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -126,13 +130,15 @@ const DraftEvents = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        {Math.ceil(sorted.length / PAGE_SIZE) > 1 && (
-          <Box sx={{ px: 2.5, py: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
-            <Typography sx={{ fontSize: "0.78rem", color: "#64748b" }}>Page {page} of {Math.ceil(sorted.length / PAGE_SIZE)} ({sorted.length} drafts)</Typography>
-            <Pagination count={Math.ceil(sorted.length / PAGE_SIZE)} page={page} onChange={(_, v) => setPage(v)} size="small"
-              sx={{ "& .MuiPaginationItem-root": { fontWeight: 600, borderRadius: "8px", fontSize: "0.78rem" }, "& .Mui-selected": { background: "linear-gradient(135deg,#D26600,#f58021) !important", color: "#fff", boxShadow: "0 2px 8px rgba(245,128,33,0.35)" } }} />
-          </Box>
-        )}
+        {/* Pagination */}
+        <AdminTablePagination
+          count={sorted.length}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={(_, p) => setPage(p)}
+          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          background="#f8fafc"
+        />
       </Paper>
     </Box>
   );

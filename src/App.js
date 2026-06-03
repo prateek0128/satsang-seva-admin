@@ -44,6 +44,7 @@ import ContactQueries from "./admin/ContactQueries";
 import BookingList from "./admin/BookingList";
 import BookingDetails from "./admin/BookingDetails";
 import NotificationList from "./admin/NotificationList";
+import AdminManagement from "./admin/AdminManagement";
 
 function App() {
   const action = useNavigationType();
@@ -116,6 +117,7 @@ function App() {
           <Route path="bookings" element={<BookingList />} />
           <Route path="bookings/:id" element={<BookingDetails />} />
           <Route path="notifications" element={<NotificationList />} />
+          <Route path="admins" element={<AdminManagement />} />
         </Route>
       </Route>
     </Routes>

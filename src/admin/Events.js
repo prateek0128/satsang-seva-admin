@@ -7,8 +7,9 @@ import Loader from "../components/Loader";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Chip, Tooltip, IconButton, Box, Typography, TextField, Select,
-  MenuItem, FormControl, TablePagination,
+  MenuItem, FormControl,
 } from "@mui/material";
+import AdminTablePagination from "./AdminTablePagination";
 import InputAdornment from "@mui/material/InputAdornment";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
@@ -35,6 +36,8 @@ const Events = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filters, setFilters] = useState({ eventName: "", host: "", place: "", category: "", status: "all", language: "", type: "all" });
+  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
+  const isSuperAdmin = adminData.designation === "superAdmin";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -270,7 +273,13 @@ const Events = () => {
                         {!ev.approved
                           ? <Tooltip title="Approve"><IconButton size="small" onClick={() => handleApprove(ev)} sx={{ background: "#f0fdf4", color: "#15803d", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                           : <Tooltip title="Reject"><IconButton size="small" onClick={() => handleReject(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
-                        <Tooltip title="Delete"><IconButton size="small" onClick={() => handleDelete(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        {isSuperAdmin && (
+                          <Tooltip title="Delete">
+                            <IconButton size="small" onClick={() => handleDelete(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}>
+                              <DeleteIcon sx={{ fontSize: 15 }} />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                       </Box>
                     </TableCell>
                   </TableRow>
@@ -281,21 +290,13 @@ const Events = () => {
         </TableContainer>
 
         {/* Footer */}
-        <Box sx={{ borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, flexWrap: "wrap" }}>
-          <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", py: 1 }}>
-            Showing {Math.min(page * rowsPerPage + 1, filtered.length)}–{Math.min((page + 1) * rowsPerPage, filtered.length)} of {filtered.length}
-          </Typography>
-          <TablePagination
-            component="div"
-            count={filtered.length}
-            page={page}
-            onPageChange={(_, p) => setPage(p)}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-            rowsPerPageOptions={[10, 25, 50]}
-            sx={{ border: "none", "& .MuiTablePagination-toolbar": { px: 0 }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { fontSize: "0.78rem", color: "#64748b" } }}
-          />
-        </Box>
+        <AdminTablePagination
+          count={filtered.length}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={(_, p) => setPage(p)}
+          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+        />
       </Paper>
     </Box>
   );

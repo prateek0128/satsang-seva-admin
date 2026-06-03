@@ -5,8 +5,9 @@ import { toast, confirmDialog } from "../components/Popup";
 import Loader from "../components/Loader";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, TextField, Pagination,
+  Paper, Chip, Tooltip, IconButton, Box, Typography, TextField,
 } from "@mui/material";
+import AdminTablePagination from "./AdminTablePagination";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import DeleteIcon from "@mui/icons-material/DeleteRounded";
 import MailIcon from "@mui/icons-material/MailRounded";
@@ -29,8 +30,6 @@ const typeColors = {
 
 const QUERY_TYPES = ["all", "contact", "help", "experience", "report", "feedback", "messages"];
 
-const PAGE_SIZE = 15;
-
 const ContactQueries = () => {
   const url = process.env.REACT_APP_BACKEND;
   const [queries, setQueries] = useState([]);
@@ -39,7 +38,10 @@ const ContactQueries = () => {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [selectedMessage, setSelectedMessage] = useState(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
+  const isSuperAdmin = adminData.designation === "superAdmin";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -75,11 +77,10 @@ const ContactQueries = () => {
       });
 
   // reset page on filter change
-  React.useEffect(() => { setPage(1); }, [search, filterType]);
+  React.useEffect(() => { setPage(0); }, [search, filterType]);
 
   const { sorted: filtered, orderBy, order, handleSort } = useSortable(baseFiltered, "createdAt", "desc");
-  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const paged = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
@@ -161,9 +162,11 @@ const ContactQueries = () => {
                         <Tooltip title="Reply via Email">
                           <IconButton size="small" component="a" href={`mailto:${q.email}?subject=Re: ${encodeURIComponent(q.subject)}`} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><MailIcon sx={{ fontSize: 15 }} /></IconButton>
                         </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton size="small" onClick={() => handleDelete(q)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton>
-                        </Tooltip>
+                        {isSuperAdmin && (
+                          <Tooltip title="Delete">
+                            <IconButton size="small" onClick={() => handleDelete(q)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton>
+                          </Tooltip>
+                        )}
                       </Box>
                     </TableCell>
                   </TableRow>
@@ -172,13 +175,15 @@ const ContactQueries = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        {pageCount > 1 && (
-          <Box sx={{ px: 2.5, py: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
-            <Typography sx={{ fontSize: "0.78rem", color: "#64748b" }}>Page {page} of {pageCount} ({filtered.length} queries)</Typography>
-            <Pagination count={pageCount} page={page} onChange={(_, v) => setPage(v)} size="small"
-              sx={{ "& .MuiPaginationItem-root": { fontWeight: 600, borderRadius: "8px", fontSize: "0.78rem" }, "& .Mui-selected": { background: "linear-gradient(135deg,#D26600,#f58021) !important", color: "#fff", boxShadow: "0 2px 8px rgba(245,128,33,0.35)" } }} />
-          </Box>
-        )}
+        {/* Pagination */}
+        <AdminTablePagination
+          count={filtered.length}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={(_, p) => setPage(p)}
+          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          background="#f8fafc"
+        />
       </Paper>
 
       {selectedMessage && (
