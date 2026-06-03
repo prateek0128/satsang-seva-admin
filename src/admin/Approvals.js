@@ -57,6 +57,7 @@ const Approvals = () => {
     catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
   const rejectEvent = async (ev) => {
+    if (!isSuperAdmin) return;
     if (!await confirmDialog(`Reject "${ev.eventName}"?`)) return;
     try { await axios.put(`${url}admin/reject/${ev._id}`, {}, { headers: headers() }); setEvents(e => e.filter(x => x._id !== ev._id)); toast("Event rejected", "info"); }
     catch (e) { toast(e.response?.data?.message || e.message, "error"); }
@@ -148,7 +149,9 @@ const Approvals = () => {
                         <Tooltip title="View"><IconButton size="small" onClick={() => window.open(`${process.env.REACT_APP_FRONTEND}/event/${ev._id}`, "_blank")} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                         <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                         <Tooltip title="Approve"><IconButton size="small" onClick={() => approveEvent(ev)} sx={{ background: "#f0fdf4", color: "#059669", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                        <Tooltip title="Reject"><IconButton size="small" onClick={() => rejectEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        {isSuperAdmin && (
+                          <Tooltip title="Reject"><IconButton size="small" onClick={() => rejectEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                        )}
                         {isSuperAdmin && (
                           <Tooltip title="Delete"><IconButton size="small" onClick={() => deleteEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                         )}

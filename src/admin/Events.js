@@ -85,6 +85,7 @@ const Events = () => {
     catch { toast("Failed to delete", "error"); }
   };
   const handleTogglePopular = async (ev) => {
+    if (!isSuperAdmin) return;
     try {
       const res = await axios.post(`${url}admin/events/${ev._id}/toggle-popular`, {}, { headers: h() });
       setAllEvents(p => p.map(e => e._id === ev._id ? { ...e, isPopular: res.data.data.isPopular } : e));
@@ -101,6 +102,7 @@ const Events = () => {
     catch { toast("Approval failed", "error"); }
   };
   const handleReject = async (ev) => {
+    if (!isSuperAdmin) return;
     if (!await confirmDialog(`Reject "${ev.eventName}"?`)) return;
     try { await axios.put(`${url}admin/events/reject/${ev._id}`, {}, { headers: h() }); setAllEvents(p => p.map(e => e._id === ev._id ? { ...e, approved: false } : e)); toast("Event rejected", "info"); }
     catch { toast("Rejection failed", "error"); }
@@ -263,16 +265,18 @@ const Events = () => {
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <Box sx={{ display: "flex", gap: 0.5 }}>
-                        <Tooltip title={ev.isPopular ? "Unmark Popular" : "Mark Popular"}>
-                          <IconButton size="small" onClick={() => handleTogglePopular(ev)} sx={{ background: ev.isPopular ? "#fffbeb" : "#f1f5f9", color: ev.isPopular ? "#f59e0b" : "#94a3b8", borderRadius: "8px", "&:hover": { background: "#fef3c7" } }}>
-                            {ev.isPopular ? <StarIcon sx={{ fontSize: 15 }} /> : <StarBorderIcon sx={{ fontSize: 15 }} />}
-                          </IconButton>
-                        </Tooltip>
+                        {isSuperAdmin && (
+                          <Tooltip title={ev.isPopular ? "Unmark Popular" : "Mark Popular"}>
+                            <IconButton size="small" onClick={() => handleTogglePopular(ev)} sx={{ background: ev.isPopular ? "#fffbeb" : "#f1f5f9", color: ev.isPopular ? "#f59e0b" : "#94a3b8", borderRadius: "8px", "&:hover": { background: "#fef3c7" } }}>
+                              {ev.isPopular ? <StarIcon sx={{ fontSize: 15 }} /> : <StarBorderIcon sx={{ fontSize: 15 }} />}
+                            </IconButton>
+                          </Tooltip>
+                        )}
                         <Tooltip title="View"><IconButton size="small" onClick={() => navigate(`/admin/event/${ev._id}`)} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                         <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                         {!ev.approved
                           ? <Tooltip title="Approve"><IconButton size="small" onClick={() => handleApprove(ev)} sx={{ background: "#f0fdf4", color: "#15803d", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                          : <Tooltip title="Reject"><IconButton size="small" onClick={() => handleReject(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
+                          : isSuperAdmin && <Tooltip title="Reject"><IconButton size="small" onClick={() => handleReject(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
                         {isSuperAdmin && (
                           <Tooltip title="Delete">
                             <IconButton size="small" onClick={() => handleDelete(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}>

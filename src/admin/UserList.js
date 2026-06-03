@@ -96,7 +96,9 @@ const UserList = () => {
     } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
 
-  const baseFiltered = users.filter(u => {
+  const visibleUsers = isSuperAdmin ? users : users.filter(u => u.userType !== "participant");
+
+  const baseFiltered = visibleUsers.filter(u => {
     const s = search.toLowerCase();
     const matchSearch = !s || u.name?.toLowerCase().includes(s) || u.email?.toLowerCase().includes(s) || u.phone?.includes(s);
     const matchType = filterType === "all" || u.userType === filterType;
@@ -106,16 +108,17 @@ const UserList = () => {
   const { sorted: allFiltered, orderBy, order, handleSort } = useSortable(baseFiltered, "createdAt", "desc");
   const filtered = allFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
-  const totalHosts = users.filter(u => u.userType === "host").length;
-  const totalParticipants = users.filter(u => u.userType === "participant").length;
-  const pendingHosts = users.filter(u => u.userType === "host" && !u.approved).length;
+  const totalHosts = visibleUsers.filter(u => u.userType === "host").length;
+  const totalParticipants = visibleUsers.filter(u => u.userType === "participant").length;
+  const pendingHosts = visibleUsers.filter(u => u.userType === "host" && !u.approved).length;
 
   const stats = [
-    { label: "Total Users",    value: users.length,      icon: <PeopleIcon sx={{ fontSize: 20 }} />,                color: "#2563eb", light: "#eff6ff" },
+    { label: "Total Users",    value: visibleUsers.length, icon: <PeopleIcon sx={{ fontSize: 20 }} />,              color: "#2563eb", light: "#eff6ff" },
     { label: "Hosts",          value: totalHosts,         icon: <SupervisedUserCircleIcon sx={{ fontSize: 20 }} />, color: BRAND,     light: "#fff7ed" },
-    { label: "Participants",   value: totalParticipants,  icon: <HowToRegIcon sx={{ fontSize: 20 }} />,             color: "#059669", light: "#f0fdf4" },
+    ...(isSuperAdmin ? [{ label: "Participants", value: totalParticipants, icon: <HowToRegIcon sx={{ fontSize: 20 }} />, color: "#059669", light: "#f0fdf4" }] : []),
     { label: "Pending Hosts",  value: pendingHosts,       icon: <PendingActionsIcon sx={{ fontSize: 20 }} />,       color: "#7c3aed", light: "#f5f3ff" },
   ];
+  const filterOptions = isSuperAdmin ? ["all", "host", "participant"] : ["all", "host"];
 
   return (
     <Box sx={{ p: { xs: "16px", sm: "24px 28px" }, minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)" }}>
@@ -131,7 +134,7 @@ const UserList = () => {
               User Management
             </Typography>
             <Typography sx={{ fontSize: "0.82rem", color: "#64748b", mt: 0.4, fontWeight: 500 }}>
-              {loading ? "Loading…" : `${users.length} total registered users`}
+              {loading ? "Loading…" : `${visibleUsers.length} total registered users`}
             </Typography>
           </Box>
         </Box>
@@ -162,7 +165,7 @@ const UserList = () => {
             sx={{ background: "#f8fafc", borderRadius: "8px", p: "2px", border: "1px solid #e2e8f0", flexShrink: 0,
               "& .MuiToggleButton-root": { border: "none", borderRadius: "6px !important", fontSize: "0.75rem", fontWeight: 600, px: 1.8, py: 0.5, color: "#64748b", textTransform: "capitalize",
                 "&.Mui-selected": { background: "linear-gradient(135deg,#D26600,#f58021)", color: "#fff", boxShadow: "0 2px 8px rgba(245,128,33,0.3)", "&:hover": { background: "linear-gradient(135deg,#b35800,#D26600)" } } } }}>
-            {["all", "host", "participant"].map(t => <ToggleButton key={t} value={t}>{t}</ToggleButton>)}
+            {filterOptions.map(t => <ToggleButton key={t} value={t}>{t}</ToggleButton>)}
           </ToggleButtonGroup>
           <TextField size="small" placeholder="Search name, email, phone…" value={search} onChange={e => { setSearch(e.target.value); setPage(0); }}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 15, color: "#94a3b8" }} /></InputAdornment> }}
