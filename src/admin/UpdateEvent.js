@@ -8,7 +8,7 @@ import Loader from "../components/Loader";
 
 const CATEGORIES = [
   "Satsang", "Yoga", "Meditation", "Kirtan", "Utsavs",
-  "Dharma Sabha", "Adhyatmik Shivir", "Seva & Charity",
+  "Dharma Sabha", " ShAdhyatmikivir", "Seva & Charity",
   "Sanskritik", "Puja", "Vividh (Others)", "Spiritual",
 ];
 

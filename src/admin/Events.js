@@ -9,13 +9,7 @@ import {
   getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { IconButton, Tooltip } from "@mui/material";
-import VisibilityIcon from "@mui/icons-material/VisibilityTwoTone";
-import EditIcon from "@mui/icons-material/BorderColorTwoTone";
-import DeleteIcon from "@mui/icons-material/DeleteForeverTwoTone";
-import BlockIcon from "@mui/icons-material/BlockTwoTone";
-import StarIcon from "@mui/icons-material/StarTwoTone";
-import StarBorderIcon from "@mui/icons-material/StarBorderTwoTone";
+import { Tooltip } from "@mui/material";
 import ArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import ArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import Loader from "../components/Loader";
@@ -38,7 +32,7 @@ const S = {
   td: { padding: "16px", borderBottom: "1px solid #f1f5f9", fontSize: "0.875rem", color: "#334155", verticalAlign: "middle", whiteSpace: "nowrap" },
   eventThumb: { width: "40px", height: "40px", borderRadius: "8px", objectFit: "cover", background: "#f1f5f9" },
   badge: (bg, fg) => ({ padding: "4px 10px", borderRadius: "20px", fontSize: "0.68rem", fontWeight: 700, background: bg, color: fg }),
-  actionBtn: (color) => ({ padding: "8px", borderRadius: "8px", border: "none", background: "transparent", color: color, cursor: "pointer", transition: "all 0.2s", display: "inline-flex", alignItems: "center", justifyContent: "center" }),
+  actionBtn: (bg, color) => ({ width: 30, height: 30, borderRadius: 8, border: `1px solid ${bg}`, background: bg, color, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "opacity 0.15s" }),
   pagination: { padding: "16px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc", borderTop: "1px solid #e2e8f0" },
   pgBtn: { padding: "6px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", background: "#fff", color: "#64748b", fontWeight: 600, fontSize: "0.875rem", cursor: "pointer", transition: "all 0.2s" }
 };
@@ -222,7 +216,7 @@ const Events = () => {
       cell: ({ row }) => (
         <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#64748b", fontSize: "0.75rem" }}>
-            <VisibilityIcon sx={{ fontSize: 14 }} />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <span style={{ fontWeight: 600 }}>{row.original.viewCount || 0}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#059669", fontSize: "0.75rem" }}>
@@ -268,36 +262,39 @@ const Events = () => {
       cell: ({ row }) => (
         <div style={{ display: "flex", gap: "4px" }}>
           <Tooltip title={row.original.isPopular ? "Unmark Popular" : "Mark Popular"}>
-            <button style={S.actionBtn(row.original.isPopular ? "#f59e0b" : "#cbd5e1")} onClick={() => handleTogglePopular(row.original)}>
-              {row.original.isPopular ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+            <button style={S.actionBtn(row.original.isPopular ? "#fffbeb" : "#f1f5f9", row.original.isPopular ? "#f59e0b" : "#94a3b8")} onClick={() => handleTogglePopular(row.original)}>
+              {row.original.isPopular
+                ? <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              }
             </button>
           </Tooltip>
           <Tooltip title="View">
-            <button style={S.actionBtn("#64748b")} onClick={() => window.open(`${process.env.REACT_APP_FRONTEND}/event/${row.original._id}`, "_blank")}>
-              <VisibilityIcon fontSize="small" />
+            <button style={S.actionBtn("#f9fafb", "#374151")} onClick={() => navigate(`/admin/event/${row.original._id}`)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </Tooltip>
           <Tooltip title="Edit">
-            <button style={S.actionBtn("#D26600")} onClick={() => navigate(`/admin/updateevent/${row.original._id}`)}>
-              <EditIcon fontSize="small" />
+            <button style={S.actionBtn("#f0fdf4", "#16a34a")} onClick={() => navigate(`/admin/updateevent/${row.original._id}`)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
           </Tooltip>
           {!row.original.approved ? (
             <Tooltip title="Approve">
-              <button style={S.actionBtn("#15803d")} onClick={() => handleApprove(row.original)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              <button style={S.actionBtn("#f0fdf4", "#15803d")} onClick={() => handleApprove(row.original)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
               </button>
             </Tooltip>
           ) : (
             <Tooltip title="Reject">
-              <button style={S.actionBtn("#ef4444")} onClick={() => handleReject(row.original)}>
-                <BlockIcon fontSize="small" />
+              <button style={S.actionBtn("#fef2f2", "#ef4444")} onClick={() => handleReject(row.original)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </Tooltip>
           )}
           <Tooltip title="Delete">
-            <button style={S.actionBtn("#ef4444")} onClick={() => handleDelete(row.original)}>
-              <DeleteIcon fontSize="small" />
+            <button style={S.actionBtn("#fef2f2", "#ef4444")} onClick={() => handleDelete(row.original)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             </button>
           </Tooltip>
         </div>

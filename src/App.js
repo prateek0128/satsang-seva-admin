@@ -31,12 +31,14 @@ import UserEvents from "./admin/UserEvents";
 import Updateform from "./admin/Updateform";
 import Approvals from "./admin/Approvals";
 import Blog from "./admin/Blog";
+import ViewBlog from "./admin/ViewBlog";
 import DraftEvents from "./admin/DraftEvents";
 import AdminLayout from "./admin/AdminLayout";
 import AdminLogin from "./admin/AdminLogin";
 import AdminSignup from "./admin/AdminSignup";
 import UpdateUser from "./admin/UpdateUser";
 import UpdateEvent from "./admin/UpdateEvent";
+import ViewEvent from "./admin/ViewEvent";
 import DeleteAccountRequest from "./admin/DeleteAccountRequest";
 import ContactQueries from "./admin/ContactQueries";
 import BookingList from "./admin/BookingList";
@@ -100,9 +102,12 @@ function App() {
           <Route path="drafts" element={<DraftEvents />} />
           <Route path="approvals" element={<Approvals />} />
           <Route path="blog" element={<Blog />} />
+          <Route path="viewblog/:id" element={<ViewBlog />} />
           <Route path="createblog" element={<AddBlog />} />
+          <Route path="editblog/:id" element={<AddBlog />} />
           <Route path="updateuser/:id" element={<UpdateUser />} />
           <Route path="updateevent/:id" element={<UpdateEvent />} />
+          <Route path="event/:id" element={<ViewEvent />} />
           <Route path="allproduct/:id/:name" element={<AllProducts />} />
           <Route path="userevents/:userId" element={<UserEvents />} />
           <Route path="userdetails/:id" element={<UpdateUser />} />

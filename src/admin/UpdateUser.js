@@ -198,6 +198,7 @@ const UpdateUser = () => {
 
   const [newInterest, setNewInterest] = useState("");
   const [docFiles, setDocFiles] = useState([]);
+  const [profileFile, setProfileFile] = useState(null);
   const [events, setEvents] = useState([]);
   const [stats, setStats] = useState({ subscribers: 0, subscriptions: 0 });
 
@@ -410,6 +411,15 @@ const UpdateUser = () => {
     setDocFiles(validFiles);
   };
 
+  const handleProfilePicChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setProfileFile(file);
+    } else if (file) {
+      toast("Only image files are allowed", "error");
+    }
+  };
+
   const getInterestLabel = (interest) => {
     const key = Number(interest);
     if (!Number.isNaN(key) && INTEREST_LABELS[key]) return INTEREST_LABELS[key];
@@ -472,7 +482,7 @@ const UpdateUser = () => {
         profilePicture: formData.profilePicture,
       };
 
-      if (docFiles.length > 0) {
+      if (docFiles.length > 0 || profileFile) {
         const multipartHeaders = token
           ? {
               Authorization: `Bearer ${token}`,
@@ -484,6 +494,9 @@ const UpdateUser = () => {
         docFiles.forEach((file) => {
           additionalForm.append("documents", file);
         });
+        if (profileFile) {
+          additionalForm.append("profilePicture", profileFile);
+        }
         await axios.put(`${url}admin/user/modify/${id}`, additionalForm, {
           headers: multipartHeaders,
         });
@@ -567,12 +580,14 @@ const UpdateUser = () => {
           <div>
             <div style={S.card}>
               <div style={S.avatarWrapper}>
-                {formData.profilePicture ? (
+                {formData.profilePicture || profileFile ? (
                   <img
                     src={
-                      formData.profilePicture.startsWith("http")
-                        ? formData.profilePicture
-                        : `${url.replace("/api/", "/")}/${formData.profilePicture}`
+                      profileFile
+                        ? URL.createObjectURL(profileFile)
+                        : formData.profilePicture.startsWith("http")
+                          ? formData.profilePicture
+                          : `${url.replace("/api/", "/")}/${formData.profilePicture}`
                     }
                     alt="Avatar"
                     style={S.avatar}
@@ -595,16 +610,48 @@ const UpdateUser = () => {
                 <h2 style={{ ...S.name, marginBottom: "16px" }}>
                   {formData.name || "User Profile"}
                 </h2>
-                <div style={{ width: "100%", textAlign: "left" }}>
-                  <span style={S.label}>Profile Picture URL</span>
-                  <input
-                    style={S.input}
-                    name="profilePicture"
-                    value={formData.profilePicture}
-                    onChange={handleChange}
-                    placeholder="https://..."
-                  />
-                </div>
+                <input
+                  id="profile-pic-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePicChange}
+                  style={{ display: "none" }}
+                />
+                <label
+                  htmlFor="profile-pic-input"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    padding: "10px 16px",
+                    borderRadius: "8px",
+                    background: "linear-gradient(135deg, #D26600, #ea580c)",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                    width: "100%",
+                    marginBottom: "12px",
+                    boxShadow: "0 2px 8px rgba(210,102,0,0.2)",
+                  }}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 5 17 10" />
+                    <line x1="12" y1="5" x2="12" y2="17" />
+                  </svg>
+                  Upload Photo
+                </label>
               </div>
             </div>
 

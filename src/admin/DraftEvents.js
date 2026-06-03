@@ -9,7 +9,7 @@ const S = {
   card: { background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", overflow: "hidden" },
   th: { padding: "11px 16px", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap", textAlign: "left" },
   td: { padding: "12px 16px", fontSize: "0.82rem", color: "#334155", borderBottom: "1px solid #f1f5f9", verticalAlign: "middle", whiteSpace: "nowrap" },
-  iconBtn: (color) => ({ background: "none", border: "none", cursor: "pointer", padding: "6px 10px", borderRadius: 7, display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.72rem", fontWeight: 600, color, border: `1px solid ${color}20`, transition: "all 0.15s" }),
+  iconBtn: (bg, color) => ({ width: 30, height: 30, borderRadius: 8, border: `1px solid ${bg}`, background: bg, color, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "opacity 0.15s" }),
 };
 
 const DraftEvents = () => {
@@ -40,6 +40,16 @@ const DraftEvents = () => {
     try {
       await axios.post(`${url}admin/events/drafts/${event._id}/remind`, {}, { headers: getHeaders() });
       toast("Reminder sent successfully", "success");
+    } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
+  };
+
+  const handleDelete = async (event) => {
+    const ok = await confirmDialog(`Delete draft "${event.eventName || 'this draft'}"? This cannot be undone.`);
+    if (!ok) return;
+    try {
+      await axios.delete(`${url}events/${event._id}`, { headers: getHeaders() });
+      setEvents(prev => prev.filter(e => e._id !== event._id));
+      toast("Draft deleted", "success");
     } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
 
@@ -123,13 +133,21 @@ const DraftEvents = () => {
                     <td style={S.td}>{event.updatedAt ? dayjs(event.updatedAt).format("DD MMM YYYY, HH:mm") : "—"}</td>
                     <td style={{ ...S.td, whiteSpace: "nowrap" }}>
                       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                        {/* Remind */}
+                        <button onClick={() => window.open(`/event/${event._id}`, "_blank")}
+                          style={S.iconBtn("#f9fafb", "#374151")} title="View">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                        <button onClick={() => navigate(`/admin/updateevent/${event._id}`)}
+                          style={S.iconBtn("#f0fdf4", "#16a34a")} title="Edit">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
                         <button onClick={() => handleRemind(event)}
-                          style={{ padding: "5px 10px", borderRadius: 7, border: "1px solid #bfdbfe", background: "#eff6ff", color: "#2563eb", fontSize: "0.72rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, transition: "all 0.15s" }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "#dbeafe"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "#eff6ff"; }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg>
-                          Send Reminder
+                          style={S.iconBtn("#eff6ff", "#2563eb")} title="Send Reminder">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg>
+                        </button>
+                        <button onClick={() => handleDelete(event)}
+                          style={S.iconBtn("#fef2f2", "#dc2626")} title="Delete">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                         </button>
                       </div>
                     </td>
