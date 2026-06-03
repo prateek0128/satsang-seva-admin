@@ -15,18 +15,57 @@ const CATEGORIES = [
 const LANGUAGES = ["Hindi", "English", "Gujarati", "Marathi", "Bengali", "Tamil", "Telugu", "Kannada", "Other"];
 
 const inputStyle = {
-  width: "100%", padding: "9px 12px", borderRadius: 8,
-  border: "1px solid #e5e7eb", fontSize: "0.875rem",
+  width: "100%", padding: "11px 13px", borderRadius: 10,
+  border: "1px solid #e2e8f0", fontSize: "0.875rem",
   outline: "none", boxSizing: "border-box", background: "#fff",
+  color: "#0f172a", boxShadow: "0 1px 2px rgba(15,23,42,0.03)",
 };
 
-const labelStyle = { fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4, display: "block" };
+const labelStyle = { fontSize: "0.76rem", fontWeight: 800, color: "#334155", marginBottom: 6, display: "block" };
+const grid2 = { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 };
+const grid3 = { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 };
+const grid4 = { display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 14 };
+const hintStyle = { margin: "6px 0 0", fontSize: "0.72rem", color: "#94a3b8" };
 
 const Field = ({ label, children }) => (
   <div style={{ display: "flex", flexDirection: "column" }}>
     <label style={labelStyle}>{label}</label>
     {children}
   </div>
+);
+
+const toneMap = {
+  green:  { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
+  orange: { bg: "#fff7ed", color: "#D26600",  border: "#fed7aa" },
+  slate:  { bg: "#f1f5f9", color: "#475569",  border: "#cbd5e1" },
+};
+
+const StatusPill = ({ label, tone = "slate" }) => {
+  const t = toneMap[tone] || toneMap.slate;
+  return (
+    <span style={{ padding: "4px 12px", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700,
+      background: t.bg, color: t.color, border: `1px solid ${t.border}`,
+      textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      {label}
+    </span>
+  );
+};
+
+const ToggleField = ({ label, checked, onChange }) => (
+  <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer",
+    background: checked ? "#fff7ed" : "#f8fafc", border: `1px solid ${checked ? "#fed7aa" : "#e2e8f0"}`,
+    borderRadius: 10, padding: "10px 14px" }}>
+    <div style={{ position: "relative", width: 38, height: 22, flexShrink: 0 }}>
+      <input type="checkbox" checked={checked} onChange={onChange}
+        style={{ opacity: 0, width: 0, height: 0, position: "absolute" }} />
+      <div style={{ position: "absolute", inset: 0, borderRadius: 999,
+        background: checked ? "#D26600" : "#cbd5e1", transition: "background 0.2s" }} />
+      <div style={{ position: "absolute", top: 3, left: checked ? 19 : 3, width: 16, height: 16,
+        borderRadius: "50%", background: "#fff", transition: "left 0.2s",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+    </div>
+    <span style={{ fontSize: "0.82rem", fontWeight: 700, color: checked ? "#D26600" : "#64748b" }}>{label}</span>
+  </label>
 );
 
 const UpdateEvent = () => {
@@ -38,10 +77,12 @@ const UpdateEvent = () => {
     eventName: "", eventDesc: "", eventCategory: [],
     eventPrice: "0", eventLang: "Hindi",
     performerName: "", hostName: "", hostWhatsapp: "", sponserName: "",
-    eventLink: "", eventAddress: "", address2: "", landmark: "",
+    eventLink: "", locationLink: "", eventAddress: "", address2: "", landmark: "",
     city: "", province: "", postalCode: "", country: "",
+    lat: "", lng: "",
     startDate: "", endDate: "", startTime: "", endTime: "",
     noOfAttendees: "", visibility: "public",
+    approved: false, isLive: false, isPopular: false, rejectionReason: "",
   });
   const [subEvents, setSubEvents] = useState([{ title: "", detail: "" }]);
   const [existingPosters, setExistingPosters] = useState([]);
@@ -49,6 +90,8 @@ const UpdateEvent = () => {
   const [newPreviews, setNewPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(null);
+  const [resolvingLocation, setResolvingLocation] = useState(false);
+  const [isDraft, setIsDraft] = useState(false);
 
   const [allCountries] = useState(Country.getAllCountries());
   const [allStates, setAllStates] = useState([]);
@@ -94,6 +137,9 @@ const UpdateEvent = () => {
           hostWhatsapp: e.hostWhatsapp || "",
           sponserName: e.sponserName || "",
           eventLink: e.eventLink || "",
+          locationLink: e.locationLink || "",
+          lat: e.geoCoordinates?.coordinates?.[1]?.toString() || "",
+          lng: e.geoCoordinates?.coordinates?.[0]?.toString() || "",
           eventAddress: e.eventAddress || "",
           address2: e.address2 || "",
           landmark: e.landmark || "",
@@ -107,7 +153,12 @@ const UpdateEvent = () => {
           endTime: toHHmm(e.endTime) || (e.endDate ? dayjs(e.endDate).format("HH:mm") : ""),
           noOfAttendees: e.noOfAttendees || "",
           visibility: e.visibility || "public",
+          approved: !!e.approved,
+          isLive: !!e.isLive,
+          isPopular: !!e.isPopular,
+          rejectionReason: e.rejectionReason || "",
         });
+        setIsDraft(!!e.isDraft);
         setExistingPosters(e.eventPosters || []);
         setSubEvents(e.subEvents?.length ? e.subEvents : [{ title: "", detail: "" }]);
       } catch (err) {
@@ -166,6 +217,10 @@ const UpdateEvent = () => {
     setForm((prev) => ({ ...prev, [field]: raw }));
   };
 
+  const setChecked = (field) => (e) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.checked }));
+  };
+
   const toggleCategory = (cat) => {
     setForm(prev => ({
       ...prev,
@@ -187,6 +242,53 @@ const UpdateEvent = () => {
     setSubEvents(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
   };
 
+  const resolveGoogleMapsUrl = async () => {
+    if (!form.locationLink) return toast("Enter a Google Maps link first", "error");
+    setResolvingLocation(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${url}events/resolve-location?url=${encodeURIComponent(form.locationLink)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const { lat, lng } = res.data.data;
+      setForm(prev => ({ ...prev, lat: lat.toString(), lng: lng.toString() }));
+      toast(`📍 Location resolved: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, "success");
+    } catch (err) {
+      toast(err.response?.data?.message || "Could not resolve location", "error");
+    } finally {
+      setResolvingLocation(false);
+    }
+  };
+
+  const handlePublishDraft = async () => {
+    if (!form.eventName) return toast("Event name is required", "error");
+    if (!form.eventCategory.length) return toast("Select at least one category", "error");
+    if (!form.startDate || !form.endDate) return toast("Start and end dates are required", "error");
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const formData = new FormData();
+      const { lat, lng, ...restForm } = form;
+      const fields = { ...restForm, isDraft: false, approved: false, subEvents: JSON.stringify(subEvents) };
+      Object.entries(fields).forEach(([k, v]) => {
+        if (Array.isArray(v)) v.forEach(item => formData.append(k, item));
+        else formData.append(k, v ?? "");
+      });
+      if (lat) formData.append("lat", lat);
+      if (lng) formData.append("lng", lng);
+      existingPosters.forEach(p => formData.append("existingPosters", p));
+      newFiles.forEach(f => formData.append("posters", f));
+      await axios.put(`${url}events/${id}`, formData, { headers });
+      toast("Draft published for approval! ✅", "success");
+      navigate("/admin/drafts");
+    } catch (err) {
+      toast(err.response?.data?.message || err.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.eventName) return toast("Event name is required", "error");
@@ -199,11 +301,14 @@ const UpdateEvent = () => {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
       const formData = new FormData();
-      const fields = { ...form, subEvents: JSON.stringify(subEvents) };
+      const { lat, lng, ...restForm } = form;
+      const fields = { ...restForm, subEvents: JSON.stringify(subEvents) };
       Object.entries(fields).forEach(([k, v]) => {
         if (Array.isArray(v)) v.forEach(item => formData.append(k, item));
-        else if (v !== "") formData.append(k, v);
+        else formData.append(k, v ?? "");
       });
+      if (lat) formData.append("lat", lat);
+      if (lng) formData.append("lng", lng);
       existingPosters.forEach(p => formData.append("existingPosters", p));
       newFiles.forEach(f => formData.append("posters", f));
 
@@ -221,15 +326,30 @@ const UpdateEvent = () => {
   if (fetchError) return <div style={{ padding: 32, color: "#ef4444" }}>{fetchError}</div>;
 
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto", padding: "24px 16px" }}>
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "30px 22px 96px" }}>
       {loading && <Loader />}
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 12, marginBottom: 18,
+        background: "linear-gradient(135deg,#fff 0%,#fff7ed 100%)",
+        border: "1px solid #fed7aa", borderRadius: 18, padding: "18px 20px",
+        boxShadow: "0 14px 40px rgba(210,102,0,0.10)",
+      }}>
         <button onClick={() => navigate("/admin/events")} style={{
-          background: "none", border: "1px solid #e5e7eb", borderRadius: 8,
-          padding: "6px 14px", cursor: "pointer", fontSize: "0.82rem", color: "#555",
+          background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10,
+          padding: "8px 14px", cursor: "pointer", fontSize: "0.82rem", color: "#475569", fontWeight: 700,
         }}>← Back</button>
-        <h1 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#111" }}>Edit Event</h1>
+        <div>
+          <h1 style={{ margin: 0, fontSize: "1.45rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.03em" }}>Edit Event</h1>
+          <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: "0.82rem" }}>Update event details, posters, agenda, location, and admin status.</p>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 22 }}>
+        <StatusPill label={form.visibility === "private" ? "Private" : "Public"} tone={form.visibility === "private" ? "slate" : "green"} />
+        <StatusPill label={form.approved ? "Approved" : "Pending"} tone={form.approved ? "green" : "orange"} />
+        <StatusPill label={form.isLive ? "Live" : "Not Live"} tone={form.isLive ? "green" : "slate"} />
+        {form.isPopular && <StatusPill label="Popular" tone="orange" />}
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -243,7 +363,7 @@ const UpdateEvent = () => {
             <textarea style={{ ...inputStyle, minHeight: 90, resize: "vertical" }}
               value={form.eventDesc} onChange={set("eventDesc")} />
           </Field>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={grid2}>
             <Field label="Language">
               <select style={inputStyle} value={form.eventLang} onChange={set("eventLang")}>
                 {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
@@ -256,6 +376,23 @@ const UpdateEvent = () => {
               </select>
             </Field>
           </div>
+        </Section>
+
+        {/* Admin Status */}
+        <Section title="Admin Status">
+          <div style={grid3}>
+            <ToggleField label="Approved" checked={form.approved} onChange={setChecked("approved")} />
+            <ToggleField label="Live Event" checked={form.isLive} onChange={setChecked("isLive")} />
+            <ToggleField label="Popular Event" checked={form.isPopular} onChange={setChecked("isPopular")} />
+          </div>
+          <Field label="Rejection Reason">
+            <textarea
+              style={{ ...inputStyle, minHeight: 74, resize: "vertical" }}
+              value={form.rejectionReason}
+              onChange={set("rejectionReason")}
+              placeholder="Add or update the reason shown when this event is rejected"
+            />
+          </Field>
         </Section>
 
         {/* Categories */}
@@ -277,7 +414,7 @@ const UpdateEvent = () => {
 
         {/* Dates & Times */}
         <Section title="Dates & Times">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+          <div style={grid4}>
             <Field label="Start Date *">
               <input style={inputStyle} type="date" value={form.startDate} onChange={set("startDate")} required />
             </Field>
@@ -295,19 +432,20 @@ const UpdateEvent = () => {
 
         {/* Pricing */}
         <Section title="Pricing">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Field label="Price (₹) — set 0 for free">
+          <div style={grid2}>
+            <Field label="Price (INR) - set 0 for free">
               <input style={inputStyle} type="number" min="0" value={form.eventPrice} onChange={set("eventPrice")} />
+              <p style={hintStyle}>{String(form.eventPrice) === "0" ? "This event is marked as free." : "Paid bookings will use this price."}</p>
             </Field>
             <Field label="Expected Attendees">
-              <input style={inputStyle} value={form.noOfAttendees} onChange={set("noOfAttendees")} />
+              <input style={inputStyle} value={form.noOfAttendees} onChange={set("noOfAttendees")} inputMode="numeric" placeholder="e.g. 500" />
             </Field>
           </div>
         </Section>
 
         {/* People */}
         <Section title="People">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={grid2}>
             <Field label="Performer / Artist Name">
               <input style={inputStyle} value={form.performerName} onChange={set("performerName")} />
             </Field>
@@ -325,10 +463,32 @@ const UpdateEvent = () => {
 
         {/* Location */}
         <Section title="Location">
+          <Field label="GPS Location (Google Maps Link)">
+            <div style={{ display: "flex", gap: 8 }}>
+              <input style={{ ...inputStyle, flex: 1 }} value={form.locationLink} onChange={set("locationLink")}
+                placeholder="Paste Google Maps link (maps.app.goo.gl, goo.gl/maps, or full URL)" />
+              <button type="button" onClick={resolveGoogleMapsUrl} disabled={resolvingLocation} style={{
+                padding: "0 16px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#D26600,#f59e0b)",
+                color: "#fff", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", whiteSpace: "nowrap",
+                opacity: resolvingLocation ? 0.7 : 1, flexShrink: 0
+              }}>
+                {resolvingLocation ? "Resolving…" : "📍 Resolve"}
+              </button>
+            </div>
+            {form.lat && form.lng && (
+              <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ padding: "4px 12px", borderRadius: 999, background: "#f0fdf4", color: "#15803d", fontSize: "0.75rem", fontWeight: 700, border: "1px solid #bbf7d0" }}>
+                  ✅ Lat: {parseFloat(form.lat).toFixed(5)}, Lng: {parseFloat(form.lng).toFixed(5)}
+                </span>
+                <a href={`https://www.google.com/maps?q=${form.lat},${form.lng}`} target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: "0.75rem", color: "#2563eb", fontWeight: 600 }}>View on Maps ↗</a>
+              </div>
+            )}
+          </Field>
           <Field label="Address Line 1">
             <input style={inputStyle} value={form.eventAddress} onChange={set("eventAddress")} />
           </Field>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={grid2}>
             <Field label="Address Line 2">
               <input style={inputStyle} value={form.address2} onChange={set("address2")} />
             </Field>
@@ -449,15 +609,24 @@ const UpdateEvent = () => {
         </Section>
 
         {/* Actions */}
-        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", paddingBottom: 32 }}>
-          <button type="button" onClick={() => navigate("/admin/events")} style={{
-            padding: "10px 24px", borderRadius: 8, border: "1px solid #e5e7eb",
-            background: "#fff", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem",
+        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", paddingBottom: 32, flexWrap: "wrap" }}>
+          <button type="button" onClick={() => navigate(-1)} style={{
+            padding: "10px 24px", borderRadius: 10, border: "1px solid #e2e8f0",
+            background: "#fff", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", color: "#475569"
           }}>Cancel</button>
+          {isDraft && (
+            <button type="button" onClick={handlePublishDraft} disabled={loading} style={{
+              padding: "10px 24px", borderRadius: 10, border: "none",
+              background: "linear-gradient(135deg,#15803d,#22c55e)", color: "#fff",
+              cursor: "pointer", fontWeight: 700, fontSize: "0.875rem", opacity: loading ? 0.7 : 1,
+              boxShadow: "0 4px 12px rgba(21,128,61,0.3)"
+            }}>{loading ? "Publishing…" : "✅ Publish for Approval"}</button>
+          )}
           <button type="submit" disabled={loading} style={{
-            padding: "10px 28px", borderRadius: 8, border: "none",
-            background: "#D26600", color: "#fff", cursor: "pointer",
+            padding: "10px 28px", borderRadius: 10, border: "none",
+            background: "linear-gradient(135deg,#D26600,#f59e0b)", color: "#fff", cursor: "pointer",
             fontWeight: 700, fontSize: "0.875rem", opacity: loading ? 0.7 : 1,
+            boxShadow: "0 4px 12px rgba(210,102,0,0.3)"
           }}>{loading ? "Saving…" : "Save Changes"}</button>
         </div>
       </form>
