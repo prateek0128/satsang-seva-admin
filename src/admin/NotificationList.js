@@ -7,7 +7,7 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Chip, Tooltip, IconButton, Box, Typography, Tab, Tabs,
 } from "@mui/material";
-import AdminTablePagination from "./AdminTablePagination";
+import AdminTable from "./AdminTable";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import CheckCircleIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import ScheduleIcon from "@mui/icons-material/ScheduleRounded";
@@ -85,63 +85,53 @@ const NotificationList = () => {
       </Tabs>
 
       {tab === 0 ? (
-        <>
-          <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", mb: 3 }}>
-            <TableContainer sx={{ maxHeight: "calc(100vh - 340px)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <SortCell label="User"   field="user.name"  orderBy={orderBy} order={order} onSort={handleSort} />
-                    <SortCell label="Type"   field="type"       orderBy={orderBy} order={order} onSort={handleSort} />
-                    <SortCell label="Title"  field="title"      orderBy={orderBy} order={order} onSort={handleSort} />
-                    <PlainCell label="Message" />
-                    <SortCell label="Date"   field="createdAt"  orderBy={orderBy} order={order} onSort={handleSort} />
-                    <SortCell label="Status" field="isRead"     orderBy={orderBy} order={order} onSort={handleSort} />
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {loadingSent ? (
-                    <TableRow><TableCell colSpan={6} sx={{ textAlign: "center", py: 6 }}><Loader /></TableCell></TableRow>
-                  ) : sent.length === 0 ? (
-                    <TableRow><TableCell colSpan={6} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>No notifications sent</TableCell></TableRow>
-                  ) : sortedSent.map(n => {
-                    const tc = typeColor(n.type);
-                    return (
-                      <TableRow key={n._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
-                        <TableCell sx={cellSx}>
-                          <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{n.user?.name || "N/A"}</Typography>
-                          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{n.user?.userId || ""}</Typography>
-                        </TableCell>
-                        <TableCell sx={cellSx}><Chip label={n.type} size="small" sx={{ fontSize: "0.65rem", fontWeight: 700, height: 20, background: tc.bg, color: tc.color, textTransform: "uppercase", letterSpacing: "0.04em" }} /></TableCell>
-                        <TableCell sx={{ ...cellSx, fontWeight: 700, color: "#0f172a" }}>{n.title}</TableCell>
-                        <TableCell sx={{ ...cellSx, maxWidth: 280 }}>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <Typography sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.8rem", color: "#64748b", flex: 1 }}>{n.message}</Typography>
-                            <Tooltip title="View full"><IconButton size="small" onClick={() => setSelectedMessage(n.message)} sx={{ p: 0.3, color: "#D26600", flexShrink: 0 }}><VisibilityIcon sx={{ fontSize: 14 }} /></IconButton></Tooltip>
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ ...cellSx, whiteSpace: "nowrap" }}>{dayjs(n.createdAt).format("DD MMM, hh:mm A")}</TableCell>
-                        <TableCell sx={cellSx}>
-                          {n.isRead
-                            ? <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "#166534" }}><CheckCircleIcon sx={{ fontSize: 14 }} /><Typography sx={{ fontSize: "0.75rem", fontWeight: 700 }}>Read</Typography></Box>
-                            : <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "#94a3b8" }}><ScheduleIcon sx={{ fontSize: 14 }} /><Typography sx={{ fontSize: "0.75rem", fontWeight: 500 }}>Unread</Typography></Box>}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {/* Pagination */}
-            <AdminTablePagination
-              count={sentTotal}
-              page={sentPage}
-              rowsPerPage={rowsPerPage}
-              onPageChange={(_, p) => setSentPage(p)}
-              onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setSentPage(0); }}
-            />
-          </Paper>
-        </>
+        <AdminTable
+          columns={[
+            { label: "User",   field: "user.name" },
+            { label: "Type",   field: "type"      },
+            { label: "Title",  field: "title"     },
+            { label: "Message" },
+            { label: "Date",   field: "createdAt" },
+            { label: "Status", field: "isRead"    },
+          ]}
+          rows={sortedSent}
+          loading={loadingSent}
+          emptyText="No notifications sent"
+          orderBy={orderBy}
+          order={order}
+          onSort={handleSort}
+          count={sentTotal}
+          page={sentPage}
+          rowsPerPage={rowsPerPage}
+          onPageChange={(_, p) => setSentPage(p)}
+          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setSentPage(0); }}
+          maxHeight="calc(100vh - 340px)"
+          renderRow={n => {
+            const tc = typeColor(n.type);
+            return (
+              <TableRow key={n._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+                <TableCell sx={cellSx}>
+                  <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{n.user?.name || "N/A"}</Typography>
+                  <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{n.user?.userId || ""}</Typography>
+                </TableCell>
+                <TableCell sx={cellSx}><Chip label={n.type} size="small" sx={{ fontSize: "0.65rem", fontWeight: 700, height: 20, background: tc.bg, color: tc.color, textTransform: "uppercase", letterSpacing: "0.04em" }} /></TableCell>
+                <TableCell sx={{ ...cellSx, fontWeight: 700, color: "#0f172a" }}>{n.title}</TableCell>
+                <TableCell sx={{ ...cellSx, maxWidth: 280 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.8rem", color: "#64748b", flex: 1 }}>{n.message}</Typography>
+                    <Tooltip title="View full"><IconButton size="small" onClick={() => setSelectedMessage(n.message)} sx={{ p: 0.3, color: "#D26600", flexShrink: 0 }}><VisibilityIcon sx={{ fontSize: 14 }} /></IconButton></Tooltip>
+                  </Box>
+                </TableCell>
+                <TableCell sx={{ ...cellSx, whiteSpace: "nowrap" }}>{dayjs(n.createdAt).format("DD MMM, hh:mm A")}</TableCell>
+                <TableCell sx={cellSx}>
+                  {n.isRead
+                    ? <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "#166534" }}><CheckCircleIcon sx={{ fontSize: 14 }} /><Typography sx={{ fontSize: "0.75rem", fontWeight: 700 }}>Read</Typography></Box>
+                    : <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "#94a3b8" }}><ScheduleIcon sx={{ fontSize: 14 }} /><Typography sx={{ fontSize: "0.75rem", fontWeight: 500 }}>Unread</Typography></Box>}
+                </TableCell>
+              </TableRow>
+            );
+          }}
+        />
       ) : loadingReceived ? <Box sx={{ py: 6, textAlign: "center" }}><Loader /></Box> : (
         <>
           {/* Pending Hosts */}

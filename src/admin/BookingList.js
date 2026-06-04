@@ -5,17 +5,15 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "../components/Popup";
 import Loader from "../components/Loader";
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, TextField, Select,
-  MenuItem, FormControl, Button,
+  TableCell, TableRow,
+  Chip, Tooltip, IconButton, Box, Typography, TextField, Select,
+  MenuItem, FormControl,
 } from "@mui/material";
-import AdminTablePagination from "./AdminTablePagination";
+import AdminTable from "./AdminTable";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import InputAdornment from "@mui/material/InputAdornment";
 import SearchIcon from "@mui/icons-material/SearchRounded";
-import FilterAltIcon from "@mui/icons-material/FilterAltRounded";
-import ClearIcon from "@mui/icons-material/ClearRounded";
-import { useSortable, SortCell, PlainCell } from "./sortable";
+import { useSortable } from "./sortable";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 
@@ -131,72 +129,65 @@ const BookingList = () => {
       </Box>
 
       {/* Table */}
-      <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 360px)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <SortCell label="Booking ID" field="bookingId"  orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Event"      field="eventName"  orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Host"       field="hostName"   orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="User"       field="userName"   orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Tickets"    field="tickets"    orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Date"       field="createdAt"  orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Status"     field="status"     orderBy={orderBy} order={order} onSort={handleSort} />
-                <PlainCell label="Action" />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading && bookings.length === 0 ? (
-                <TableRow><TableCell colSpan={8} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>Loading…</TableCell></TableRow>
-              ) : bookings.length === 0 ? (
-                <TableRow><TableCell colSpan={8} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>{hasFilters ? "No bookings match your filters." : "No bookings found."}</TableCell></TableRow>
-              ) : sortedBookings.map(b => {
-                const sc = statusColor(b.status);
-                return (
-                  <TableRow key={b._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
-                    <TableCell sx={cellSx}>
-                      <Tooltip title="Click to copy" arrow>
-                        <Box component="span" onClick={() => { navigator.clipboard.writeText(b.bookingId || b._id || ""); toast("Booking ID copied", "success"); }}
-                          sx={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#64748b", fontWeight: 700, background: "#f1f5f9", padding: "2px 8px", borderRadius: "6px", cursor: "pointer", display: "inline-block", border: "1px solid #e2e8f0", "&:hover": { background: "#e2e8f0", color: "#334155" }, transition: "all 0.15s" }}>
-                          {b.bookingId || b._id}
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem" }}>{b.event?.eventName || "N/A"}</Typography>
-                      <Typography sx={{ fontSize: "0.72rem", color: "#94a3b8" }}>{b.event?.eventId || ""}</Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}><Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{b.event?.hostName || b.event?.user?.name || "N/A"}</Typography></TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{b.user?.name || "N/A"}</Typography>
-                      <Typography sx={{ fontSize: "0.72rem", color: "#94a3b8" }}>{b.user?.userId || ""}</Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}>{b.tickets}</TableCell>
-                    <TableCell sx={cellSx}>{dayjs(b.createdAt).format("DD MMM YYYY")}</TableCell>
-                    <TableCell sx={cellSx}><Chip label={b.status} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: sc.bg, color: sc.color }} /></TableCell>
-                    <TableCell sx={cellSx}>
-                      <Tooltip title="View Details">
-                        <IconButton size="small" onClick={() => navigate(`/admin/bookings/${b._id}`, { state: { booking: b } })} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}>
-                          <VisibilityIcon sx={{ fontSize: 15 }} />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <AdminTablePagination
-          count={total}
-          page={page - 1}
-          rowsPerPage={20}
-          rowsPerPageOptions={[20]}
-          onPageChange={(_, p) => setPage(p + 1)}
-          onRowsPerPageChange={() => {}}
-        />
-      </Paper>
+      <AdminTable
+        columns={[
+          { label: "Booking ID", field: "bookingId" },
+          { label: "Event",      field: "eventName" },
+          { label: "Host",       field: "hostName"  },
+          { label: "User",       field: "userName"  },
+          { label: "Tickets",    field: "tickets"   },
+          { label: "Date",       field: "createdAt" },
+          { label: "Status",     field: "status"    },
+          { label: "Action" },
+        ]}
+        rows={sortedBookings}
+        loading={loading && bookings.length === 0}
+        emptyText={hasFilters ? "No bookings match your filters." : "No bookings found."}
+        orderBy={orderBy}
+        order={order}
+        onSort={handleSort}
+        count={total}
+        page={page - 1}
+        rowsPerPage={20}
+        rowsPerPageOptions={[20]}
+        onPageChange={(_, p) => setPage(p + 1)}
+        onRowsPerPageChange={() => {}}
+        maxHeight="calc(100vh - 360px)"
+        renderRow={b => {
+          const sc = statusColor(b.status);
+          return (
+            <TableRow key={b._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+              <TableCell sx={cellSx}>
+                <Tooltip title="Click to copy" arrow>
+                  <Box component="span" onClick={() => { navigator.clipboard.writeText(b.bookingId || b._id || ""); toast("Booking ID copied", "success"); }}
+                    sx={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#64748b", fontWeight: 700, background: "#f1f5f9", padding: "2px 8px", borderRadius: "6px", cursor: "pointer", display: "inline-block", border: "1px solid #e2e8f0", "&:hover": { background: "#e2e8f0", color: "#334155" }, transition: "all 0.15s" }}>
+                    {b.bookingId || b._id}
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem" }}>{b.event?.eventName || "N/A"}</Typography>
+                <Typography sx={{ fontSize: "0.72rem", color: "#94a3b8" }}>{b.event?.eventId || ""}</Typography>
+              </TableCell>
+              <TableCell sx={cellSx}><Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{b.event?.hostName || b.event?.user?.name || "N/A"}</Typography></TableCell>
+              <TableCell sx={cellSx}>
+                <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{b.user?.name || "N/A"}</Typography>
+                <Typography sx={{ fontSize: "0.72rem", color: "#94a3b8" }}>{b.user?.userId || ""}</Typography>
+              </TableCell>
+              <TableCell sx={cellSx}>{b.tickets}</TableCell>
+              <TableCell sx={cellSx}>{dayjs(b.createdAt).format("DD MMM YYYY")}</TableCell>
+              <TableCell sx={cellSx}><Chip label={b.status} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: sc.bg, color: sc.color }} /></TableCell>
+              <TableCell sx={cellSx}>
+                <Tooltip title="View Details">
+                  <IconButton size="small" onClick={() => navigate(`/admin/bookings/${b._id}`, { state: { booking: b } })} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}>
+                    <VisibilityIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                </Tooltip>
+              </TableCell>
+            </TableRow>
+          );
+        }}
+      />
     </Box>
   );
 };

@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
-import Loader from "../components/Loader";
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, TextField,
+  TableCell, TableRow,
+  Chip, Tooltip, IconButton, Box, Typography, TextField,
 } from "@mui/material";
-import AdminTablePagination from "./AdminTablePagination";
+import AdminTable from "./AdminTable";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import DeleteIcon from "@mui/icons-material/DeleteRounded";
 import MailIcon from "@mui/icons-material/MailRounded";
@@ -15,7 +14,7 @@ import SearchIcon from "@mui/icons-material/SearchRounded";
 import InputAdornment from "@mui/material/InputAdornment";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import ToggleButton from "@mui/material/ToggleButton";
-import { useSortable, SortCell, PlainCell } from "./sortable";
+import { useSortable } from "./sortable";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 
@@ -100,91 +99,82 @@ const ContactQueries = () => {
         </Box>
       </Box>
 
-      <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 320px)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <SortCell label="Date"    field="createdAt" orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Sender"  field="firstName" orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Contact" field="email"     orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Type"    field="queryType" orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Subject" field="subject"   orderBy={orderBy} order={order} onSort={handleSort} />
-                <PlainCell label="Message" />
-                <PlainCell label="Actions" />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow><TableCell colSpan={7} sx={{ textAlign: "center", py: 6 }}><Loader /></TableCell></TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={7} sx={{ textAlign: "center", py: 6, color: "#94a3b8" }}>No queries found</TableCell></TableRow>
-              ) : paged.map(q => {
-                const qType = q.queryType || "Contact";
-                const tc = typeColors[qType] || typeColors.Contact;
-                return (
-                  <TableRow key={q._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
-                    <TableCell sx={{ ...cellSx, whiteSpace: "nowrap" }}>
-                      <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{dayjs(q.createdAt).format("DD MMM YYYY")}</Typography>
-                      <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{dayjs(q.createdAt).format("hh:mm A")}</Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
-                        <Box sx={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#D26600,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "0.75rem", fontWeight: 700, flexShrink: 0 }}>
-                          {(q.firstName || "?")[0].toUpperCase()}
-                        </Box>
-                        <Box>
-                          <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem" }}>{q.firstName} {q.lastName}</Typography>
-                          {q.user && <Typography sx={{ fontSize: "0.7rem", color: "#2563eb" }}>Registered</Typography>}
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: "0.82rem" }}>{q.email}</Typography>
-                      <Typography sx={{ fontSize: "0.72rem", color: "#64748b" }}>{q.phone || "No phone"}</Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Chip label={qType} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: tc.bg, color: tc.color, textTransform: "capitalize" }} />
-                    </TableCell>
-                    <TableCell sx={{ ...cellSx, maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600, color: "#0f172a" }}>
-                      {q.subject}
-                    </TableCell>
-                    <TableCell sx={{ ...cellSx, maxWidth: 300, minWidth: 180 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Typography sx={{ overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", fontSize: "0.8rem", color: "#475569", flex: 1 }}>{q.message}</Typography>
-                        <Tooltip title="View full message">
-                          <IconButton size="small" onClick={() => setSelectedMessage(q.message)} sx={{ flexShrink: 0, color: "#D26600", p: 0.3 }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton>
-                        </Tooltip>
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Box sx={{ display: "flex", gap: 0.6 }}>
-                        <Tooltip title="Reply via Email">
-                          <IconButton size="small" component="a" href={`mailto:${q.email}?subject=Re: ${encodeURIComponent(q.subject)}`} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><MailIcon sx={{ fontSize: 15 }} /></IconButton>
-                        </Tooltip>
-                        {isSuperAdmin && (
-                          <Tooltip title="Delete">
-                            <IconButton size="small" onClick={() => handleDelete(q)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton>
-                          </Tooltip>
-                        )}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {/* Pagination */}
-        <AdminTablePagination
-          count={filtered.length}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={(_, p) => setPage(p)}
-          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-          background="#f8fafc"
-        />
-      </Paper>
+      <AdminTable
+        columns={[
+          { label: "Date",    field: "createdAt" },
+          { label: "Sender",  field: "firstName" },
+          { label: "Contact", field: "email"     },
+          { label: "Type",    field: "queryType" },
+          { label: "Subject", field: "subject"   },
+          { label: "Message" },
+          { label: "Actions" },
+        ]}
+        rows={paged}
+        loading={loading}
+        emptyText="No queries found"
+        orderBy={orderBy}
+        order={order}
+        onSort={handleSort}
+        count={filtered.length}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={(_, p) => setPage(p)}
+        onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+        maxHeight="calc(100vh - 320px)"
+        renderRow={q => {
+          const qType = q.queryType || "Contact";
+          const tc = typeColors[qType] || typeColors.Contact;
+          return (
+            <TableRow key={q._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+              <TableCell sx={{ ...cellSx, whiteSpace: "nowrap" }}>
+                <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{dayjs(q.createdAt).format("DD MMM YYYY")}</Typography>
+                <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{dayjs(q.createdAt).format("hh:mm A")}</Typography>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+                  <Box sx={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#D26600,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "0.75rem", fontWeight: 700, flexShrink: 0 }}>
+                    {(q.firstName || "?")[0].toUpperCase()}
+                  </Box>
+                  <Box>
+                    <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem" }}>{q.firstName} {q.lastName}</Typography>
+                    {q.user && <Typography sx={{ fontSize: "0.7rem", color: "#2563eb" }}>Registered</Typography>}
+                  </Box>
+                </Box>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Typography sx={{ fontSize: "0.82rem" }}>{q.email}</Typography>
+                <Typography sx={{ fontSize: "0.72rem", color: "#64748b" }}>{q.phone || "No phone"}</Typography>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Chip label={qType} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: tc.bg, color: tc.color, textTransform: "capitalize" }} />
+              </TableCell>
+              <TableCell sx={{ ...cellSx, maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600, color: "#0f172a" }}>
+                {q.subject}
+              </TableCell>
+              <TableCell sx={{ ...cellSx, maxWidth: 300, minWidth: 180 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography sx={{ overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", fontSize: "0.8rem", color: "#475569", flex: 1 }}>{q.message}</Typography>
+                  <Tooltip title="View full message">
+                    <IconButton size="small" onClick={() => setSelectedMessage(q.message)} sx={{ flexShrink: 0, color: "#D26600", p: 0.3 }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton>
+                  </Tooltip>
+                </Box>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Box sx={{ display: "flex", gap: 0.6 }}>
+                  <Tooltip title="Reply via Email">
+                    <IconButton size="small" component="a" href={`mailto:${q.email}?subject=Re: ${encodeURIComponent(q.subject)}`} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><MailIcon sx={{ fontSize: 15 }} /></IconButton>
+                  </Tooltip>
+                  {isSuperAdmin && (
+                    <Tooltip title="Delete">
+                      <IconButton size="small" onClick={() => handleDelete(q)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
+              </TableCell>
+            </TableRow>
+          );
+        }}
+      />
 
       {selectedMessage && (
         <Box sx={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>

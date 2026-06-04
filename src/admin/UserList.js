@@ -4,11 +4,11 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, TextField,
+  TableCell, TableRow,
+  Chip, Tooltip, IconButton, Box, Typography, TextField,
   ToggleButtonGroup, ToggleButton, Skeleton,
 } from "@mui/material";
-import AdminTablePagination from "./AdminTablePagination";
+import AdminTable from "./AdminTable";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
 import DeleteIcon from "@mui/icons-material/DeleteRounded";
@@ -18,7 +18,7 @@ import HowToRegIcon from "@mui/icons-material/HowToRegRounded";
 import SupervisedUserCircleIcon from "@mui/icons-material/SupervisedUserCircleRounded";
 import PendingActionsIcon from "@mui/icons-material/PendingActionsRounded";
 import InputAdornment from "@mui/material/InputAdornment";
-import { useSortable, SortCell, PlainCell } from "./sortable";
+import { useSortable } from "./sortable";
 
 const BRAND = "#f58021";
 const cellSx = { fontSize: "0.82rem", color: "#334155", whiteSpace: "nowrap", py: 1.5, px: 2 };
@@ -51,16 +51,6 @@ const badgeColor = (type) =>
   type === "admin"   ? { bg: "#fef3c7", color: "#92400e", border: "#fde68a" } :
   type === "host"    ? { bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe" } :
                        { bg: "#f0fdf4", color: "#166534", border: "#bbf7d0" };
-
-const SkeletonRow = () => (
-  <TableRow>
-    {Array.from({ length: 9 }).map((_, i) => (
-      <TableCell key={i} sx={{ py: 1.5, px: 2 }}>
-        <Skeleton variant={i === 1 ? "circular" : "text"} width={i === 1 ? 32 : "80%"} height={i === 1 ? 32 : 18} />
-      </TableCell>
-    ))}
-  </TableRow>
-);
 
 const UserList = () => {
   const navigate = useNavigate();
@@ -174,211 +164,116 @@ const UserList = () => {
       </Box>
 
       {/* ── Table ── */}
-      <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 380px)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <SortCell label="User ID"    field="userId"       orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Name"       field="name"         orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Type"       field="userType"     orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Performer"  field="performerType" orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Approved"   field="approved"     orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Email"      field="email"        orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Phone"      field="phone"        orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Registered" field="createdAt"    orderBy={orderBy} order={order} onSort={handleSort} />
-                <PlainCell label="Actions" />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: rowsPerPage }).map((_, i) => <SkeletonRow key={i} />)
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} sx={{ textAlign: "center", py: 8 }}>
-                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
-                      <Box sx={{ width: 56, height: 56, borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <PeopleIcon sx={{ fontSize: 28, color: "#cbd5e1" }} />
-                      </Box>
-                      <Typography sx={{ fontWeight: 700, color: "#334155", fontSize: "0.9rem" }}>No users found</Typography>
-                      <Typography sx={{ color: "#94a3b8", fontSize: "0.8rem" }}>
-                        {search ? "Try adjusting your search or filter" : "No users have registered yet"}
-                      </Typography>
+      <AdminTable
+        columns={[
+          { label: "User ID",    field: "userId"        },
+          { label: "Name",       field: "name"          },
+          { label: "Type",       field: "userType"      },
+          { label: "Performer",  field: "performerType" },
+          { label: "Approved",   field: "approved"      },
+          { label: "Email",      field: "email"         },
+          { label: "Phone",      field: "phone"         },
+          { label: "Registered", field: "createdAt"     },
+          { label: "Actions" },
+        ]}
+        rows={filtered}
+        loading={loading}
+        emptyText={search ? "Try adjusting your search or filter" : "No users have registered yet"}
+        orderBy={orderBy}
+        order={order}
+        onSort={handleSort}
+        count={allFiltered.length}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={(_, p) => setPage(p)}
+        onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+        maxHeight="calc(100vh - 380px)"
+        sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
+        renderRow={user => {
+          const bc = badgeColor(user.userType);
+          return (
+            <TableRow
+              key={user._id}
+              hover
+              sx={{ "&:hover": { background: "#fafbff" }, "&:hover .row-actions": { opacity: 1 }, transition: "background 0.15s", cursor: "default" }}
+            >
+              <TableCell sx={cellSx}>
+                <Tooltip title="Click to copy">
+                  <Box component="span" onClick={() => { navigator.clipboard.writeText(user.userId || user._id); toast("ID copied", "success"); }}
+                    sx={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b", fontWeight: 700, cursor: "pointer", px: 1, py: 0.3, borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0", "&:hover": { background: "#f1f5f9", color: "#334155" }, transition: "all 0.15s" }}>
+                    {user.userId || user._id || "—"}
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+                  {user.profilePicture ? (
+                    <Box component="img" src={user.profilePicture.startsWith("http") ? user.profilePicture : `${url.replace("/api/", "/")}${user.profilePicture}`} alt="" onError={e => e.target.style.display = "none"} sx={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "2px solid #e2e8f0", flexShrink: 0 }} />
+                  ) : (
+                    <Box sx={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, background: "linear-gradient(135deg,#D26600,#f58021,#ffa726)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "0.75rem", fontWeight: 800, border: "2px solid #fff", boxShadow: "0 2px 10px rgba(245,128,33,0.4)" }}>
+                      {(user.name || "?")[0].toUpperCase()}
                     </Box>
-                  </TableCell>
-                </TableRow>
-              ) : filtered.map(user => {
-                const bc = badgeColor(user.userType);
-                return (
-                  <TableRow
-                    key={user._id}
-                    hover
-                    sx={{
-                      "&:hover": { background: "#fafbff" },
-                      "&:hover .row-actions": { opacity: 1 },
-                      transition: "background 0.15s",
-                      cursor: "default",
-                    }}
-                  >
-                    {/* User ID */}
-                    <TableCell sx={cellSx}>
-                      <Tooltip title="Click to copy">
-                        <Box
-                          component="span"
-                          onClick={() => { navigator.clipboard.writeText(user.userId || user._id); toast("ID copied", "success"); }}
-                          sx={{
-                            fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b",
-                            fontWeight: 700, cursor: "pointer", px: 1, py: 0.3,
-                            borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0",
-                            "&:hover": { background: "#f1f5f9", color: "#334155" },
-                            transition: "all 0.15s",
-                          }}
-                        >
-                          {user.userId || user._id || "—"}
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-
-                    {/* Name + Avatar */}
-                    <TableCell sx={cellSx}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
-                        {user.profilePicture ? (
-                          <Box component="img"
-                            src={user.profilePicture.startsWith("http") ? user.profilePicture : `${url.replace("/api/", "/")}${user.profilePicture}`}
-                            alt=""
-                            onError={e => e.target.style.display = "none"}
-                            sx={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "2px solid #e2e8f0", flexShrink: 0 }}
-                          />
-                        ) : (
-                          <Box sx={{
-                            width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-                            background: `linear-gradient(135deg,#D26600,#f58021,#ffa726)`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            color: "#fff", fontSize: "0.75rem", fontWeight: 800,
-                            border: "2px solid #fff", boxShadow: `0 2px 10px rgba(245,128,33,0.4)`,
-                          }}>
-                            {(user.name || "?")[0].toUpperCase()}
-                          </Box>
-                        )}
-                        <Box>
-                          <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem", lineHeight: 1.2 }}>
-                            {user.name || "—"}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-
-                    {/* Type */}
-                    <TableCell sx={cellSx}>
-                      <Chip
-                        label={user.userType || "—"}
-                        size="small"
-                        sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: bc.bg, color: bc.color, border: `1px solid ${bc.border}` }}
-                      />
-                    </TableCell>
-
-                    {/* Performer */}
-                    <TableCell sx={cellSx}>
-                      {user.performerType
-                        ? <Chip label={user.performerType} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, textTransform: "capitalize", background: "#fce7f3", color: "#be185d", border: "1px solid #fbcfe8" }} />
-                        : <Typography component="span" sx={{ color: "#cbd5e1", fontSize: "0.8rem" }}>—</Typography>
-                      }
-                    </TableCell>
-
-                    {/* Approved */}
-                    <TableCell sx={cellSx}>
-                      {user.userType === "host" ? (
-                        <Chip
-                          label={user.approved ? "Approved" : "Pending"}
-                          size="small"
-                          sx={{
-                            fontSize: "0.68rem", fontWeight: 700, height: 22,
-                            background: user.approved ? "#f0fdf4" : "#fef2f2",
-                            color: user.approved ? "#166534" : "#991b1b",
-                            border: `1px solid ${user.approved ? "#bbf7d0" : "#fecaca"}`,
-                          }}
-                        />
-                      ) : <Typography component="span" sx={{ color: "#cbd5e1", fontSize: "0.8rem" }}>—</Typography>}
-                    </TableCell>
-
-                    {/* Email */}
-                    <TableCell sx={{ ...cellSx, maxWidth: 180 }}>
-                      <Tooltip title="Click to copy">
-                        <Box
-                          component="span"
-                          onClick={() => { navigator.clipboard.writeText(user.email || ""); toast("Email copied", "success"); }}
-                          sx={{
-                            cursor: "pointer", display: "block", overflow: "hidden",
-                            textOverflow: "ellipsis", color: "#475569",
-                            "&:hover": { color: "#2563eb", textDecoration: "underline" },
-                            transition: "color 0.15s",
-                          }}
-                        >
-                          {user.email || "—"}
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-
-                    {/* Phone */}
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ color: "#475569", fontSize: "0.82rem" }}>{user.phone || "—"}</Typography>
-                    </TableCell>
-
-                    {/* Date */}
-                    <TableCell sx={cellSx}>
-                      {user.createdAt ? (
-                        <Box>
-                          <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
-                            {dayjs(user.createdAt).format("DD MMM YYYY")}
-                          </Typography>
-                          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>
-                            {dayjs(user.createdAt).format("hh:mm A")}
-                          </Typography>
-                        </Box>
-                      ) : "—"}
-                    </TableCell>
-
-                    {/* Actions */}
-                    <TableCell sx={cellSx}>
-                      <Box className="row-actions" sx={{ display: "flex", gap: 0.6, opacity: { xs: 1, md: 0.6 }, transition: "opacity 0.2s" }}>
-                        <Tooltip title="View Profile" arrow>
-                          <IconButton size="small" onClick={() => navigate(`/admin/userdetails/${user._id}`)}
-                            sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#dbeafe", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
-                            <VisibilityIcon sx={{ fontSize: 15 }} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Edit User" arrow>
-                          <IconButton size="small" onClick={() => navigate(`/admin/updateuser/${user._id}`)}
-                            sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#dcfce7", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
-                            <EditIcon sx={{ fontSize: 15 }} />
-                          </IconButton>
-                        </Tooltip>
-                        {isSuperAdmin && (
-                          <Tooltip title="Delete User" arrow>
-                            <IconButton size="small" onClick={() => handleDelete(user)}
-                              sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#fee2e2", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
-                              <DeleteIcon sx={{ fontSize: 15 }} />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Pagination */}
-        <AdminTablePagination
-          count={allFiltered.length}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={(_, p) => setPage(p)}
-          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-        />
-      </Paper>
+                  )}
+                  <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem", lineHeight: 1.2 }}>{user.name || "—"}</Typography>
+                </Box>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Chip label={user.userType || "—"} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: bc.bg, color: bc.color, border: `1px solid ${bc.border}` }} />
+              </TableCell>
+              <TableCell sx={cellSx}>
+                {user.performerType
+                  ? <Chip label={user.performerType} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, textTransform: "capitalize", background: "#fce7f3", color: "#be185d", border: "1px solid #fbcfe8" }} />
+                  : <Typography component="span" sx={{ color: "#cbd5e1", fontSize: "0.8rem" }}>—</Typography>}
+              </TableCell>
+              <TableCell sx={cellSx}>
+                {user.userType === "host" ? (
+                  <Chip label={user.approved ? "Approved" : "Pending"} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: user.approved ? "#f0fdf4" : "#fef2f2", color: user.approved ? "#166534" : "#991b1b", border: `1px solid ${user.approved ? "#bbf7d0" : "#fecaca"}` }} />
+                ) : <Typography component="span" sx={{ color: "#cbd5e1", fontSize: "0.8rem" }}>—</Typography>}
+              </TableCell>
+              <TableCell sx={{ ...cellSx, maxWidth: 180 }}>
+                <Tooltip title="Click to copy">
+                  <Box component="span" onClick={() => { navigator.clipboard.writeText(user.email || ""); toast("Email copied", "success"); }}
+                    sx={{ cursor: "pointer", display: "block", overflow: "hidden", textOverflow: "ellipsis", color: "#475569", "&:hover": { color: "#2563eb", textDecoration: "underline" }, transition: "color 0.15s" }}>
+                    {user.email || "—"}
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Typography sx={{ color: "#475569", fontSize: "0.82rem" }}>{user.phone || "—"}</Typography>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                {user.createdAt ? (
+                  <Box>
+                    <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>{dayjs(user.createdAt).format("DD MMM YYYY")}</Typography>
+                    <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{dayjs(user.createdAt).format("hh:mm A")}</Typography>
+                  </Box>
+                ) : "—"}
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Box className="row-actions" sx={{ display: "flex", gap: 0.6, opacity: { xs: 1, md: 0.6 }, transition: "opacity 0.2s" }}>
+                  <Tooltip title="View Profile" arrow>
+                    <IconButton size="small" onClick={() => navigate(`/admin/userdetails/${user._id}`)} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#dbeafe", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
+                      <VisibilityIcon sx={{ fontSize: 15 }} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Edit User" arrow>
+                    <IconButton size="small" onClick={() => navigate(`/admin/updateuser/${user._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#dcfce7", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
+                      <EditIcon sx={{ fontSize: 15 }} />
+                    </IconButton>
+                  </Tooltip>
+                  {isSuperAdmin && (
+                    <Tooltip title="Delete User" arrow>
+                      <IconButton size="small" onClick={() => handleDelete(user)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#fee2e2", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
+                        <DeleteIcon sx={{ fontSize: 15 }} />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
+              </TableCell>
+            </TableRow>
+          );
+        }}
+      />
     </Box>
   );
 };

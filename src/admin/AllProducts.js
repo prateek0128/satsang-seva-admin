@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import '../Csss/AllProducts.css'; // Adjust the path if necessary
 import { useNavigate, useParams } from 'react-router-dom';
-import Loader from '../components/Loader';
+import { TableCell, TableRow, Box, Typography } from '@mui/material';
+import AdminTable from './AdminTable';
+
+const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 
 const AllProducts = () => {
   const url = process.env.REACT_APP_BACKEND;
-  const { id, name } = useParams(); // Get event ID from URL parameters
-  const [bookings, setBookings] = useState([]); // State to store booking data
+  const { id, name } = useParams();
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -16,7 +18,7 @@ const AllProducts = () => {
       try {
         const response = await fetch(`${url}/booking/event/${id}`);
         const data = await response.json();
-        setBookings(data.booking); // Update state with fetched bookings
+        setBookings(data.booking);
       } catch (error) {
         console.error('Error fetching booking data:', error);
         alert("Error in fetching Bookings!");
@@ -24,49 +26,44 @@ const AllProducts = () => {
       }
       setLoading(false);
     };
-
-    fetchBookings(); // Call the function to fetch bookings
-  }, [id]); // Re-run when the event ID changes
+    fetchBookings();
+  }, [id]);
 
   return (
-    <div className='container'>
-      {loading && <Loader />}
-      <div className="head">
-        <h1>Booking Details For: </h1>
-        <h3>Event ID: {id}</h3>
-        <h3>Event Name: <span className="text-tomato">{decodeURIComponent(name)}</span></h3>
-      </div>
-      <div className="table-container border">
-        <table className="table table-responsive table-bordered table-hover m-0">
-          <thead className='sticky-top'>
-            <tr>
-              <th>Booking ID</th>
-              <th>Attendee Contact</th>
-              <th>User Name</th>
-              <th>No of Attendees</th>
-              <th>Amount Paid</th>
-              <th>Payment ID</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(bookings && bookings.length > 0) ? bookings.map((booking) => (
-              <tr key={booking._id}>
-                <td>{booking.bookingId || booking._id}</td>
-                <td>{booking.attendeeContact}</td>
-                <td>{booking.user ? booking.user.name : 'N/A'}</td> {/* Add a null check here */}
-                <td>{booking.noOfAttendee}</td>
-                <td>{booking.amountPaid}</td>
-                <td>{booking.paymentId ? booking.paymentId : 'N/A'}</td>
-              </tr>
-            )) :
-              <tr>
-                <td colSpan={6} className='text-center fw-bolder text-danger'>No Bookings Found</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <Box sx={{ p: { xs: "16px", sm: "28px 32px" }, minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)" }}>
+      <Box sx={{ mb: 3 }}>
+        <Typography sx={{ fontSize: { xs: "1.1rem", sm: "1.4rem" }, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em" }}>
+          Booking Details
+        </Typography>
+        <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", mt: 0.3 }}>
+          Event: <strong style={{ color: "#f58021" }}>{decodeURIComponent(name)}</strong> &nbsp;·&nbsp; ID: {id}
+        </Typography>
+      </Box>
+
+      <AdminTable
+        columns={[
+          { label: "Booking ID" },
+          { label: "Attendee Contact" },
+          { label: "User Name" },
+          { label: "No of Attendees" },
+          { label: "Amount Paid" },
+          { label: "Payment ID" },
+        ]}
+        rows={bookings || []}
+        loading={loading}
+        emptyText="No Bookings Found"
+        renderRow={booking => (
+          <TableRow key={booking._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+            <TableCell sx={cellSx}>{booking.bookingId || booking._id}</TableCell>
+            <TableCell sx={cellSx}>{booking.attendeeContact}</TableCell>
+            <TableCell sx={cellSx}>{booking.user ? booking.user.name : "N/A"}</TableCell>
+            <TableCell sx={cellSx}>{booking.noOfAttendee}</TableCell>
+            <TableCell sx={cellSx}>{booking.amountPaid}</TableCell>
+            <TableCell sx={cellSx}>{booking.paymentId || "N/A"}</TableCell>
+          </TableRow>
+        )}
+      />
+    </Box>
   );
 };
 

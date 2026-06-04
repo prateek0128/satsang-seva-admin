@@ -3,28 +3,18 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Tooltip, IconButton, Box, Typography, Button, TextField,
-  Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, InputLabel, FormControl, Skeleton
+  TableCell, TableRow,
+  Chip, Tooltip, IconButton, Box, Typography, Button,
+  Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, InputLabel, FormControl, TextField
 } from "@mui/material";
-import AdminTablePagination from "./AdminTablePagination";
+import AdminTable from "./AdminTable";
 import DeleteIcon from "@mui/icons-material/DeleteRounded";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettingsRounded";
 import AddIcon from "@mui/icons-material/AddRounded";
-import { useSortable, SortCell, PlainCell } from "./sortable";
+import { useSortable } from "./sortable";
 
 const BRAND = "#f58021";
 const cellSx = { fontSize: "0.82rem", color: "#334155", whiteSpace: "nowrap", py: 1.5, px: 2 };
-
-const SkeletonRow = () => (
-  <TableRow>
-    {Array.from({ length: 6 }).map((_, i) => (
-      <TableCell key={i} sx={{ py: 1.5, px: 2 }}>
-        <Skeleton variant="text" width="80%" height={18} />
-      </TableCell>
-    ))}
-  </TableRow>
-);
 
 const AdminManagement = () => {
   const url = process.env.REACT_APP_BACKEND;
@@ -119,127 +109,72 @@ const AdminManagement = () => {
       </Box>
 
       {/* ── Table ── */}
-      <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 220px)", overflowX: "auto" }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <SortCell label="Name"       field="name"         orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Email"      field="email"        orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Mobile"     field="mobile"       orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Designation" field="designation" orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Created At" field="createdAt"    orderBy={orderBy} order={order} onSort={handleSort} />
-                <PlainCell label="Actions" />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: rowsPerPage }).map((_, i) => <SkeletonRow key={i} />)
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} sx={{ textAlign: "center", py: 8 }}>
-                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
-                      <Box sx={{ width: 56, height: 56, borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <AdminPanelSettingsIcon sx={{ fontSize: 28, color: "#cbd5e1" }} />
-                      </Box>
-                      <Typography sx={{ fontWeight: 700, color: "#334155", fontSize: "0.9rem" }}>No admins found</Typography>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ) : filtered.map(admin => {
-                const isSuper = admin.designation === "superAdmin";
-                return (
-                  <TableRow
-                    key={admin._id}
-                    hover
-                    sx={{
-                      "&:hover": { background: "#fafbff" },
-                      "&:hover .row-actions": { opacity: 1 },
-                      transition: "background 0.15s",
-                      cursor: "default",
-                    }}
-                  >
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem" }}>
-                        {admin.name || "—"}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell sx={{ ...cellSx, maxWidth: 180 }}>
-                      <Tooltip title="Click to copy">
-                        <Box
-                          component="span"
-                          onClick={() => { navigator.clipboard.writeText(admin.email || ""); toast("Email copied", "success"); }}
-                          sx={{
-                            cursor: "pointer", display: "block", overflow: "hidden",
-                            textOverflow: "ellipsis", color: "#475569",
-                            "&:hover": { color: "#2563eb", textDecoration: "underline" },
-                            transition: "color 0.15s",
-                          }}
-                        >
-                          {admin.email || "—"}
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ color: "#475569", fontSize: "0.82rem" }}>{admin.mobile || admin.phone || "—"}</Typography>
-                    </TableCell>
-
-                    <TableCell sx={cellSx}>
-                      <Chip
-                        label={admin.designation || "admin"}
-                        size="small"
-                        sx={{
-                          fontSize: "0.68rem", fontWeight: 700, height: 22,
-                          background: isSuper ? "#f5f3ff" : "#f0fdf4",
-                          color: isSuper ? "#7c3aed" : "#166534",
-                          border: `1px solid ${isSuper ? "#ddd6fe" : "#bbf7d0"}`,
-                        }}
-                      />
-                    </TableCell>
-
-                    <TableCell sx={cellSx}>
-                      {admin.createdAt ? (
-                        <Box>
-                          <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>
-                            {dayjs(admin.createdAt).format("DD MMM YYYY")}
-                          </Typography>
-                          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>
-                            {dayjs(admin.createdAt).format("hh:mm A")}
-                          </Typography>
-                        </Box>
-                      ) : "—"}
-                    </TableCell>
-
-                    <TableCell sx={cellSx}>
-                      {isSuperAdmin && currentAdmin._id !== admin._id && (
-                        <Box className="row-actions" sx={{ display: "flex", gap: 0.6, opacity: { xs: 1, md: 0.6 }, transition: "opacity 0.2s" }}>
-                          <Tooltip title="Delete Admin" arrow>
-                            <IconButton size="small" onClick={() => handleDelete(admin)}
-                              sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#fee2e2", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
-                              <DeleteIcon sx={{ fontSize: 15 }} />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Pagination */}
-        <AdminTablePagination
-          count={allFiltered.length}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={(_, p) => setPage(p)}
-          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-        />
-      </Paper>
+      <AdminTable
+        columns={[
+          { label: "Name",        field: "name"        },
+          { label: "Email",       field: "email"       },
+          { label: "Mobile",      field: "mobile"      },
+          { label: "Designation", field: "designation" },
+          { label: "Created At",  field: "createdAt"   },
+          { label: "Actions" },
+        ]}
+        rows={filtered}
+        loading={loading}
+        emptyText="No admins found"
+        orderBy={orderBy}
+        order={order}
+        onSort={handleSort}
+        count={allFiltered.length}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={(_, p) => setPage(p)}
+        onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+        maxHeight="calc(100vh - 220px)"
+        sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
+        renderRow={admin => {
+          const isSuper = admin.designation === "superAdmin";
+          return (
+            <TableRow key={admin._id} hover sx={{ "&:hover": { background: "#fafbff" }, "&:hover .row-actions": { opacity: 1 }, transition: "background 0.15s", cursor: "default" }}>
+              <TableCell sx={cellSx}>
+                <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem" }}>{admin.name || "—"}</Typography>
+              </TableCell>
+              <TableCell sx={{ ...cellSx, maxWidth: 180 }}>
+                <Tooltip title="Click to copy">
+                  <Box component="span" onClick={() => { navigator.clipboard.writeText(admin.email || ""); toast("Email copied", "success"); }}
+                    sx={{ cursor: "pointer", display: "block", overflow: "hidden", textOverflow: "ellipsis", color: "#475569", "&:hover": { color: "#2563eb", textDecoration: "underline" }, transition: "color 0.15s" }}>
+                    {admin.email || "—"}
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Typography sx={{ color: "#475569", fontSize: "0.82rem" }}>{admin.mobile || admin.phone || "—"}</Typography>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Chip label={admin.designation || "admin"} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: isSuper ? "#f5f3ff" : "#f0fdf4", color: isSuper ? "#7c3aed" : "#166534", border: `1px solid ${isSuper ? "#ddd6fe" : "#bbf7d0"}` }} />
+              </TableCell>
+              <TableCell sx={cellSx}>
+                {admin.createdAt ? (
+                  <Box>
+                    <Typography sx={{ fontSize: "0.8rem", color: "#334155", fontWeight: 600 }}>{dayjs(admin.createdAt).format("DD MMM YYYY")}</Typography>
+                    <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{dayjs(admin.createdAt).format("hh:mm A")}</Typography>
+                  </Box>
+                ) : "—"}
+              </TableCell>
+              <TableCell sx={cellSx}>
+                {isSuperAdmin && currentAdmin._id !== admin._id && (
+                  <Box className="row-actions" sx={{ display: "flex", gap: 0.6, opacity: { xs: 1, md: 0.6 }, transition: "opacity 0.2s" }}>
+                    <Tooltip title="Delete Admin" arrow>
+                      <IconButton size="small" onClick={() => handleDelete(admin)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#fee2e2", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
+                        <DeleteIcon sx={{ fontSize: 15 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                )}
+              </TableCell>
+            </TableRow>
+          );
+        }}
+      />
 
       {/* Add Admin Modal */}
       <Dialog open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} maxWidth="xs" fullWidth>

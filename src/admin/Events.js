@@ -5,11 +5,11 @@ import dayjs from "dayjs";
 import { toast, confirmDialog } from "../components/Popup";
 import Loader from "../components/Loader";
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  TableRow, TableCell,
   Paper, Chip, Tooltip, IconButton, Box, Typography, TextField, Select,
   MenuItem, FormControl,
 } from "@mui/material";
-import AdminTablePagination from "./AdminTablePagination";
+import AdminTable from "./AdminTable";
 import InputAdornment from "@mui/material/InputAdornment";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
@@ -21,7 +21,7 @@ import StarBorderIcon from "@mui/icons-material/StarBorderRounded";
 import SearchIcon from "@mui/icons-material/SearchRounded";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import GroupsIcon from "@mui/icons-material/GroupsRounded";
-import { useSortable, SortCell, PlainCell } from "./sortable";
+import { useSortable } from "./sortable";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 const CATS = ["Satsang", "Kirtan", "Sabha", "Yoga", "Utsav", "Adhyatmik", "Puja", "Seva & Charity", "Sanskritik", "Vividh"];
@@ -179,129 +179,120 @@ const Events = () => {
       </Box>
 
       {/* Table */}
-      <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 380px)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <SortCell label="Event ID"    field="eventId"   orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Event"       field="eventName" orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Host"        field="hostName"  orderBy={orderBy} order={order} onSort={handleSort} />
-                <PlainCell label="Category" />
-                <SortCell label="Date & Price" field="startDate" orderBy={orderBy} order={order} onSort={handleSort} />
-                <PlainCell label="Timing" />
-                <SortCell label="Engagement"  field="viewCount" orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Created"     field="createdAt" orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Status"      field="approved"   orderBy={orderBy} order={order} onSort={handleSort} />
-                <SortCell label="Approved On"  field="approvedAt" orderBy={orderBy} order={order} onSort={handleSort} />
-                <PlainCell label="Actions" />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paged.length === 0 ? (
-                <TableRow><TableCell colSpan={11} sx={{ textAlign: "center", py: 8, color: "#94a3b8" }}>No events found matching your criteria.</TableCell></TableRow>
-              ) : paged.map(ev => {
-                const poster = ev.eventPosters?.[0];
-                const src = poster ? (poster.startsWith("http") ? poster : `${url.replace("/api/", "/")}${poster}`) : null;
-                const isPast = ev.endDate || ev.startDate ? dayjs(ev.endDate || ev.startDate).endOf("day").isBefore(dayjs()) : false;
-                return (
-                  <TableRow key={ev._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
-                    <TableCell sx={cellSx}>
-                      <Tooltip title="Click to copy" arrow>
-                        <Box component="span" onClick={() => { navigator.clipboard.writeText(ev.eventId || ev._id || ""); toast("Event ID copied", "success"); }}
-                          sx={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b", fontWeight: 700, cursor: "pointer", px: 1, py: 0.3, borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "inline-block", "&:hover": { background: "#f1f5f9", color: "#334155" }, transition: "all 0.15s" }}>
-                          {ev.eventId || "—"}
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell sx={{ ...cellSx, maxWidth: 220 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
-                        <img src={src || "https://via.placeholder.com/40"} alt="" onError={e => e.target.src = "https://via.placeholder.com/40"} style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
-                        <Box>
-                          <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem" }}>{ev.eventName}</Typography>
-                          <Typography sx={{ fontSize: "0.72rem", color: "#64748b" }}>{ev.city}, {ev.country}</Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={{ ...cellSx, fontWeight: 600 }}>{ev.hostName || "—"}</TableCell>
-                    <TableCell sx={cellSx}>
-                      <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                        {ev.eventCategory?.slice(0, 2).map((c, i) => <Chip key={i} label={c} size="small" sx={{ fontSize: "0.65rem", fontWeight: 700, height: 20, background: "#eff6ff", color: "#1e40af" }} />)}
-                        {ev.eventCategory?.length > 2 && <Chip label={`+${ev.eventCategory.length - 2}`} size="small" sx={{ fontSize: "0.65rem", height: 20, background: "#f1f5f9", color: "#475569" }} />}
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{ev.startDate ? dayjs(ev.startDate).format("DD MMM YYYY") : "—"}</Typography>
-                      <Typography sx={{ fontSize: "0.72rem", color: "#64748b" }}>to {ev.endDate ? dayjs(ev.endDate).format("DD MMM YYYY") : "—"}</Typography>
-                      <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: ev.eventPrice === "0" ? "#15803d" : "#D26600", mt: 0.3 }}>{ev.eventPrice === "0" ? "FREE" : `₹${ev.eventPrice}`}</Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}><Chip label={isPast ? "Past" : "Upcoming"} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: isPast ? "#f1f5f9" : "#ecfdf5", color: isPast ? "#475569" : "#047857" }} /></TableCell>
-                    <TableCell sx={cellSx}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.4 }}>
-                        <VisibilityOutlinedIcon sx={{ fontSize: 13, color: "#94a3b8" }} />
-                        <Typography sx={{ fontSize: "0.75rem", color: "#64748b" }}>{ev.viewCount || 0}</Typography>
-                      </Box>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                        <GroupsIcon sx={{ fontSize: 13, color: "#059669" }} />
-                        <Typography sx={{ fontSize: "0.75rem", color: "#059669" }}>{ev.bookings?.length || 0}</Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{ev.createdAt ? dayjs(ev.createdAt).format("DD MMM YYYY") : "—"}</Typography>
-                      <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{ev.createdAt ? dayjs(ev.createdAt).format("hh:mm A") : ""}</Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Chip label={ev.approved ? "Approved" : "Pending"} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: ev.approved ? "#f0fdf4" : "#fff7ed", color: ev.approved ? "#166534" : "#9a3412" }} />
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      {ev.approvedAt ? (
-                        <Box>
-                          <Typography sx={{ fontWeight: 600, fontSize: "0.82rem", color: "#166534" }}>{dayjs(ev.approvedAt).format("DD MMM YYYY")}</Typography>
-                          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{dayjs(ev.approvedAt).format("hh:mm A")}</Typography>
-                        </Box>
-                      ) : (
-                        <Typography sx={{ fontSize: "0.75rem", color: "#cbd5e1" }}>—</Typography>
-                      )}
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Box sx={{ display: "flex", gap: 0.5 }}>
-                        {isSuperAdmin && (
-                          <Tooltip title={ev.isPopular ? "Unmark Popular" : "Mark Popular"}>
-                            <IconButton size="small" onClick={() => handleTogglePopular(ev)} sx={{ background: ev.isPopular ? "#fffbeb" : "#f1f5f9", color: ev.isPopular ? "#f59e0b" : "#94a3b8", borderRadius: "8px", "&:hover": { background: "#fef3c7" } }}>
-                              {ev.isPopular ? <StarIcon sx={{ fontSize: 15 }} /> : <StarBorderIcon sx={{ fontSize: 15 }} />}
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        <Tooltip title="View"><IconButton size="small" onClick={() => navigate(`/admin/event/${ev._id}`)} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                        <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                        {!ev.approved
-                          ? <Tooltip title="Approve"><IconButton size="small" onClick={() => handleApprove(ev)} sx={{ background: "#f0fdf4", color: "#15803d", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                          : isSuperAdmin && <Tooltip title="Reject"><IconButton size="small" onClick={() => handleReject(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
-                        {isSuperAdmin && (
-                          <Tooltip title="Delete">
-                            <IconButton size="small" onClick={() => handleDelete(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}>
-                              <DeleteIcon sx={{ fontSize: 15 }} />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Footer */}
-        <AdminTablePagination
-          count={filtered.length}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={(_, p) => setPage(p)}
-          onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-        />
-      </Paper>
+      <AdminTable
+        columns={[
+          { label: "Event ID",    field: "eventId"   },
+          { label: "Event",       field: "eventName" },
+          { label: "Host",        field: "hostName"  },
+          { label: "Category" },
+          { label: "Date & Price", field: "startDate" },
+          { label: "Timing" },
+          { label: "Engagement",  field: "viewCount" },
+          { label: "Created",     field: "createdAt" },
+          { label: "Status",      field: "approved"  },
+          { label: "Approved On", field: "approvedAt" },
+          { label: "Actions" },
+        ]}
+        rows={paged}
+        loading={false}
+        emptyText="No events found matching your criteria."
+        orderBy={orderBy}
+        order={order}
+        onSort={handleSort}
+        count={filtered.length}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={(_, p) => setPage(p)}
+        onRowsPerPageChange={e => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+        maxHeight="calc(100vh - 380px)"
+        renderRow={ev => {
+          const poster = ev.eventPosters?.[0];
+          const src = poster ? (poster.startsWith("http") ? poster : `${url.replace("/api/", "/")}${poster}`) : null;
+          const isPast = ev.endDate || ev.startDate ? dayjs(ev.endDate || ev.startDate).endOf("day").isBefore(dayjs()) : false;
+          return (
+            <TableRow key={ev._id} hover sx={{ "&:hover": { background: "#fafbff" } }}>
+              <TableCell sx={cellSx}>
+                <Tooltip title="Click to copy" arrow>
+                  <Box component="span" onClick={() => { navigator.clipboard.writeText(ev.eventId || ev._id || ""); toast("Event ID copied", "success"); }}
+                    sx={{ fontFamily: "monospace", fontSize: "0.72rem", color: "#64748b", fontWeight: 700, cursor: "pointer", px: 1, py: 0.3, borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "inline-block", "&:hover": { background: "#f1f5f9", color: "#334155" }, transition: "all 0.15s" }}>
+                    {ev.eventId || "—"}
+                  </Box>
+                </Tooltip>
+              </TableCell>
+              <TableCell sx={{ ...cellSx, maxWidth: 220 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+                  <img src={src || "https://via.placeholder.com/40"} alt="" onError={e => e.target.src = "https://via.placeholder.com/40"} style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                  <Box>
+                    <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem" }}>{ev.eventName}</Typography>
+                    <Typography sx={{ fontSize: "0.72rem", color: "#64748b" }}>{ev.city}, {ev.country}</Typography>
+                  </Box>
+                </Box>
+              </TableCell>
+              <TableCell sx={{ ...cellSx, fontWeight: 600 }}>{ev.hostName || "—"}</TableCell>
+              <TableCell sx={cellSx}>
+                <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                  {ev.eventCategory?.slice(0, 2).map((c, i) => <Chip key={i} label={c} size="small" sx={{ fontSize: "0.65rem", fontWeight: 700, height: 20, background: "#eff6ff", color: "#1e40af" }} />)}
+                  {ev.eventCategory?.length > 2 && <Chip label={`+${ev.eventCategory.length - 2}`} size="small" sx={{ fontSize: "0.65rem", height: 20, background: "#f1f5f9", color: "#475569" }} />}
+                </Box>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{ev.startDate ? dayjs(ev.startDate).format("DD MMM YYYY") : "—"}</Typography>
+                <Typography sx={{ fontSize: "0.72rem", color: "#64748b" }}>to {ev.endDate ? dayjs(ev.endDate).format("DD MMM YYYY") : "—"}</Typography>
+                <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: ev.eventPrice === "0" ? "#15803d" : "#D26600", mt: 0.3 }}>{ev.eventPrice === "0" ? "FREE" : `₹${ev.eventPrice}`}</Typography>
+              </TableCell>
+              <TableCell sx={cellSx}><Chip label={isPast ? "Past" : "Upcoming"} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: isPast ? "#f1f5f9" : "#ecfdf5", color: isPast ? "#475569" : "#047857" }} /></TableCell>
+              <TableCell sx={cellSx}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.4 }}>
+                  <VisibilityOutlinedIcon sx={{ fontSize: 13, color: "#94a3b8" }} />
+                  <Typography sx={{ fontSize: "0.75rem", color: "#64748b" }}>{ev.viewCount || 0}</Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <GroupsIcon sx={{ fontSize: 13, color: "#059669" }} />
+                  <Typography sx={{ fontSize: "0.75rem", color: "#059669" }}>{ev.bookings?.length || 0}</Typography>
+                </Box>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Typography sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{ev.createdAt ? dayjs(ev.createdAt).format("DD MMM YYYY") : "—"}</Typography>
+                <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{ev.createdAt ? dayjs(ev.createdAt).format("hh:mm A") : ""}</Typography>
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Chip label={ev.approved ? "Approved" : "Pending"} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: ev.approved ? "#f0fdf4" : "#fff7ed", color: ev.approved ? "#166534" : "#9a3412" }} />
+              </TableCell>
+              <TableCell sx={cellSx}>
+                {ev.approvedAt ? (
+                  <Box>
+                    <Typography sx={{ fontWeight: 600, fontSize: "0.82rem", color: "#166534" }}>{dayjs(ev.approvedAt).format("DD MMM YYYY")}</Typography>
+                    <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>{dayjs(ev.approvedAt).format("hh:mm A")}</Typography>
+                  </Box>
+                ) : <Typography sx={{ fontSize: "0.75rem", color: "#cbd5e1" }}>—</Typography>}
+              </TableCell>
+              <TableCell sx={cellSx}>
+                <Box sx={{ display: "flex", gap: 0.5 }}>
+                  {isSuperAdmin && (
+                    <Tooltip title={ev.isPopular ? "Unmark Popular" : "Mark Popular"}>
+                      <IconButton size="small" onClick={() => handleTogglePopular(ev)} sx={{ background: ev.isPopular ? "#fffbeb" : "#f1f5f9", color: ev.isPopular ? "#f59e0b" : "#94a3b8", borderRadius: "8px", "&:hover": { background: "#fef3c7" } }}>
+                        {ev.isPopular ? <StarIcon sx={{ fontSize: 15 }} /> : <StarBorderIcon sx={{ fontSize: 15 }} />}
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  <Tooltip title="View"><IconButton size="small" onClick={() => navigate(`/admin/event/${ev._id}`)} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                  <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                  {!ev.approved
+                    ? <Tooltip title="Approve"><IconButton size="small" onClick={() => handleApprove(ev)} sx={{ background: "#f0fdf4", color: "#15803d", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                    : isSuperAdmin && <Tooltip title="Reject"><IconButton size="small" onClick={() => handleReject(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
+                  {isSuperAdmin && (
+                    <Tooltip title="Delete">
+                      <IconButton size="small" onClick={() => handleDelete(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}>
+                        <DeleteIcon sx={{ fontSize: 15 }} />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
+              </TableCell>
+            </TableRow>
+          );
+        }}
+      />
     </Box>
   );
 };
