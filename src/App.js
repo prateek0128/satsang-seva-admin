@@ -1,26 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, useNavigationType, useLocation } from "react-router-dom";
 
-// User-facing page imports (kept for reference, routes commented out)
-import LandingDesign from "./pages/LandingDesign";
 import Event from "./pages/Event";
-import CategoriesPage from "./pages/CategoriesPage";
-import SignUp from "./pages/SignUp";
-import CreateEventComponent from "./pages/CreateEventComponent";
-import ProfilePage from "./pages/ProfilePage";
-import SearchBar from "./pages/SearchBar";
-import LogIn from "./pages/LogIn";
-import BookingComponent from "./components/BookingComponent";
 import PublicProfile from "./pages/PublicProfile";
-import About from "./pages/About";
-import ContactUs from "./pages/ContactUs";
 import AddBlog from "./pages/AddBlog";
-import Blogs from "./pages/Blogs";
-import Terms from "./components/Terms";
-import Home from "./pages/Home";
-import LiveEvent from "./components/LiveEvent";
-import Userlayout from "./components/UserLayout";
-import ViewProfile from "./pages/ViewProfile";
 
 // Admin imports
 import AdminPage from "./admin/AdminPage";
@@ -69,27 +52,6 @@ function App() {
       <Route path="/event/:id" element={<Event />} />
       <Route path="/public-profile" element={<PublicProfile />} />
       <Route path="/delete-account" element={<DeleteAccountRequest />} />
-
-      {/* ── USER ROUTES (commented out — admin-only build) ──
-      <Route element={<Userlayout />}>
-        <Route path="/sign-in" element={<SignUp />} />
-        <Route path="/login" element={<LogIn />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/live-event" element={<LiveEvent />} />
-        <Route path="/landing-design-a-2" element={<LandingDesign />} />
-        <Route path="/categories-page" element={<CategoriesPage />} />
-        <Route exact path="/profile-page" element={<ProfilePage />} />
-        <Route path="/event-listing" element={<CreateEventComponent />} />
-        <Route path="/search-bar" element={<SearchBar />} />
-        <Route path="/booking" element={<BookingComponent />} />
-        <Route path="/aboutus" element={<About />} />
-        <Route path="/contactus" element={<ContactUs />} />
-        <Route path="/blog" element={<Blogs />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/addblog" element={<AddBlog />} />
-        <Route path="*" element={<LogIn />} />
-      </Route>
-      ── END USER ROUTES ── */}
 
       {/* ── ADMIN ROUTES ── */}
       <Route path="/admin">
