@@ -1,6 +1,5 @@
 import { Button } from "@mui/material";
 import PropTypes from "prop-types";
-import FrameComponent from "./NavComponent"; // Import FrameComponent
 import { useEffect, useState } from "react";
 import '../Csss/ProfilePage.css';
 import { HashLink } from "react-router-hash-link";

@@ -1,40 +1,64 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, useNavigationType, useLocation } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  useNavigationType,
+  useLocation,
+} from "react-router-dom";
 
+// Auth
+import AdminLogin from "./pages/Auth/AdminLogin";
+import AdminSignup from "./pages/Auth/AdminSignup";
+
+// Shared / Layout
+import AdminLayout from "./pages/Shared/AdminLayout";
+import AdminPage from "./pages/Shared/AdminPage";
+import Updateform from "./pages/Shared/Updateform";
+
+// Users
+import UserList from "./pages/Users/UserList";
+import UserEvents from "./pages/Users/UserEvents";
+import UpdateUser from "./pages/Users/UpdateUser";
+import AdminManagement from "./pages/Users/AdminManagement";
+
+// Events
+import Events from "./pages/Events/Events";
+import DraftEvents from "./pages/Events/DraftEvents";
+import Approvals from "./pages/Events/Approvals";
+import UpdateEvent from "./pages/Events/UpdateEvent";
+import ViewEvent from "./pages/Events/ViewEvent";
+import AllProducts from "./pages/Events/AllProducts";
+
+// Bookings
+import BookingList from "./pages/Bookings/BookingList";
+import BookingDetails from "./pages/Bookings/BookingDetails";
+
+// Blogs
+import Blog from "./pages/Blogs/Blog";
+import ViewBlog from "./pages/Blogs/ViewBlog";
+import AddBlog from "./pages/Blogs/Createblog";
+
+// Notifications
+import NotificationList from "./pages/Notifications/NotificationList";
+
+// Support
+import ContactQueries from "./pages/Support/ContactQueries";
+import DeleteAccountRequest from "./pages/Support/DeleteAccountRequest";
+
+// Public pages
 import Event from "./pages/Event";
 import PublicProfile from "./pages/PublicProfile";
-import AddBlog from "./pages/AddBlog";
-
-// Admin imports
-import AdminPage from "./admin/AdminPage";
-import AllProducts from "./admin/AllProducts";
-import UserList from "./admin/UserList";
-import Events from "./admin/Events";
-import UserEvents from "./admin/UserEvents";
-import Updateform from "./admin/Updateform";
-import Approvals from "./admin/Approvals";
-import Blog from "./admin/Blog";
-import ViewBlog from "./admin/ViewBlog";
-import DraftEvents from "./admin/DraftEvents";
-import AdminLayout from "./admin/AdminLayout";
-import AdminLogin from "./admin/AdminLogin";
-import AdminSignup from "./admin/AdminSignup";
-import UpdateUser from "./admin/UpdateUser";
-import UpdateEvent from "./admin/UpdateEvent";
-import ViewEvent from "./admin/ViewEvent";
-import DeleteAccountRequest from "./admin/DeleteAccountRequest";
-import ContactQueries from "./admin/ContactQueries";
-import BookingList from "./admin/BookingList";
-import BookingDetails from "./admin/BookingDetails";
-import NotificationList from "./admin/NotificationList";
-import AdminManagement from "./admin/AdminManagement";
 
 function App() {
   const action = useNavigationType();
   const location = useLocation();
   const pathname = location.pathname;
   const [admin, setAdmin] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("admin")); } catch { return null; }
+    try {
+      return JSON.parse(localStorage.getItem("admin"));
+    } catch {
+      return null;
+    }
   });
 
   const handleAdmin = (adminData) => setAdmin(adminData);
