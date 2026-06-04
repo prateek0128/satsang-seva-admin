@@ -23,7 +23,7 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import GroupsIcon from "@mui/icons-material/GroupsRounded";
 import { useSortable, SortCell, PlainCell } from "./sortable";
 
-const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
+const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 const CATS = ["Satsang", "Kirtan", "Sabha", "Yoga", "Utsav", "Adhyatmik", "Puja", "Seva & Charity", "Sanskritik", "Vividh"];
 const PAGE_SIZE = 12;
 
@@ -109,12 +109,12 @@ const Events = () => {
   };
 
   return (
-    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: { xs: "16px", sm: "28px 32px" }, minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       {loading && <Loader />}
 
       {/* Header */}
       <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)", mb: 0.5 }}>Events Management</Typography>
+        <Typography sx={{ fontSize: { xs: "1.1rem", sm: "1.4rem" }, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)", mb: 0.5 }}>Events Management</Typography>
         <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8" }}>Manage and moderate all spiritual events on the platform</Typography>
       </Box>
 
@@ -180,7 +180,7 @@ const Events = () => {
 
       {/* Table */}
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 380px)", overflowX: "auto" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 380px)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>

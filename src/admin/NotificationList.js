@@ -16,7 +16,7 @@ import EventIcon from "@mui/icons-material/EventRounded";
 import DraftsIcon from "@mui/icons-material/EditNoteRounded";
 import { useSortable, SortCell, PlainCell } from "./sortable";
 
-const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
+const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 
 const typeColor = (type) => ({
   broadcast:       { bg: "#eff6ff", color: "#2563eb" },
@@ -33,7 +33,7 @@ const SectionCard = ({ icon, title, count, accentColor, children }) => (
       <Typography sx={{ fontWeight: 800, color: "#0f172a", fontSize: "0.85rem", fontFamily: "var(--font-admin)", flex: 1 }}>{title}</Typography>
       <Chip label={`${count}`} size="small" sx={{ fontSize: "0.65rem", fontWeight: 800, height: 20, background: accentColor + "18", color: accentColor }} />
     </Box>
-    <TableContainer><Table>{children}</Table></TableContainer>
+    <TableContainer sx={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}><Table>{children}</Table></TableContainer>
   </Paper>
 );
 
@@ -75,11 +75,11 @@ const NotificationList = () => {
   const { sorted: sortedDrafts, orderBy: dOB, order: dO, handleSort: dSort } = useSortable(received.draftEvents, "updatedAt", "desc");
 
   return (
-    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: { xs: "16px", sm: "28px 32px" }, minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)", mb: 0.5 }}>Notification History</Typography>
       <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", mb: 2.5 }}>Track all sent and received notifications</Typography>
 
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, "& .MuiTab-root": { fontSize: "0.78rem", fontWeight: 700, textTransform: "none", fontFamily: "var(--font-admin)", minWidth: 160 }, "& .Mui-selected": { color: "#f58021 !important" }, "& .MuiTabs-indicator": { background: "linear-gradient(90deg,#D26600,#f58021)" } }}>
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto" sx={{ mb: 3, "& .MuiTab-root": { fontSize: "0.78rem", fontWeight: 700, textTransform: "none", fontFamily: "var(--font-admin)", minWidth: { xs: 120, sm: 160 } }, "& .Mui-selected": { color: "#f58021 !important" }, "& .MuiTabs-indicator": { background: "linear-gradient(90deg,#D26600,#f58021)" } }}>
         <Tab label="Sent Notifications" />
         <Tab label={`Received${totalReceived ? ` (${totalReceived})` : ""}`} />
       </Tabs>
@@ -87,7 +87,7 @@ const NotificationList = () => {
       {tab === 0 ? (
         <>
           <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", mb: 3 }}>
-            <TableContainer sx={{ maxHeight: "calc(100vh - 340px)", overflowX: "auto" }}>
+            <TableContainer sx={{ maxHeight: "calc(100vh - 340px)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               <Table stickyHeader>
                 <TableHead>
                   <TableRow>

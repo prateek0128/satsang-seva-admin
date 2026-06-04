@@ -282,7 +282,7 @@ const TopNav = ({ isOpen, toggleNav }) => {
                 letterSpacing: "0.08em",
               }}
             >
-              Super Admin
+              {admin?.role === 'superadmin' ? 'Super Admin' : 'Admin'}
             </p>
           </div>
         </div>

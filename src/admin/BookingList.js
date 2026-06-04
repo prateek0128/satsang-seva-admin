@@ -70,10 +70,10 @@ const BookingList = () => {
   if (loading && page === 1 && bookings.length === 0) return <Loader />;
 
   return (
-    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: { xs: "16px", sm: "28px 32px" }, minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2 }}>
         <Box>
-          <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>All Bookings</Typography>
+          <Typography sx={{ fontSize: { xs: "1.1rem", sm: "1.4rem" }, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>All Bookings</Typography>
           <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", mt: 0.3 }}>
             {hasFilters ? "Matching" : "Total"}: <strong style={{ color: "#D26600" }}>{total}</strong> bookings
           </Typography>
@@ -102,8 +102,8 @@ const BookingList = () => {
         <Box sx={{ p: "12px 16px", display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
           <TextField size="small" placeholder="Search Booking ID" value={filters.bookingId} onChange={e => setFilters(f => ({ ...f, bookingId: e.target.value }))}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 15, color: "#94a3b8" }} /></InputAdornment> }}
-            sx={{ flex: 1, minWidth: 180, "& .MuiOutlinedInput-root": { borderRadius: "8px", fontSize: "0.82rem", height: 36, "&.Mui-focused fieldset": { borderColor: "#D26600" } } }} />
-          <FormControl size="small" sx={{ minWidth: 150 }}>
+            sx={{ flex: 1, minWidth: 150, "& .MuiOutlinedInput-root": { borderRadius: "8px", fontSize: "0.82rem", height: 36, "&.Mui-focused fieldset": { borderColor: "#D26600" } } }} />
+          <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 150 } }}>
             <Select value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))} displayEmpty
               sx={{ borderRadius: "8px", fontSize: "0.82rem", height: 36, "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#D26600" } }}>
               <MenuItem value="" sx={{ fontSize: "0.82rem" }}>All Statuses</MenuItem>
@@ -111,14 +111,14 @@ const BookingList = () => {
               <MenuItem value="inprocess" sx={{ fontSize: "0.82rem" }}>In Process</MenuItem>
             </Select>
           </FormControl>
-          <FormControl size="small" sx={{ minWidth: 200 }}>
+          <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 200 } }}>
             <Select value={filters.eventId} onChange={e => setFilters(f => ({ ...f, eventId: e.target.value }))} displayEmpty
               sx={{ borderRadius: "8px", fontSize: "0.82rem", height: 36, "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#D26600" } }}>
               <MenuItem value="" sx={{ fontSize: "0.82rem" }}>All Events</MenuItem>
               {eventOptions.map(ev => <MenuItem key={ev.id} value={ev.id} sx={{ fontSize: "0.82rem" }}>{ev.label}</MenuItem>)}
             </Select>
           </FormControl>
-          <FormControl size="small" sx={{ minWidth: 160 }}>
+          <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 160 } }}>
             <Select value={filters.hostName} onChange={e => setFilters(f => ({ ...f, hostName: e.target.value }))} displayEmpty
               sx={{ borderRadius: "8px", fontSize: "0.82rem", height: 36, "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#D26600" } }}>
               <MenuItem value="" sx={{ fontSize: "0.82rem" }}>All Hosts</MenuItem>
@@ -126,13 +126,13 @@ const BookingList = () => {
             </Select>
           </FormControl>
           <TextField size="small" type="date" value={filters.date} onChange={e => setFilters(f => ({ ...f, date: e.target.value }))}
-            sx={{ minWidth: 150, "& .MuiOutlinedInput-root": { borderRadius: "8px", fontSize: "0.82rem", height: 36, "&.Mui-focused fieldset": { borderColor: "#D26600" } } }} />
+            sx={{ minWidth: { xs: "100%", sm: 150 }, "& .MuiOutlinedInput-root": { borderRadius: "8px", fontSize: "0.82rem", height: 36, "&.Mui-focused fieldset": { borderColor: "#D26600" } } }} />
         </Box>
       </Box>
 
       {/* Table */}
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 360px)", overflowX: "auto" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 360px)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>

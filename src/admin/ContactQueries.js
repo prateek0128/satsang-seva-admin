@@ -17,7 +17,7 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import ToggleButton from "@mui/material/ToggleButton";
 import { useSortable, SortCell, PlainCell } from "./sortable";
 
-const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2 };
+const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 
 const typeColors = {
   Contact:    { bg: "rgba(37,99,235,0.08)",  color: "#2563eb" },
@@ -83,25 +83,25 @@ const ContactQueries = () => {
   const paged = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
-    <Box sx={{ p: "28px 32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
+    <Box sx={{ p: { xs: "16px", sm: "28px 32px" }, minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "var(--font-admin)" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3, flexWrap: "wrap", gap: 2 }}>
         <Box>
-          <Typography sx={{ fontSize: "1.4rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>Contact Queries</Typography>
+          <Typography sx={{ fontSize: { xs: "1.1rem", sm: "1.4rem" }, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", fontFamily: "var(--font-admin)" }}>Contact Queries</Typography>
           <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", mt: 0.3 }}>{queries.length} total messages received</Typography>
         </Box>
-        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap", width: { xs: "100%", sm: "auto" } }}>
           <ToggleButtonGroup size="small" value={filterType} exclusive onChange={(_, v) => v && setFilterType(v)}
             sx={{ background: "#f1f5f9", borderRadius: "10px", p: "3px", border: "1px solid #e2e8f0", flexWrap: "wrap", "& .MuiToggleButton-root": { border: "none", borderRadius: "8px !important", fontSize: "0.72rem", fontWeight: 600, px: 1.5, py: 0.6, color: "#64748b", textTransform: "capitalize", fontFamily: "var(--font-admin)", "&.Mui-selected": { background: "linear-gradient(135deg,#D26600,#f58021)", color: "#fff", "&:hover": { background: "linear-gradient(135deg,#b35800,#D26600)" } } } }}>
             {QUERY_TYPES.map(t => <ToggleButton key={t} value={t}>{t}</ToggleButton>)}
           </ToggleButtonGroup>
           <TextField size="small" placeholder="Search…" value={search} onChange={e => setSearch(e.target.value)}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 16, color: "#94a3b8" }} /></InputAdornment> }}
-            sx={{ width: 220, "& .MuiOutlinedInput-root": { borderRadius: "10px", fontSize: "0.82rem", "&.Mui-focused fieldset": { borderColor: "#D26600" } } }} />
+            sx={{ width: { xs: "100%", sm: 220 }, "& .MuiOutlinedInput-root": { borderRadius: "10px", fontSize: "0.82rem", "&.Mui-focused fieldset": { borderColor: "#D26600" } } }} />
         </Box>
       </Box>
 
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 320px)", overflowX: "auto" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 320px)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>

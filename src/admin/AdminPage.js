@@ -164,14 +164,14 @@ const AdminPage = () => {
   ];
 
   return (
-    <div style={{ padding: "32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "'Plus Jakarta Sans','Inter',-apple-system,sans-serif" }}>
+    <div style={{ padding: "32px", minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)", fontFamily: "'Plus Jakarta Sans','Inter',-apple-system,sans-serif" }} className="dashboard-root">
 
       {/* ── Header ── */}
       <div style={{ marginBottom: 32 }}>
         <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase" }}>
           {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         </p>
-        <h1 style={{ margin: "0 0 4px", fontSize: "1.75rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.05em", lineHeight: 1.15 }}>
+        <h1 style={{ margin: "0 0 4px", fontSize: "1.75rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.05em", lineHeight: 1.15 }} className="dashboard-title">
           {greeting},{" "}
           <span style={{ background: "linear-gradient(135deg,#D26600,#f58021,#ffa726)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
             {admin?.name?.split(" ")[0] || "Admin"}
@@ -289,7 +289,8 @@ const AdminPage = () => {
       <style>{`
         @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(4,1fr) !important; } .summary-grid { grid-template-columns: repeat(2,1fr) !important; } }
         @media (max-width: 900px)  { .stats-grid { grid-template-columns: repeat(2,1fr) !important; } }
-        @media (max-width: 768px)  { .stats-grid { grid-template-columns: 1fr !important; } .main-grid { grid-template-columns: 1fr !important; } .summary-grid { grid-template-columns: 1fr 1fr !important; } }
+        @media (max-width: 768px)  { .stats-grid { grid-template-columns: 1fr !important; } .main-grid { grid-template-columns: 1fr !important; } .summary-grid { grid-template-columns: 1fr !important; } .dashboard-root { padding: 16px !important; } .dashboard-title { font-size: 1.25rem !important; } }
+        @media (max-width: 480px)  { .stats-grid { grid-template-columns: 1fr !important; } .summary-grid { grid-template-columns: 1fr !important; } }
         .skeleton { background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
         @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
         .stat-card { position: relative; overflow: hidden; }

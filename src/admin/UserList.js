@@ -27,7 +27,7 @@ const StatCard = ({ label, value, icon, color, light, loading }) => (
   <Box sx={{
     background: "#fff", borderRadius: "16px", p: "20px 22px",
     border: "1px solid #e8edf5", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-    display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0,
+    display: "flex", alignItems: "center", gap: 2,
     position: "relative", overflow: "hidden",
     transition: "box-shadow 0.25s, transform 0.25s",
     "&:hover": { boxShadow: `0 8px 28px rgba(245,128,33,0.15), 0 0 0 1px ${color}22`, transform: "translateY(-2px)" },
@@ -141,7 +141,7 @@ const UserList = () => {
       </Box>
 
       {/* ── Stat Cards ── */}
-      <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(auto-fit, minmax(180px, 1fr))" }, gap: { xs: 1.5, sm: 2 }, mb: 3 }}>
         {stats.map((s, i) => <StatCard key={i} loading={loading} {...s} />)}
       </Box>
 
@@ -175,7 +175,7 @@ const UserList = () => {
 
       {/* ── Table ── */}
       <Paper elevation={0} sx={{ borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-        <TableContainer sx={{ maxHeight: "calc(100vh - 380px)", overflowX: "auto" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 380px)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
