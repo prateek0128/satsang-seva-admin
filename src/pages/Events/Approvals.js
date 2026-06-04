@@ -13,6 +13,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
 import CancelIcon from "@mui/icons-material/CancelRounded";
 import DeleteIcon from "@mui/icons-material/DeleteRounded";
 import { useSortable } from "../Shared/sortable";
+import usePermission from "../../hooks/usePermission";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 
@@ -30,8 +31,7 @@ const Approvals = () => {
   const [hRowsPerPage, setHRowsPerPage] = useState(10);
   const { sorted: sortedEvents, orderBy: evOB, order: evO, handleSort: evSort } = useSortable(events, "createdAt", "desc");
   const { sorted: sortedHosts, orderBy: hOB, order: hO, handleSort: hSort } = useSortable(hosts, "createdAt", "desc");
-  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
-  const isSuperAdmin = adminData.designation === "superAdmin";
+  const { can, isSuperAdmin } = usePermission();
 
   const headers = () => {
     const token = localStorage.getItem("token");
@@ -163,10 +163,10 @@ const Approvals = () => {
               <TableCell sx={cellSx}>
                 <Box sx={{ display: "flex", gap: 0.6 }}>
                   <Tooltip title="View"><IconButton size="small" onClick={() => window.open(`${process.env.REACT_APP_FRONTEND}/event/${ev._id}`, "_blank")} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                  <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                  <Tooltip title="Approve"><IconButton size="small" onClick={() => approveEvent(ev)} sx={{ background: "#f0fdf4", color: "#059669", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                  {isSuperAdmin && <Tooltip title="Reject"><IconButton size="small" onClick={() => rejectEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
-                  {isSuperAdmin && <Tooltip title="Delete"><IconButton size="small" onClick={() => deleteEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
+                  {can("approvals", "edit") && <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
+                  {can("approvals", "approve") && <Tooltip title="Approve"><IconButton size="small" onClick={() => approveEvent(ev)} sx={{ background: "#f0fdf4", color: "#059669", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
+                  {can("approvals", "reject") && <Tooltip title="Reject"><IconButton size="small" onClick={() => rejectEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
+                  {can("approvals", "delete") && <Tooltip title="Delete"><IconButton size="small" onClick={() => deleteEvent(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
                 </Box>
               </TableCell>
             </TableRow>

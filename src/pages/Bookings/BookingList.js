@@ -14,6 +14,7 @@ import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import InputAdornment from "@mui/material/InputAdornment";
 import SearchIcon from "@mui/icons-material/SearchRounded";
 import { useSortable } from "../Shared/sortable";
+import usePermission from "../../hooks/usePermission";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 
@@ -36,6 +37,7 @@ const BookingList = () => {
   const [eventOptions, setEventOptions] = useState([]);
   const [hostOptions, setHostOptions] = useState([]);
   const { sorted: sortedBookings, orderBy, order, handleSort } = useSortable(bookings, "createdAt", "desc");
+  const { can } = usePermission();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -178,11 +180,13 @@ const BookingList = () => {
               <TableCell sx={cellSx}>{dayjs(b.createdAt).format("DD MMM YYYY")}</TableCell>
               <TableCell sx={cellSx}><Chip label={b.status} size="small" sx={{ fontSize: "0.68rem", fontWeight: 700, height: 22, background: sc.bg, color: sc.color }} /></TableCell>
               <TableCell sx={cellSx}>
-                <Tooltip title="View Details">
-                  <IconButton size="small" onClick={() => navigate(`/admin/bookings/${b._id}`, { state: { booking: b } })} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}>
-                    <VisibilityIcon sx={{ fontSize: 15 }} />
-                  </IconButton>
-                </Tooltip>
+                {can("bookings", "view") && (
+                  <Tooltip title="View Details">
+                    <IconButton size="small" onClick={() => navigate(`/admin/bookings/${b._id}`, { state: { booking: b } })} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}>
+                      <VisibilityIcon sx={{ fontSize: 15 }} />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </TableCell>
             </TableRow>
           );

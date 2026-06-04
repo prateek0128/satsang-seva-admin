@@ -12,6 +12,7 @@ import EditIcon from "@mui/icons-material/EditRounded";
 import DeleteIcon from "@mui/icons-material/DeleteRounded";
 import AddIcon from "@mui/icons-material/AddRounded";
 import { useSortable } from "../Shared/sortable";
+import usePermission from "../../hooks/usePermission";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 
@@ -25,8 +26,7 @@ const Blog = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const { sorted, orderBy, order, handleSort } = useSortable(blogs, "createdAt", "desc");
-  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
-  const isSuperAdmin = adminData.designation === "superAdmin";
+  const { can, isSuperAdmin } = usePermission();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -108,9 +108,9 @@ const Blog = () => {
             <TableCell sx={cellSx}>{blog.createdAt ? dayjs(blog.createdAt).format("DD MMM YYYY") : "—"}</TableCell>
             <TableCell sx={cellSx}>
               <Box sx={{ display: "flex", gap: 0.6 }}>
-                <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/editblog/${blog._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                <Tooltip title="View"><IconButton size="small" onClick={() => navigate(`/admin/viewblog/${blog._id}`)} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                {isSuperAdmin && (
+                {can("blog", "view") && <Tooltip title="View"><IconButton size="small" onClick={() => navigate(`/admin/viewblog/${blog._id}`)} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
+                {can("blog", "edit") && <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/editblog/${blog._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
+                {can("blog", "delete") && (
                   <Tooltip title="Delete"><IconButton size="small" onClick={() => handleDelete(blog._id)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                 )}
               </Box>

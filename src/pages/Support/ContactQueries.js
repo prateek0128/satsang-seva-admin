@@ -15,6 +15,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import ToggleButton from "@mui/material/ToggleButton";
 import { useSortable } from "../Shared/sortable";
+import usePermission from "../../hooks/usePermission";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 
@@ -39,8 +40,7 @@ const ContactQueries = () => {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
-  const isSuperAdmin = adminData.designation === "superAdmin";
+  const { can, isSuperAdmin } = usePermission();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -164,7 +164,7 @@ const ContactQueries = () => {
                   <Tooltip title="Reply via Email">
                     <IconButton size="small" component="a" href={`mailto:${q.email}?subject=Re: ${encodeURIComponent(q.subject)}`} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><MailIcon sx={{ fontSize: 15 }} /></IconButton>
                   </Tooltip>
-                  {isSuperAdmin && (
+                  {can("contact-queries", "delete") && (
                     <Tooltip title="Delete">
                       <IconButton size="small" onClick={() => handleDelete(q)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton>
                     </Tooltip>

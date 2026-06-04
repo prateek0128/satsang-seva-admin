@@ -19,6 +19,7 @@ import SupervisedUserCircleIcon from "@mui/icons-material/SupervisedUserCircleRo
 import PendingActionsIcon from "@mui/icons-material/PendingActionsRounded";
 import InputAdornment from "@mui/material/InputAdornment";
 import { useSortable } from "../Shared/sortable";
+import usePermission from "../../hooks/usePermission";
 
 const BRAND = "#f58021";
 const cellSx = { fontSize: "0.82rem", color: "#334155", whiteSpace: "nowrap", py: 1.5, px: 2 };
@@ -61,8 +62,7 @@ const UserList = () => {
   const [filterType, setFilterType] = useState("all");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
-  const isSuperAdmin = adminData.designation === "superAdmin";
+  const { can, isSuperAdmin } = usePermission();
 
   useEffect(() => {
     const fetch = async () => {
@@ -256,12 +256,14 @@ const UserList = () => {
                       <VisibilityIcon sx={{ fontSize: 15 }} />
                     </IconButton>
                   </Tooltip>
+                  {can("allusers", "edit") && (
                   <Tooltip title="Edit User" arrow>
                     <IconButton size="small" onClick={() => navigate(`/admin/updateuser/${user._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#dcfce7", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
                       <EditIcon sx={{ fontSize: 15 }} />
                     </IconButton>
                   </Tooltip>
-                  {isSuperAdmin && (
+                  )}
+                  {can("allusers", "delete") && (
                     <Tooltip title="Delete User" arrow>
                       <IconButton size="small" onClick={() => handleDelete(user)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#fee2e2", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
                         <DeleteIcon sx={{ fontSize: 15 }} />

@@ -13,6 +13,7 @@ import EditIcon from "@mui/icons-material/EditRounded";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActiveRounded";
 import DeleteIcon from "@mui/icons-material/DeleteRounded";
 import { useSortable } from "../Shared/sortable";
+import usePermission from "../../hooks/usePermission";
 
 const cellSx = { fontSize: "0.82rem", color: "#334155", py: 1.5, px: 2, whiteSpace: "nowrap" };
 
@@ -24,8 +25,7 @@ const DraftEvents = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const { sorted, orderBy, order, handleSort } = useSortable(events, "updatedAt", "desc");
-  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
-  const isSuperAdmin = adminData.designation === "superAdmin";
+  const { can, isSuperAdmin } = usePermission();
 
   const headers = () => {
     const token = localStorage.getItem("token");
@@ -115,10 +115,10 @@ const DraftEvents = () => {
             <TableCell sx={cellSx}>{ev.updatedAt ? dayjs(ev.updatedAt).format("DD MMM YYYY, HH:mm") : "—"}</TableCell>
             <TableCell sx={cellSx}>
               <Box sx={{ display: "flex", gap: 0.6 }}>
-                <Tooltip title="View"><IconButton size="small" onClick={() => window.open(`/event/${ev._id}`, "_blank")} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
+                {can("drafts", "view") && <Tooltip title="View"><IconButton size="small" onClick={() => window.open(`/event/${ev._id}`, "_blank")} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
+                {can("drafts", "edit") && <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
                 <Tooltip title="Send Reminder"><IconButton size="small" onClick={() => handleRemind(ev)} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}><NotificationsActiveIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                {isSuperAdmin && (
+                {can("drafts", "delete") && (
                   <Tooltip title="Delete"><IconButton size="small" onClick={() => handleDelete(ev)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
                 )}
               </Box>
