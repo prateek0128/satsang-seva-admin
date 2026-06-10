@@ -11,7 +11,7 @@ import {
 import AdminTable from "../Shared/AdminTable";
 import VisibilityIcon from "@mui/icons-material/VisibilityRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
-import DeleteIcon from "@mui/icons-material/DeleteRounded";
+import BlockIcon from "@mui/icons-material/BlockRounded";
 import SearchIcon from "@mui/icons-material/SearchRounded";
 import PeopleIcon from "@mui/icons-material/PeopleRounded";
 import HowToRegIcon from "@mui/icons-material/HowToRegRounded";
@@ -77,16 +77,18 @@ const UserList = () => {
   }, []);
 
   const handleDelete = async (user) => {
-    if (!await confirmDialog(`Delete ${user.name || "this user"}?`)) return;
+    if (user.isActive === false) return;
+    if (!await confirmDialog(`Deactivate ${user.name || "this user"}?`)) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(url + "admin/user/" + user._id, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.patch(url + "admin/user/" + user._id + "/deactivate", {}, { headers: { Authorization: `Bearer ${token}` } });
       setUsers(u => u.filter(x => x._id !== user._id));
-      toast("User deleted", "success");
+      toast("User deactivated", "success");
     } catch (e) { toast(e.response?.data?.message || e.message, "error"); }
   };
 
-  const visibleUsers = isSuperAdmin ? users : users.filter(u => u.userType !== "participant");
+  const activeUsers = users.filter(u => u.isActive !== false);
+  const visibleUsers = isSuperAdmin ? activeUsers : activeUsers.filter(u => u.userType !== "participant");
 
   const baseFiltered = visibleUsers.filter(u => {
     const s = search.toLowerCase();
@@ -264,9 +266,9 @@ const UserList = () => {
                   </Tooltip>
                   )}
                   {can("allusers", "delete") && (
-                    <Tooltip title="Delete User" arrow>
+                    <Tooltip title="Deactivate User" arrow>
                       <IconButton size="small" onClick={() => handleDelete(user)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#fee2e2", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
-                        <DeleteIcon sx={{ fontSize: 15 }} />
+                        <BlockIcon sx={{ fontSize: 15 }} />
                       </IconButton>
                     </Tooltip>
                   )}

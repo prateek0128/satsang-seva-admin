@@ -15,6 +15,11 @@ const pageMap = {
     sub: "View and manage all users",
     crumb: "Users",
   },
+  "/admin/inactive-users": {
+    title: "Inactive Users",
+    sub: "Restore disabled accounts",
+    crumb: "Inactive Users",
+  },
   "/admin/events": {
     title: "Events",
     sub: "Manage spiritual events",

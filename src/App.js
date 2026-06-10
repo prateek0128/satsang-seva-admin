@@ -17,6 +17,7 @@ import Updateform from "./pages/Shared/Updateform";
 
 // Users
 import UserList from "./pages/Users/UserList";
+import InactiveUsers from "./pages/Users/InactiveUsers";
 import UserEvents from "./pages/Users/UserEvents";
 import UpdateUser from "./pages/Users/UpdateUser";
 import AdminManagement from "./pages/Users/AdminManagement";
@@ -85,6 +86,7 @@ function App() {
         <Route element={<AdminLayout setAdmin={handleAdmin} />}>
           <Route path="dashboard" element={<AdminPage />} />
           <Route path="allusers" element={<UserList />} />
+          <Route path="inactive-users" element={<InactiveUsers />} />
           <Route path="events" element={<Events />} />
           <Route path="drafts" element={<DraftEvents />} />
           <Route path="approvals" element={<Approvals />} />

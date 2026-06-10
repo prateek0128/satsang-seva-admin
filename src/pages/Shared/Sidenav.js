@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import DashboardIcon from "@mui/icons-material/SpaceDashboardRounded";
 import UsersIcon from "@mui/icons-material/PeopleRounded";
+import PersonOffIcon from "@mui/icons-material/PersonOffRounded";
 import EventsIcon from "@mui/icons-material/EventAvailableRounded";
 import ApproveIcon from "@mui/icons-material/VerifiedUserRounded";
 import BlogIcon from "@mui/icons-material/DescriptionRounded";
@@ -64,6 +65,11 @@ const SideNavbar = forwardRef(
         to: "/admin/allusers",
         label: "Users",
         icon: <UsersIcon fontSize="small" />,
+      },
+      {
+        to: "/admin/inactive-users",
+        label: "Inactive Users",
+        icon: <PersonOffIcon fontSize="small" />,
       },
       {
         to: "/admin/events",

@@ -168,6 +168,7 @@ const UpdateUser = () => {
 
   const [loading, setLoading] = useState(false);
   const [otpRequired, setOtpRequired] = useState(false);
+  const [isInactive, setIsInactive] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -215,6 +216,7 @@ const UpdateUser = () => {
         const response = await axios.get(`${url}admin/user/${id}`, { headers });
         const u = response.data.user;
         if (u) {
+          setIsInactive(u.isActive === false);
           setStats({
             subscribers: u.subscribers?.length || 0,
             subscriptions: u.subscriptions?.length || 0,
@@ -427,7 +429,7 @@ const UpdateUser = () => {
   };
 
   const handleUpdate = async () => {
-    if (isReadOnly) return;
+    if (isReadOnly || isInactive) return;
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -542,7 +544,7 @@ const UpdateUser = () => {
           </svg>
           {isReadOnly ? "Back" : "Cancel"}
         </button>
-        {isReadOnly && (
+        {isReadOnly && !isInactive && (
           <button
             style={S.saveBtn}
             onClick={() => navigate(`/admin/updateuser/${id}`)}
@@ -564,15 +566,20 @@ const UpdateUser = () => {
             Edit Details
           </button>
         )}
-        {!isReadOnly && (
+        {!isReadOnly && !isInactive && (
           <button style={S.saveBtn} onClick={handleUpdate}>
             Save Changes
+          </button>
+        )}
+        {isInactive && (
+          <button style={{ ...S.saveBtn, opacity: 0.65, cursor: "not-allowed" }} disabled>
+            Inactive User
           </button>
         )}
       </div>
 
       <fieldset
-        disabled={isReadOnly}
+        disabled={isReadOnly || isInactive}
         style={{ border: "none", margin: 0, padding: 0 }}
       >
         <div style={S.grid}>
