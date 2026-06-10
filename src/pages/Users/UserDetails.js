@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast } from "../components/Popup";
 import Loader from "../components/Loader";
+import usePermission from "../../hooks/usePermission";
 
 const S = {
   container: {
@@ -123,6 +124,8 @@ const UserDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const url = process.env.REACT_APP_BACKEND;
+  const { can, isLoaded } = usePermission();
+  const canEdit = isLoaded && can("allusers", "edit");
   const [user, setUser] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -166,7 +169,7 @@ const UserDetails = () => {
     (!user.userType || user.userType.toLowerCase() === "participant") &&
     (!user.profileType || user.profileType.toLowerCase() === "participant") &&
     (!user.performerType || user.performerType === "None");
-
+  console.log("User Access:", canEdit);
   return (
     <div style={S.container}>
       <div style={S.header}>
@@ -194,36 +197,38 @@ const UserDetails = () => {
             </svg>
             Back to Users
           </button>
-          <button
-            onClick={() => navigate(`/admin/updateuser/${id}`)}
-            style={{
-              background: "#D26600",
-              color: "#fff",
-              border: "none",
-              padding: "8px 20px",
-              borderRadius: "8px",
-              fontWeight: 700,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {canEdit && (
+            <button
+              onClick={() => navigate(`/admin/updateuser/${id}`)}
+              style={{
+                background: "#D26600",
+                color: "#fff",
+                border: "none",
+                padding: "8px 20px",
+                borderRadius: "8px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
             >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-            Edit Profile
-          </button>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              Edit Profile
+            </button>
+          )}
         </div>
       </div>
 

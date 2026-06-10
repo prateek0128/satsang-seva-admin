@@ -43,5 +43,7 @@ export const logout = () => {
   // return auth.signOut();
   localStorage.removeItem("token");
   localStorage.removeItem("userId");
+  // Clear in-memory permission cache so the next login fetches fresh permissions
+  import("../hooks/usePermission").then(m => m.clearPermissionCache());
   window.location.reload();
 };
