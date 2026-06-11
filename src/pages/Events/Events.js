@@ -277,9 +277,6 @@ const Events = () => {
                   )}
                   {can("events", "view") && <Tooltip title="View"><IconButton size="small" onClick={() => navigate(`/admin/event/${ev._id}`)} sx={{ background: "#f9fafb", color: "#374151", borderRadius: "8px", "&:hover": { background: "#f3f4f6" } }}><VisibilityIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
                   {can("events", "edit") && <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/admin/updateevent/${ev._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><EditIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
-                  {!ev.approved && can("events", "approve")
-                    ? <Tooltip title="Approve"><IconButton size="small" onClick={() => handleApprove(ev)} sx={{ background: "#f0fdf4", color: "#15803d", borderRadius: "8px", "&:hover": { background: "#dcfce7" } }}><CheckCircleIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>
-                    : ev.approved && can("events", "reject") && <Tooltip title="Reject"><IconButton size="small" onClick={() => handleReject(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}><CancelIcon sx={{ fontSize: 15 }} /></IconButton></Tooltip>}
                   {can("events", "delete") && (
                     <Tooltip title="Delete">
                       <IconButton size="small" onClick={() => handleDelete(ev)} sx={{ background: "#fef2f2", color: "#ef4444", borderRadius: "8px", "&:hover": { background: "#fee2e2" } }}>

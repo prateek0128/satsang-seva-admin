@@ -13,6 +13,23 @@ const notify = (data) => {
 
 export const clearPermissionCache = () => {
   _cache = null;
+  _listeners.forEach((fn) => fn(null));
+};
+
+const fetchPermissions = () => {
+  if (_fetching) return;
+  _fetching = true;
+  const token = localStorage.getItem("token");
+  const url = process.env.REACT_APP_BACKEND;
+  axios
+    .get(`${url}admin/permissions/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then((r) => notify(r.data.data))
+    .catch(() => notify(null))
+    .finally(() => {
+      _fetching = false;
+    });
 };
 
 const usePermission = () => {
@@ -22,20 +39,8 @@ const usePermission = () => {
     _listeners.add(setPermissions);
     if (_cache) {
       setPermissions(_cache);
-    } else if (!_fetching) {
-      _fetching = true;
-      const token = localStorage.getItem("token");
-      const url = process.env.REACT_APP_BACKEND;
-      axios
-        .get(`${url}admin/permissions/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((r) => notify(r.data.data))
-        .catch(() => notify(null))
-        .finally(() => {
-          _fetching = false;
-        });
     }
+    fetchPermissions();
     return () => _listeners.delete(setPermissions);
   }, []);
 

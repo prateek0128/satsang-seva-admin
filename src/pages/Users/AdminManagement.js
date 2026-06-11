@@ -19,21 +19,23 @@ const BRAND = "#f58021";
 const cellSx = { fontSize: "0.82rem", color: "#334155", whiteSpace: "nowrap", py: 1.5, px: 2 };
 
 const PAGES = [
-  { key: "allusers",       label: "All Users"        },
-  { key: "events",         label: "Events"           },
-  { key: "approvals",      label: "Approvals"        },
-  { key: "drafts",         label: "Draft Events"     },
-  { key: "blog",           label: "Blogs"            },
-  { key: "bookings",       label: "Bookings"         },
-  { key: "contact-queries",label: "Contact Queries"  },
-  { key: "notifications",  label: "Notifications"    },
+  { key: "allusers",       label: "All Users",       actions: ["view", "edit", "deactivate"] },
+  { key: "events",         label: "Events",          actions: ["view", "edit", "delete"] },
+  { key: "approvals",      label: "Approvals",       actions: ["view", "edit", "delete", "approve", "reject"] },
+  { key: "drafts",         label: "Draft Events",    actions: ["view", "edit", "delete"] },
+  { key: "blog",           label: "Blogs",           actions: ["view", "edit", "delete"] },
+  { key: "bookings",       label: "Bookings",        actions: ["view"] },
+  { key: "contact-queries",label: "Contact Queries", actions: ["view", "delete"] },
+  { key: "notifications",  label: "Notifications",   actions: ["view"] },
 ];
 
-const ACTIONS = ["view", "edit", "delete", "approve", "reject"];
+const ACTIONS = ["view", "edit", "delete", "approve", "reject", "deactivate"];
+const actionLabel = (action) => action === "deactivate" ? "Deactivate" : action;
+const pageActions = (pageKey) => PAGES.find((p) => p.key === pageKey)?.actions || [];
 
 const emptyPermissions = () =>
   Object.fromEntries(
-    PAGES.map((p) => [p.key, Object.fromEntries(ACTIONS.map((a) => [a, false]))])
+    PAGES.map((p) => [p.key, Object.fromEntries(p.actions.map((a) => [a, false]))])
   );
 
 const AdminManagement = () => {
@@ -100,7 +102,7 @@ const AdminManagement = () => {
     if (admin.permissions) {
       PAGES.forEach(({ key }) => {
         if (admin.permissions[key]) {
-          ACTIONS.forEach((a) => {
+          pageActions(key).forEach((a) => {
             base[key][a] = !!(admin.permissions[key][a]);
           });
         }
@@ -120,14 +122,14 @@ const AdminManagement = () => {
   const toggleAllActionsForPage = (pageKey, value) => {
     setPermData((prev) => ({
       ...prev,
-      [pageKey]: Object.fromEntries(ACTIONS.map((a) => [a, value])),
+      [pageKey]: Object.fromEntries(pageActions(pageKey).map((a) => [a, value])),
     }));
   };
 
   const toggleAllPages = (value) => {
     setPermData(
       Object.fromEntries(
-        PAGES.map(({ key }) => [key, Object.fromEntries(ACTIONS.map((a) => [a, value]))])
+        PAGES.map(({ key, actions }) => [key, Object.fromEntries(actions.map((a) => [a, value]))])
       )
     );
   };
@@ -316,41 +318,49 @@ const AdminManagement = () => {
           </Box>
 
           {/* Header row */}
-          <Box sx={{ px: 3, py: 1, background: "#f1f5f9", borderBottom: "1px solid #e2e8f0", display: "grid", gridTemplateColumns: "180px repeat(5, 1fr) 80px", alignItems: "center" }}>
+          <Box sx={{ px: 3, py: 1, background: "#f1f5f9", borderBottom: "1px solid #e2e8f0", display: "grid", gridTemplateColumns: "180px repeat(6, 1fr) 80px", alignItems: "center" }}>
             <Typography sx={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em" }}>Page</Typography>
             {ACTIONS.map((a) => (
-              <Typography key={a} sx={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", textAlign: "center" }}>{a}</Typography>
+              <Typography key={a} sx={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", textAlign: "center" }}>{actionLabel(a)}</Typography>
             ))}
             <Typography sx={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", textAlign: "center" }}>All</Typography>
           </Box>
 
           {PAGES.map(({ key, label }, idx) => {
             const pagePerms = permData[key] || {};
-            const allOn = ACTIONS.every((a) => pagePerms[a]);
-            const anyOn = ACTIONS.some((a) => pagePerms[a]);
+            const allowedActions = pageActions(key);
+            const allOn = allowedActions.every((a) => pagePerms[a]);
+            const anyOn = allowedActions.some((a) => pagePerms[a]);
             return (
               <Box key={key} sx={{
                 px: 3, py: 1.2,
                 background: idx % 2 === 0 ? "#fff" : "#fafbff",
                 borderBottom: "1px solid #f1f5f9",
                 display: "grid",
-                gridTemplateColumns: "180px repeat(5, 1fr) 80px",
+                gridTemplateColumns: "180px repeat(6, 1fr) 80px",
                 alignItems: "center",
               }}>
                 <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "#0f172a" }}>{label}</Typography>
-                {ACTIONS.map((action) => (
-                  <Box key={action} sx={{ display: "flex", justifyContent: "center" }}>
-                    <Switch
-                      size="small"
-                      checked={!!(pagePerms[action])}
-                      onChange={() => toggleAction(key, action)}
-                      sx={{
-                        "& .MuiSwitch-switchBase.Mui-checked": { color: "#f58021" },
-                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: "#f58021" },
-                      }}
-                    />
-                  </Box>
-                ))}
+                {ACTIONS.map((action) => {
+                  const isAllowed = allowedActions.includes(action);
+                  return (
+                    <Box key={action} sx={{ display: "flex", justifyContent: "center" }}>
+                      {isAllowed ? (
+                        <Switch
+                          size="small"
+                          checked={!!(pagePerms[action])}
+                          onChange={() => toggleAction(key, action)}
+                          sx={{
+                            "& .MuiSwitch-switchBase.Mui-checked": { color: "#f58021" },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: "#f58021" },
+                          }}
+                        />
+                      ) : (
+                        <Typography sx={{ color: "#cbd5e1", fontSize: "0.75rem" }}>-</Typography>
+                      )}
+                    </Box>
+                  );
+                })}
                 <Box sx={{ display: "flex", justifyContent: "center" }}>
                   <Switch
                     size="small"

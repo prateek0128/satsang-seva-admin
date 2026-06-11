@@ -267,7 +267,7 @@ const UserList = () => {
                     </IconButton>
                   </Tooltip>
                   )}
-                  {can("allusers", "delete") && (
+                  {can("allusers", "deactivate") && (
                     <Tooltip title="Deactivate User" arrow>
                       <IconButton size="small" onClick={() => handleDelete(user)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#fee2e2", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
                         <BlockIcon sx={{ fontSize: 15 }} />
