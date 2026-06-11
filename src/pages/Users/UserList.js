@@ -253,11 +253,13 @@ const UserList = () => {
               </TableCell>
               <TableCell sx={cellSx}>
                 <Box className="row-actions" sx={{ display: "flex", gap: 0.6, opacity: { xs: 1, md: 0.6 }, transition: "opacity 0.2s" }}>
+                  {can("allusers", "view") && (
                   <Tooltip title="View Profile" arrow>
                     <IconButton size="small" onClick={() => navigate(`/admin/userdetails/${user._id}`)} sx={{ background: "#eff6ff", color: "#2563eb", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#dbeafe", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
                       <VisibilityIcon sx={{ fontSize: 15 }} />
                     </IconButton>
                   </Tooltip>
+                  )}
                   {can("allusers", "edit") && (
                   <Tooltip title="Edit User" arrow>
                     <IconButton size="small" onClick={() => navigate(`/admin/updateuser/${user._id}`)} sx={{ background: "#f0fdf4", color: "#16a34a", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#dcfce7", transform: "scale(1.08)" }, transition: "all 0.18s" }}>

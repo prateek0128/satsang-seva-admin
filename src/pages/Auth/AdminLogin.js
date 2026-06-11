@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "../../components/Popup";
+import { clearPermissionCache } from "../../hooks/usePermission";
 
 const AdminLogin = ({ setAdmin }) => {
   const [email, setEmail] = useState("");
@@ -37,6 +38,7 @@ const AdminLogin = ({ setAdmin }) => {
       });
       localStorage.setItem("token", data.token);
       localStorage.setItem("admin", JSON.stringify(data.admin));
+      clearPermissionCache();
       if (remember) {
         localStorage.setItem("admin_email", email);
         localStorage.setItem("admin_password", password);

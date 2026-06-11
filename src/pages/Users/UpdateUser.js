@@ -4,6 +4,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Country, State, City } from "country-state-city";
 import { toast } from "../../components/Popup";
 import Loader from "../../components/Loader";
+import usePermission from "../../hooks/usePermission";
 
 const S = {
   container: {
@@ -165,6 +166,8 @@ const UpdateUser = () => {
   const location = useLocation();
   const url = process.env.REACT_APP_BACKEND;
   const isReadOnly = location.pathname.includes("/admin/userdetails/");
+  const { can } = usePermission();
+  const canEdit = can("allusers", "edit");
 
   const [loading, setLoading] = useState(false);
   const [otpRequired, setOtpRequired] = useState(false);
@@ -544,7 +547,8 @@ const UpdateUser = () => {
           </svg>
           {isReadOnly ? "Back" : "Cancel"}
         </button>
-        {isReadOnly && !isInactive && (
+       
+        {isReadOnly && !isInactive  && canEdit && (
           <button
             style={S.saveBtn}
             onClick={() => navigate(`/admin/updateuser/${id}`)}

@@ -11,7 +11,9 @@ const notify = (data) => {
   _listeners.forEach((fn) => fn(data));
 };
 
-export const clearPermissionCache = () => { _cache = null; };
+export const clearPermissionCache = () => {
+  _cache = null;
+};
 
 const usePermission = () => {
   const [permissions, setPermissions] = useState(_cache);
@@ -25,10 +27,14 @@ const usePermission = () => {
       const token = localStorage.getItem("token");
       const url = process.env.REACT_APP_BACKEND;
       axios
-        .get(`${url}admin/permissions/me`, { headers: { Authorization: `Bearer ${token}` } })
+        .get(`${url}admin/permissions/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
         .then((r) => notify(r.data.data))
         .catch(() => notify(null))
-        .finally(() => { _fetching = false; });
+        .finally(() => {
+          _fetching = false;
+        });
     }
     return () => _listeners.delete(setPermissions);
   }, []);
@@ -38,15 +44,20 @@ const usePermission = () => {
     (page, action) => {
       if (!permissions) return false;
       if (permissions.designation === "superAdmin") return true;
-      return !!(permissions.permissions?.[page]?.[action]);
+      return !!permissions.permissions?.[page]?.[action];
     },
-    [permissions]
+    [permissions],
   );
 
   const isSuperAdmin = permissions?.designation === "superAdmin";
   const isLoaded = permissions !== null && permissions !== undefined;
 
-  return { can, isSuperAdmin, isLoaded, rawPermissions: permissions?.permissions || {} };
+  return {
+    can,
+    isSuperAdmin,
+    isLoaded,
+    rawPermissions: permissions?.permissions || {},
+  };
 };
 
 export default usePermission;
