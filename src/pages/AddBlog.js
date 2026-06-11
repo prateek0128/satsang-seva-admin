@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import Loader from '../components/Loader';
 import { toast } from '../components/Popup';
+import usePermission from '../hooks/usePermission';
 
 const S = {
   page: { padding: '28px 32px', background: '#f8fafc', minHeight: '100vh', fontFamily: "'Inter',-apple-system,sans-serif" },
@@ -25,6 +26,8 @@ function AddBlog() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
+  const { can, isLoaded } = usePermission();
+  const canSaveBlog = isEdit ? can('blog', 'edit') : can('blog', 'edit');
 
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState(null);
@@ -36,6 +39,11 @@ function AddBlog() {
   const [existingImages, setExistingImages] = useState([]);
 
   useEffect(() => {
+    if (isLoaded && !canSaveBlog) {
+      toast('You do not have permission to edit blogs', 'error');
+      navigate('/admin/blog', { replace: true });
+      return;
+    }
     if (!isEdit) return;
     const fetchBlog = async () => {
       setLoading(true);
@@ -56,7 +64,7 @@ function AddBlog() {
       }
     };
     fetchBlog();
-  }, [id, isEdit, url]);
+  }, [id, isEdit, url, isLoaded, canSaveBlog, navigate]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'image/jpeg': [], 'image/png': [], 'image/jpg': [], 'image/webp': [] },
@@ -73,6 +81,7 @@ function AddBlog() {
   });
 
   const handleSubmit = async () => {
+    if (!canSaveBlog) return;
     if (!title.trim()) return toast('Blog title is required', 'error');
     if (!content.trim()) return toast('Blog content is required', 'error');
     if (!isEdit && !blogPoster) return toast('Blog poster image is required', 'error');

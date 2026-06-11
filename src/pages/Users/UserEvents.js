@@ -8,6 +8,7 @@ import View from '@mui/icons-material/VisibilityTwoTone';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Button, Form } from 'react-bootstrap';
 import Loader from '../../components/Loader';
+import usePermission from '../../hooks/usePermission';
 
 const UserEvents = () => {
   const url = process.env.REACT_APP_BACKEND;
@@ -18,6 +19,9 @@ const UserEvents = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { can } = usePermission();
+  const canEditEvents = can("events", "edit");
+  const canDeleteEvents = can("events", "delete");
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -40,6 +44,7 @@ const UserEvents = () => {
   }, [userId]);
 
   const handleEditClick = (event) => {
+    if (!canEditEvents) return;
     navigate('/admin/updateform', { state: { eventData: event } });
   };
 
@@ -55,6 +60,7 @@ const UserEvents = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!canEditEvents) return;
     setLoading(true);
     try {
       await axios.put(`${url}/events/${selectedEvent._id}`, selectedEvent);
@@ -73,6 +79,7 @@ const UserEvents = () => {
   };
 
   const handleDeleteClick = (event) => {
+    if (!canDeleteEvents) return;
     setEventToDelete(event);
     setShowDeleteDialog(true);
   };
@@ -116,8 +123,8 @@ const UserEvents = () => {
                 <th>Event Price</th>
                 <th>View Bookings</th>
                 <th>View</th>
-                <th>Edit</th>
-                <th>Delete</th>
+                {canEditEvents && <th>Edit</th>}
+                {canDeleteEvents && <th>Delete</th>}
               </tr>
             </thead>
             <tbody>
@@ -133,12 +140,16 @@ const UserEvents = () => {
                   <td>
                     <View titleAccess='View Event'onClick={() => handleClick(event._id)} className='cursor-pointer' style={{ color: "#D26600" }} />
                   </td>
-                  <td>
-                    <Edit titleAccess='Edit Event' onClick={() => handleEditClick(event)} className='cursor-pointer' style={{ color: "#D26600" }} />
-                  </td>
-                  <td>
-                    <Delete titleAccess='Delete Event' onClick={() => handleDeleteClick(event)} className='cursor-pointer' style={{ color: "#D26600" }} />
-                  </td>
+                  {canEditEvents && (
+                    <td>
+                      <Edit titleAccess='Edit Event' onClick={() => handleEditClick(event)} className='cursor-pointer' style={{ color: "#D26600" }} />
+                    </td>
+                  )}
+                  {canDeleteEvents && (
+                    <td>
+                      <Delete titleAccess='Delete Event' onClick={() => handleDeleteClick(event)} className='cursor-pointer' style={{ color: "#D26600" }} />
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

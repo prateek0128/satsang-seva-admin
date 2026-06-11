@@ -123,10 +123,10 @@ const InactiveUsers = () => {
     <Box sx={{ p: { xs: "16px", sm: "24px 28px" }, minHeight: "100vh", background: "linear-gradient(145deg,#fff8f2 0%,#fff3e6 30%,#fef9f5 60%,#fff0e0 100%)" }}>
       <Box sx={{ mb: 3 }}>
         <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: "#94a3b8", mb: 0.5, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          Admin / Removed Users
+          Admin / Inactive Users
         </Typography>
         <Typography sx={{ fontSize: "1.5rem", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.05em", lineHeight: 1.2 }}>
-          Removed Users
+          Inactive Users
         </Typography>
         {/* <Typography sx={{ fontSize: "0.82rem", color: "#64748b", mt: 0.4, fontWeight: 500 }}>
           {loading ? "Loading..." : `${users.length} disabled accounts`}
@@ -134,7 +134,7 @@ const InactiveUsers = () => {
       </Box>
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(auto-fit, minmax(180px, 1fr))" }, gap: { xs: 1.5, sm: 2 }, mb: 3 }}>
-        <StatCard loading={loading} label="Removed Users" value={users.length} icon={<PersonOffIcon sx={{ fontSize: 20 }} />} color="#64748b" light="#f8fafc" />
+        <StatCard loading={loading} label="Inactive Users" value={users.length} icon={<PersonOffIcon sx={{ fontSize: 20 }} />} color="#64748b" light="#f8fafc" />
         <StatCard loading={loading} label="Hosts" value={totalHosts} icon={<SupervisedUserCircleIcon sx={{ fontSize: 20 }} />} color={BRAND} light="#fff7ed" />
         <StatCard loading={loading} label="Participants" value={totalParticipants} icon={<HowToRegIcon sx={{ fontSize: 20 }} />} color="#059669" light="#f0fdf4" />
       </Box>

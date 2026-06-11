@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, confirmDialog } from "../../components/Popup";
 import Loader from "../../components/Loader";
+import usePermission from "../../hooks/usePermission";
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 const SvgEye       = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
@@ -69,6 +70,10 @@ const ViewEvent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const url = process.env.REACT_APP_BACKEND;
+  const { can } = usePermission();
+  const canEdit = can("events", "edit");
+  const canApprove = can("events", "approve");
+  const canReject = can("events", "reject");
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -150,10 +155,12 @@ const ViewEvent = () => {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               Public View
             </button>
-            <button onClick={() => navigate(`/admin/updateevent/${event._id}`)} style={{ display: "flex", alignItems: "center", gap: 7, background: "linear-gradient(135deg,#D26600,#f59e0b)", border: "none", color: "#fff", padding: "10px 18px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: "0.85rem", boxShadow: "0 4px 14px rgba(210,102,0,0.4)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Edit Event
-            </button>
+            {canEdit && (
+              <button onClick={() => navigate(`/admin/updateevent/${event._id}`)} style={{ display: "flex", alignItems: "center", gap: 7, background: "linear-gradient(135deg,#D26600,#f59e0b)", border: "none", color: "#fff", padding: "10px 18px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: "0.85rem", boxShadow: "0 4px 14px rgba(210,102,0,0.4)" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit Event
+              </button>
+            )}
           </div>
         </div>
 
@@ -288,25 +295,29 @@ const ViewEvent = () => {
                 <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.08em" }}>Quick Actions</p>
               </div>
               <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
-                <button onClick={() => navigate(`/admin/updateevent/${event._id}`)} style={{ width: "100%", padding: "13px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#D26600,#f59e0b)", color: "#fff", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 14px rgba(210,102,0,0.3)" }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit Event
-                </button>
-                {!event.approved ? (
+                {canEdit && (
+                  <button onClick={() => navigate(`/admin/updateevent/${event._id}`)} style={{ width: "100%", padding: "13px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#D26600,#f59e0b)", color: "#fff", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 14px rgba(210,102,0,0.3)" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Event
+                  </button>
+                )}
+                {!event.approved && canApprove ? (
                   <button onClick={handleApprove} style={{ width: "100%", padding: "13px", borderRadius: 12, border: "none", background: "#15803d", color: "#fff", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                     Approve Event
                   </button>
-                ) : (
+                ) : event.approved && canReject ? (
                   <button onClick={handleReject} style={{ width: "100%", padding: "13px", borderRadius: 12, border: "1px solid #fca5a5", background: "#fef2f2", color: "#ef4444", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     Reject Event
                   </button>
+                ) : null}
+                {canEdit && (
+                  <button onClick={handleTogglePopular} style={{ width: "100%", padding: "13px", borderRadius: 12, border: `1px solid ${event.isPopular ? "#fde68a" : "#e2e8f0"}`, background: event.isPopular ? "#fffbeb" : "#f8fafc", color: event.isPopular ? "#d97706" : "#64748b", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                    <SvgStar filled={event.isPopular} />
+                    {event.isPopular ? "Unmark Popular" : "Mark as Popular"}
+                  </button>
                 )}
-                <button onClick={handleTogglePopular} style={{ width: "100%", padding: "13px", borderRadius: 12, border: `1px solid ${event.isPopular ? "#fde68a" : "#e2e8f0"}`, background: event.isPopular ? "#fffbeb" : "#f8fafc", color: event.isPopular ? "#d97706" : "#64748b", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  <SvgStar filled={event.isPopular} />
-                  {event.isPopular ? "Unmark Popular" : "Mark as Popular"}
-                </button>
               </div>
             </div>
 

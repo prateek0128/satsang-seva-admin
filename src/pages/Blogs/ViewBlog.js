@@ -4,11 +4,14 @@ import axios from "axios";
 import dayjs from "dayjs";
 import Loader from "../../components/Loader";
 import { toast } from "../../components/Popup";
+import usePermission from "../../hooks/usePermission";
 
 const ViewBlog = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const url = process.env.REACT_APP_BACKEND;
+  const { can } = usePermission();
+  const canEdit = can("blog", "edit");
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState(null);
@@ -63,15 +66,17 @@ const ViewBlog = () => {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           All Blogs
         </button>
-        <button onClick={() => navigate(`/admin/editblog/${id}`)} style={{
-          background: "linear-gradient(135deg,#D26600,#ea580c)", color: "#fff", border: "none",
-          borderRadius: "8px", padding: "9px 20px", fontWeight: 700, fontSize: "0.85rem",
-          cursor: "pointer", display: "flex", alignItems: "center", gap: "7px",
-          boxShadow: "0 3px 10px rgba(210,102,0,0.3)",
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Edit Blog
-        </button>
+        {canEdit && (
+          <button onClick={() => navigate(`/admin/editblog/${id}`)} style={{
+            background: "linear-gradient(135deg,#D26600,#ea580c)", color: "#fff", border: "none",
+            borderRadius: "8px", padding: "9px 20px", fontWeight: 700, fontSize: "0.85rem",
+            cursor: "pointer", display: "flex", alignItems: "center", gap: "7px",
+            boxShadow: "0 3px 10px rgba(210,102,0,0.3)",
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Blog
+          </button>
+        )}
       </div>
 
       {/* Cover Image Banner */}

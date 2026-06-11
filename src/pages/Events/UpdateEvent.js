@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import { Country, State, City } from "country-state-city";
 import { toast } from "../../components/Popup";
 import Loader from "../../components/Loader";
+import usePermission from "../../hooks/usePermission";
 
 const CATEGORIES = [
   "Satsang", "Yoga", "Meditation", "Kirtan", "Utsavs",
@@ -72,6 +73,8 @@ const UpdateEvent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const url = process.env.REACT_APP_BACKEND;
+  const { can, isLoaded } = usePermission();
+  const canEditEvent = can("events", "edit") || can("approvals", "edit") || can("drafts", "edit");
 
   const [form, setForm] = useState({
     eventName: "", eventDesc: "", eventCategory: [],
@@ -121,6 +124,11 @@ const UpdateEvent = () => {
   };
 
   useEffect(() => {
+    if (isLoaded && !canEditEvent) {
+      toast("You do not have permission to edit events", "error");
+      navigate("/admin/events", { replace: true });
+      return;
+    }
     const fetchEvent = async () => {
       setLoading(true);
       try {
@@ -168,7 +176,7 @@ const UpdateEvent = () => {
       }
     };
     fetchEvent();
-  }, [id, url]);
+  }, [id, url, isLoaded, canEditEvent, navigate]);
 
   useEffect(() => {
     if (!form.country) {
@@ -291,6 +299,7 @@ const UpdateEvent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!canEditEvent) return;
     if (!form.eventName) return toast("Event name is required", "error");
     if (!form.eventCategory.length) return toast("Select at least one category", "error");
     if (!form.startDate || !form.endDate) return toast("Start and end dates are required", "error");

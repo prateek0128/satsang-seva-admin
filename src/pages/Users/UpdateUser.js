@@ -432,7 +432,7 @@ const UpdateUser = () => {
   };
 
   const handleUpdate = async () => {
-    if (isReadOnly || isInactive) return;
+    if (isReadOnly || isInactive || !canEdit) return;
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -570,7 +570,7 @@ const UpdateUser = () => {
             Edit Details
           </button>
         )}
-        {!isReadOnly && !isInactive && (
+        {!isReadOnly && !isInactive && canEdit && (
           <button style={S.saveBtn} onClick={handleUpdate}>
             Save Changes
           </button>
@@ -583,7 +583,7 @@ const UpdateUser = () => {
       </div>
 
       <fieldset
-        disabled={isReadOnly || isInactive}
+        disabled={isReadOnly || isInactive || !canEdit}
         style={{ border: "none", margin: 0, padding: 0 }}
       >
         <div style={S.grid}>

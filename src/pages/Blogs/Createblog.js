@@ -1,15 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
 import FirstFold1 from "../../components/FirstFold1";
 import Footer from "../../components/Footer";
+import usePermission from "../../hooks/usePermission";
 const Createblog = () => {
+  const navigate = useNavigate();
+  const { can, isLoaded } = usePermission();
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState(null);
   const [eventPoster, setEventPoster] = useState(null);
 
   const [blogTitle, setBlogTitle] = useState("");
   const [blogContent, setBlogContent] = useState("");
+
+  useEffect(() => {
+    if (isLoaded && !can("blog", "edit")) {
+      navigate("/admin/blog", { replace: true });
+    }
+  }, [isLoaded, can, navigate]);
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: 'image/jpeg, image/png, image/jpg',
@@ -27,6 +37,7 @@ const Createblog = () => {
   });
 
   const handleSubmit = () => {
+    if (!can("blog", "edit")) return;
     // Consolidate form data into an object
     const formData = {
       blogTitle,
