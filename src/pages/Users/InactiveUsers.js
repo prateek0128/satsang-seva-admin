@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 import {
   Box, Chip, IconButton, InputAdornment, Skeleton, TableCell,
   TableRow, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
+import DeleteIcon from "@mui/icons-material/DeleteRounded";
 import PersonOffIcon from "@mui/icons-material/PersonOffRounded";
 import PeopleIcon from "@mui/icons-material/PeopleRounded";
 import SearchIcon from "@mui/icons-material/SearchRounded";
@@ -44,7 +46,9 @@ const badgeColor = (type) =>
     : { bg: "#f0fdf4", color: "#166534", border: "#bbf7d0" };
 
 const InactiveUsers = () => {
+  const navigate = useNavigate();
   const url = process.env.REACT_APP_BACKEND;
+  const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -67,7 +71,13 @@ const InactiveUsers = () => {
     }
   };
 
-  useEffect(() => { fetchInactiveUsers(); }, []);
+  useEffect(() => {
+    if (adminData.designation !== "superAdmin") {
+      navigate("/admin/dashboard", { replace: true });
+      return;
+    }
+    fetchInactiveUsers();
+  }, []);
 
   const handleActivate = async (user) => {
     if (!await confirmDialog(`Activate ${user.name || "this user"}?`)) return;
@@ -78,6 +88,20 @@ const InactiveUsers = () => {
       });
       setUsers(prev => prev.filter(u => u._id !== user._id));
       toast("User activated", "success");
+    } catch (e) {
+      toast(e.response?.data?.message || e.message, "error");
+    }
+  };
+
+  const handleDelete = async (user) => {
+    if (!await confirmDialog(`Permanently delete ${user.name || "this user"}?`)) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${url}admin/user/${user._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsers(prev => prev.filter(u => u._id !== user._id));
+      toast("User deleted", "success");
     } catch (e) {
       toast(e.response?.data?.message || e.message, "error");
     }
@@ -176,11 +200,18 @@ const InactiveUsers = () => {
                 ) : "-"}
               </TableCell>
               <TableCell sx={cellSx}>
-                <Tooltip title="Activate User" arrow>
-                  <IconButton size="small" onClick={() => handleActivate(user)} sx={{ background: "#ecfdf5", color: "#047857", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#d1fae5", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
-                    <CheckCircleIcon sx={{ fontSize: 15 }} />
-                  </IconButton>
-                </Tooltip>
+                <Box sx={{ display: "flex", gap: 0.6 }}>
+                  <Tooltip title="Activate User" arrow>
+                    <IconButton size="small" onClick={() => handleActivate(user)} sx={{ background: "#ecfdf5", color: "#047857", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#d1fae5", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
+                      <CheckCircleIcon sx={{ fontSize: 15 }} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete User" arrow>
+                    <IconButton size="small" onClick={() => handleDelete(user)} sx={{ background: "#fef2f2", color: "#dc2626", borderRadius: "8px", width: 30, height: 30, "&:hover": { background: "#fee2e2", transform: "scale(1.08)" }, transition: "all 0.18s" }}>
+                      <DeleteIcon sx={{ fontSize: 15 }} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </TableCell>
             </TableRow>
           );

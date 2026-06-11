@@ -59,17 +59,17 @@ const SideNavbar = forwardRef(
               label: "Admin Users",
               icon: <AdminPanelSettingsIcon fontSize="small" />,
             },
+            {
+              to: "/admin/inactive-users",
+              label: "Inactive Users",
+              icon: <PersonOffIcon fontSize="small" />,
+            },
           ]
         : []),
       {
         to: "/admin/allusers",
         label: "Users",
         icon: <UsersIcon fontSize="small" />,
-      },
-      {
-        to: "/admin/inactive-users",
-        label: "Inactive Users",
-        icon: <PersonOffIcon fontSize="small" />,
       },
       {
         to: "/admin/events",
