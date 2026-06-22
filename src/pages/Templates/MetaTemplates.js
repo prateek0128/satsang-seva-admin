@@ -142,10 +142,14 @@ const MetaTemplates = () => {
     status: "active",
   });
   const [sendParamValues, setSendParamValues] = useState([]);
+  const [sendHeaderTextValue, setSendHeaderTextValue] = useState("");
+  const [sendHeaderMedia, setSendHeaderMedia] = useState(null);
+  const [sendButtonParamValues, setSendButtonParamValues] = useState({});
   const [metaModalOpen, setMetaModalOpen] = useState(false);
   const [metaSearch, setMetaSearch] = useState("");
   const [viewTemplate, setViewTemplate] = useState(null);
   const mediaInputRef = useRef(null);
+  const sendMediaInputRef = useRef(null);
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -305,11 +309,15 @@ const MetaTemplates = () => {
   };
 
   const openSend = (template) => {
+    const requirements = getSendRequirements(template);
     setSendTemplate(template);
     setSelectedUsers([]);
     setSendAllUsers(false);
     setRecipientFilters({ membership: "all", community: "all", status: "active" });
-    setSendParamValues(Array.from({ length: variableCount(template.bodyText) }, () => ""));
+    setSendParamValues(Array.from({ length: requirements.bodyParamCount }, () => ""));
+    setSendHeaderTextValue("");
+    setSendHeaderMedia(null);
+    setSendButtonParamValues({});
   };
 
   const submitSend = async () => {
@@ -322,17 +330,56 @@ const MetaTemplates = () => {
     }
 
     let components = [];
-    const bodyParamCount = variableCount(sendTemplate?.bodyText);
+    const requirements = getSendRequirements(sendTemplate);
+    const bodyParamCount = requirements.bodyParamCount;
+
+    if (requirements.headerTextParamCount > 0) {
+      if (!sendHeaderTextValue.trim()) {
+        toast("Fill the header parameter value", "warning");
+        return;
+      }
+      components.push({
+        type: "header",
+        parameters: [{ type: "text", text: sendHeaderTextValue.trim() }],
+      });
+    }
+
+    if (requirements.headerMediaFormat) {
+      if (!sendHeaderMedia?.mediaId) {
+        toast(`Select a ${requirements.headerMediaFormat.toLowerCase()} file for the header`, "warning");
+        return;
+      }
+      const mediaType = requirements.headerMediaFormat.toLowerCase();
+      components.push({
+        type: "header",
+        parameters: [{ type: mediaType, [mediaType]: { id: sendHeaderMedia.mediaId } }],
+      });
+    }
+
     if (bodyParamCount > 0) {
       const values = sendParamValues.slice(0, bodyParamCount).map((value) => value.trim());
       if (values.some((value) => !value)) {
         toast("Fill all template parameter values", "warning");
         return;
       }
-      components = [{
+      components.push({
         type: "body",
         parameters: values.map((value) => ({ type: "text", text: value })),
-      }];
+      });
+    }
+
+    for (const button of requirements.dynamicUrlButtons) {
+      const value = sendButtonParamValues[button.index]?.trim();
+      if (!value) {
+        toast(`Fill URL button parameter for ${button.text || `button ${Number(button.index) + 1}`}`, "warning");
+        return;
+      }
+      components.push({
+        type: "button",
+        sub_type: "url",
+        index: String(button.index),
+        parameters: [{ type: "text", text: value }],
+      });
     }
 
     setSubmitting(true);
@@ -377,9 +424,30 @@ const MetaTemplates = () => {
     return numbers.length ? Math.max(...numbers) : 0;
   };
 
+  const getSendRequirements = (template) => {
+    const components = template?.components || [];
+    const header = components.find((component) => String(component.type).toUpperCase() === "HEADER");
+    const body = components.find((component) => String(component.type).toUpperCase() === "BODY");
+    const buttonsComponent = components.find((component) => String(component.type).toUpperCase() === "BUTTONS");
+    const headerFormat = String(header?.format || template?.headerFormat || "NONE").toUpperCase();
+    const headerTextParamCount = headerFormat === "TEXT" ? variableCount(header?.text || template?.headerText) : 0;
+    const headerMediaFormat = MEDIA_HEADER_FORMATS.includes(headerFormat) ? headerFormat : "";
+    const dynamicUrlButtons = (buttonsComponent?.buttons || template?.buttons || [])
+      .map((button, index) => ({ ...button, index }))
+      .filter((button) => String(button.type).toUpperCase() === "URL" && variableCount(button.url) > 0);
+
+    return {
+      headerTextParamCount,
+      headerMediaFormat,
+      bodyParamCount: variableCount(body?.text || template?.bodyText),
+      dynamicUrlButtons,
+    };
+  };
+
   const bodyVariableCount = variableCount(form.bodyText);
   const headerVariableCount = variableCount(form.headerText);
-  const sendBodyVariableCount = variableCount(sendTemplate?.bodyText);
+  const sendRequirements = getSendRequirements(sendTemplate);
+  const sendBodyVariableCount = sendRequirements.bodyParamCount;
   const sendPreview = (sendTemplate?.bodyText || "").replace(/\{\{(\d+)\}\}/g, (_, n) => {
     const value = sendParamValues[Number(n) - 1];
     return value?.trim() || `{{Parameter ${n}}}`;
@@ -410,6 +478,22 @@ const MetaTemplates = () => {
 
   const setFilter = (key, value) => {
     setRecipientFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const uploadSendMedia = async (file) => {
+    if (!file) return;
+    const data = new FormData();
+    data.append("media", file);
+    setSubmitting(true);
+    try {
+      const res = await axios.post(`${url}admin/meta-templates/media`, data, { headers: headers() });
+      setSendHeaderMedia(res.data.data);
+      toast("Media selected", "success");
+    } catch (e) {
+      toast(e.response?.data?.message || "Media upload failed", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const SegmentedFilter = ({ label, value, options, onChange }) => (
@@ -954,11 +1038,89 @@ const MetaTemplates = () => {
                 <Typography sx={{ fontSize: "0.72rem", fontWeight: 900, color: "#64748b", mb: 1.4 }}>
                   Template Parameters
                 </Typography>
-                {sendBodyVariableCount === 0 ? (
+                {sendRequirements.headerTextParamCount === 0 && !sendRequirements.headerMediaFormat && sendBodyVariableCount === 0 && sendRequirements.dynamicUrlButtons.length === 0 ? (
                   <Box sx={{ p: 2, borderRadius: "10px", background: "#f8fafc", border: "1px dashed #cbd5e1", color: "#94a3b8", fontSize: "0.82rem", fontWeight: 700 }}>
-                    This template has no body parameters.
+                    This template has no send-time parameters.
                   </Box>
                 ) : (
+                  <>
+                    {sendRequirements.headerTextParamCount > 0 && (
+                      <Box sx={{ mb: 1.6 }}>
+                        <Typography sx={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, mb: 0.8 }}>
+                          Header Parameter
+                        </Typography>
+                        <TextField
+                          label="Header Text Value"
+                          size="small"
+                          required
+                          fullWidth
+                          value={sendHeaderTextValue}
+                          onChange={(e) => setSendHeaderTextValue(e.target.value)}
+                          sx={{
+                            "& .MuiInputLabel-root": { color: "#64748b" },
+                            "& .MuiOutlinedInput-root": {
+                              color: "#0f172a",
+                              background: "#f8fafc",
+                              borderRadius: "9px",
+                              "& fieldset": { borderColor: "#cbd5e1" },
+                              "&:hover fieldset": { borderColor: "#94a3b8" },
+                              "&.Mui-focused fieldset": { borderColor: BRAND },
+                            },
+                          }}
+                        />
+                      </Box>
+                    )}
+
+                    {sendRequirements.headerMediaFormat && (
+                      <Box sx={{ mb: 1.6 }}>
+                        <Typography sx={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, mb: 0.8 }}>
+                          {sendRequirements.headerMediaFormat} Header
+                        </Typography>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: "10px",
+                            background: "#f8fafc",
+                            border: "1px dashed #cbd5e1",
+                            display: "flex",
+                            alignItems: { xs: "flex-start", sm: "center" },
+                            justifyContent: "space-between",
+                            gap: 1.5,
+                            flexDirection: { xs: "column", sm: "row" },
+                          }}
+                        >
+                          <Box>
+                            <Typography sx={{ fontSize: "0.84rem", color: "#0f172a", fontWeight: 800 }}>
+                              {sendHeaderMedia?.fileName || `Select ${sendRequirements.headerMediaFormat.toLowerCase()} file`}
+                            </Typography>
+                            <Typography sx={{ fontSize: "0.74rem", color: "#64748b", mt: 0.35 }}>
+                              {sendHeaderMedia?.mediaId ? `Uploaded media id: ${sendHeaderMedia.mediaId}` : "Required for this template header."}
+                            </Typography>
+                          </Box>
+                          <Button
+                            variant="outlined"
+                            disabled={submitting}
+                            onClick={() => sendMediaInputRef.current?.click()}
+                            sx={{ borderColor: "#fed7aa", color: "#D26600", background: "#fff", textTransform: "none", fontWeight: 900, "&:hover": { borderColor: BRAND, background: "#fff7ed" } }}
+                          >
+                            {sendHeaderMedia?.mediaId ? "Change File" : "Select Document"}
+                          </Button>
+                          <input
+                            ref={sendMediaInputRef}
+                            type="file"
+                            hidden
+                            accept={sendRequirements.headerMediaFormat === "IMAGE" ? "image/*" : sendRequirements.headerMediaFormat === "VIDEO" ? "video/*" : ".pdf,.doc,.docx,.ppt,.pptx,.txt,application/pdf"}
+                            onChange={(e) => uploadSendMedia(e.target.files?.[0])}
+                          />
+                        </Box>
+                      </Box>
+                    )}
+
+                    {sendBodyVariableCount > 0 && (
+                      <>
+                        <Typography sx={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, mb: 0.8 }}>
+                          Body Parameters
+                        </Typography>
                   <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.4 }}>
                     {Array.from({ length: sendBodyVariableCount }).map((_, index) => (
                       <TextField
@@ -986,6 +1148,41 @@ const MetaTemplates = () => {
                       />
                     ))}
                   </Box>
+                      </>
+                    )}
+
+                    {sendRequirements.dynamicUrlButtons.length > 0 && (
+                      <Box sx={{ mt: sendBodyVariableCount > 0 ? 1.8 : 0 }}>
+                        <Typography sx={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, mb: 0.8 }}>
+                          URL Button Parameters
+                        </Typography>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.4 }}>
+                          {sendRequirements.dynamicUrlButtons.map((button) => (
+                            <TextField
+                              key={button.index}
+                              label={`${button.text || "URL Button"} Value`}
+                              size="small"
+                              required
+                              value={sendButtonParamValues[button.index] || ""}
+                              onChange={(e) => setSendButtonParamValues({ ...sendButtonParamValues, [button.index]: e.target.value })}
+                              helperText="Value replaces the URL variable in this button."
+                              sx={{
+                                "& .MuiInputLabel-root": { color: "#64748b" },
+                                "& .MuiOutlinedInput-root": {
+                                  color: "#0f172a",
+                                  background: "#f8fafc",
+                                  borderRadius: "9px",
+                                  "& fieldset": { borderColor: "#cbd5e1" },
+                                  "&:hover fieldset": { borderColor: "#94a3b8" },
+                                  "&.Mui-focused fieldset": { borderColor: BRAND },
+                                },
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </>
                 )}
               </Box>
             </Box>
