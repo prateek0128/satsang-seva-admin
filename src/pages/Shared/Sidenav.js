@@ -12,6 +12,7 @@ import DraftsIcon from "@mui/icons-material/EditNoteRounded";
 import SupportIcon from "@mui/icons-material/SupportAgentRounded";
 import BookingsIcon from "@mui/icons-material/BookOnlineRounded";
 import NotificationsIcon from "@mui/icons-material/NotificationsRounded";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettingsRounded";
 import { Tooltip } from "@mui/material";
 import { confirmDialog } from "../../components/Popup";
@@ -102,6 +103,11 @@ const SideNavbar = forwardRef(
         label: "Notifications",
         icon: <NotificationsIcon fontSize="small" />,
         badge: notifCount,
+      },
+      {
+        to: "/admin/templates",
+        label: "Templates",
+        icon: <WhatsAppIcon fontSize="small" />,
       },
       {
         to: "/admin/contact-queries",

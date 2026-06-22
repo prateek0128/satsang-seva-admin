@@ -41,6 +41,7 @@ import AddBlog from "./pages/Blogs/Createblog";
 
 // Notifications
 import NotificationList from "./pages/Notifications/NotificationList";
+import MetaTemplates from "./pages/Templates/MetaTemplates";
 
 // Support
 import ContactQueries from "./pages/Support/ContactQueries";
@@ -105,6 +106,7 @@ function App() {
           <Route path="bookings" element={<BookingList />} />
           <Route path="bookings/:id" element={<BookingDetails />} />
           <Route path="notifications" element={<NotificationList />} />
+          <Route path="templates" element={<MetaTemplates />} />
           <Route path="admins" element={<AdminManagement />} />
         </Route>
       </Route>

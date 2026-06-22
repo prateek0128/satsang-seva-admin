@@ -27,6 +27,7 @@ const PAGES = [
   { key: "bookings",       label: "Bookings",        actions: ["view"] },
   { key: "contact-queries",label: "Contact Queries", actions: ["view", "delete"] },
   { key: "notifications",  label: "Notifications",   actions: ["view"] },
+  { key: "templates",      label: "Meta Templates",   actions: ["view", "edit", "delete"] },
 ];
 
 const ACTIONS = ["view", "edit", "delete", "approve", "reject", "deactivate"];
