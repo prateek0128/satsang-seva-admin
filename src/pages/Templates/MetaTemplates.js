@@ -134,6 +134,7 @@ const MetaTemplates = () => {
   const [mediaSampleFile, setMediaSampleFile] = useState(null);
   const [mediaDragActive, setMediaDragActive] = useState(false);
   const [sendTemplate, setSendTemplate] = useState(null);
+  const [sendChannel, setSendChannel] = useState("whatsapp");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [sendAllUsers, setSendAllUsers] = useState(false);
   const [recipientFilters, setRecipientFilters] = useState({
@@ -311,6 +312,7 @@ const MetaTemplates = () => {
   const openSend = (template) => {
     const requirements = getSendRequirements(template);
     setSendTemplate(template);
+    setSendChannel("whatsapp");
     setSelectedUsers([]);
     setSendAllUsers(false);
     setRecipientFilters({ membership: "all", community: "all", status: "active" });
@@ -326,6 +328,26 @@ const MetaTemplates = () => {
       .filter((user) => user.phone);
     if (!sendAllUsers && !payloadRecipients.length) {
       toast("Choose users or select all users", "warning");
+      return;
+    }
+
+    if (sendChannel === "sms") {
+      setSubmitting(true);
+      try {
+        const res = await axios.post(
+          `${url}admin/meta-templates/${sendTemplate._id}/send-sms`,
+          { recipients: payloadRecipients, sendAllUsers, filters: recipientFilters, message: sendPreview },
+          { headers: headers() }
+        );
+        const sent = res.data.data?.sent || 0;
+        const failed = res.data.data?.failed || 0;
+        toast(`SMS sent ${sent}, failed ${failed}`, failed ? "warning" : "success");
+        setSendTemplate(null);
+      } catch (e) {
+        toast(e.response?.data?.message || "Error sending SMS", "error");
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
 
@@ -446,6 +468,12 @@ const MetaTemplates = () => {
 
   const bodyVariableCount = variableCount(form.bodyText);
   const headerVariableCount = variableCount(form.headerText);
+  const bodyExampleArray = form.bodyExampleValues.split("\n");
+  const updateBodyExampleValue = (index, value) => {
+    const next = [...bodyExampleArray];
+    next[index] = value;
+    setForm({ ...form, bodyExampleValues: next.slice(0, bodyVariableCount).join("\n") });
+  };
   const sendRequirements = getSendRequirements(sendTemplate);
   const sendBodyVariableCount = sendRequirements.bodyParamCount;
   const sendPreview = (sendTemplate?.bodyText || "").replace(/\{\{(\d+)\}\}/g, (_, n) => {
@@ -794,16 +822,24 @@ const MetaTemplates = () => {
             )}
             <TextField required label="Body" minRows={5} multiline value={form.bodyText} onChange={(e) => setForm({ ...form, bodyText: e.target.value })} sx={{ gridColumn: { xs: "1", sm: "1 / -1" } }} helperText="Use Meta variables like {{1}} when dynamic text is needed." />
             {bodyVariableCount > 0 && (
-              <TextField
-                label="Body Example Values"
-                required={form.createOnMeta || editingMeta}
-                minRows={Math.min(Math.max(bodyVariableCount, 2), 5)}
-                multiline
-                value={form.bodyExampleValues}
-                onChange={(e) => setForm({ ...form, bodyExampleValues: e.target.value })}
-                sx={{ gridColumn: { xs: "1", sm: "1 / -1" } }}
-                helperText={`Add ${bodyVariableCount} example value${bodyVariableCount > 1 ? "s" : ""}, one per line, matching {{1}} to {{${bodyVariableCount}}}. Example: Ayush`}
-              />
+              <Box sx={{ gridColumn: { xs: "1", sm: "1 / -1" } }}>
+                <Typography sx={{ fontSize: "0.72rem", fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em", mb: 1 }}>
+                  Body Example Values
+                </Typography>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: bodyVariableCount === 1 ? "1fr" : "repeat(2, 1fr)" }, gap: 1.4 }}>
+                  {Array.from({ length: bodyVariableCount }).map((_, index) => (
+                    <TextField
+                      key={index}
+                      label={`Example for {{${index + 1}}}`}
+                      required={form.createOnMeta || editingMeta}
+                      size="small"
+                      value={bodyExampleArray[index] || ""}
+                      onChange={(e) => updateBodyExampleValue(index, e.target.value)}
+                      helperText={`Sample value for body parameter {{${index + 1}}}`}
+                    />
+                  ))}
+                </Box>
+              </Box>
             )}
             <TextField label="Footer" size="small" value={form.footerText} onChange={(e) => setForm({ ...form, footerText: e.target.value })} sx={{ gridColumn: { xs: "1", sm: "1 / -1" } }} />
             <Box sx={{ gridColumn: { xs: "1", sm: "1 / -1" } }}>
@@ -935,7 +971,7 @@ const MetaTemplates = () => {
             <Box sx={{ display: "flex", gap: 1, alignItems: "center", mt: 1.2, flexWrap: "wrap" }}>
               <Chip label={sendTemplate?.name || ""} size="small" sx={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", fontWeight: 800 }} />
               <Typography sx={{ fontSize: "0.72rem", color: "#64748b" }}>{sendTemplate?.language}</Typography>
-              <Typography sx={{ fontSize: "0.72rem", color: "#D26600", fontWeight: 800 }}>Manual</Typography>
+              <Typography sx={{ fontSize: "0.72rem", color: "#D26600", fontWeight: 800 }}>{sendChannel === "sms" ? "SMS" : "WhatsApp"}</Typography>
             </Box>
           </Box>
           <IconButton onClick={() => setSendTemplate(null)} sx={{ color: "#64748b", alignSelf: "flex-start", background: "#fff", border: "1px solid #e2e8f0", "&:hover": { background: "#f1f5f9", color: "#0f172a" } }}>
@@ -946,6 +982,31 @@ const MetaTemplates = () => {
         <DialogContent sx={{ p: 0, background: "#f8fafc" }}>
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1.45fr 1fr" }, gap: 2, p: 3, maxHeight: "calc(72vh - 88px)", overflow: "auto" }}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <Box sx={{ p: 2, borderRadius: "12px", background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 2px 10px rgba(15,23,42,0.04)" }}>
+                <Typography sx={{ fontSize: "0.72rem", fontWeight: 900, color: "#64748b", mb: 1.2 }}>
+                  Send Channel
+                </Typography>
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, p: 0.5, border: "1px solid #e2e8f0", borderRadius: "9px", background: "#f8fafc" }}>
+                  <Button
+                    onClick={() => setSendChannel("whatsapp")}
+                    sx={{ color: sendChannel === "whatsapp" ? "#fff" : "#64748b", background: sendChannel === "whatsapp" ? "linear-gradient(135deg,#D26600,#f58021)" : "transparent", textTransform: "none", fontWeight: 900, borderRadius: "7px", "&:hover": { background: sendChannel === "whatsapp" ? "linear-gradient(135deg,#b35800,#D26600)" : "#fff7ed" } }}
+                  >
+                    WhatsApp
+                  </Button>
+                  <Button
+                    onClick={() => setSendChannel("sms")}
+                    sx={{ color: sendChannel === "sms" ? "#fff" : "#64748b", background: sendChannel === "sms" ? "linear-gradient(135deg,#D26600,#f58021)" : "transparent", textTransform: "none", fontWeight: 900, borderRadius: "7px", "&:hover": { background: sendChannel === "sms" ? "linear-gradient(135deg,#b35800,#D26600)" : "#fff7ed" } }}
+                  >
+                    SMS
+                  </Button>
+                </Box>
+                {sendChannel === "sms" && (
+                  <Typography sx={{ fontSize: "0.74rem", color: "#64748b", mt: 1 }}>
+                    SMS sends only the resolved body text. Media headers and buttons are ignored.
+                  </Typography>
+                )}
+              </Box>
+
               <Box sx={{ p: 2, borderRadius: "12px", background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 2px 10px rgba(15,23,42,0.04)" }}>
                 <Typography sx={{ fontSize: "0.72rem", fontWeight: 900, color: "#64748b", mb: 1.4 }}>
                   Recipients
@@ -1045,13 +1106,15 @@ const MetaTemplates = () => {
                 <Typography sx={{ fontSize: "0.72rem", fontWeight: 900, color: "#64748b", mb: 1.4 }}>
                   Template Parameters
                 </Typography>
-                {sendRequirements.headerTextParamCount === 0 && !sendRequirements.headerMediaFormat && sendBodyVariableCount === 0 && sendRequirements.dynamicUrlButtons.length === 0 ? (
+                {(sendChannel === "sms"
+                  ? sendBodyVariableCount === 0
+                  : sendRequirements.headerTextParamCount === 0 && !sendRequirements.headerMediaFormat && sendBodyVariableCount === 0 && sendRequirements.dynamicUrlButtons.length === 0) ? (
                   <Box sx={{ p: 2, borderRadius: "10px", background: "#f8fafc", border: "1px dashed #cbd5e1", color: "#94a3b8", fontSize: "0.82rem", fontWeight: 700 }}>
                     This template has no send-time parameters.
                   </Box>
                 ) : (
                   <>
-                    {sendRequirements.headerTextParamCount > 0 && (
+                    {sendChannel === "whatsapp" && sendRequirements.headerTextParamCount > 0 && (
                       <Box sx={{ mb: 1.6 }}>
                         <Typography sx={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, mb: 0.8 }}>
                           Header Parameter
@@ -1078,7 +1141,7 @@ const MetaTemplates = () => {
                       </Box>
                     )}
 
-                    {sendRequirements.headerMediaFormat && (
+                    {sendChannel === "whatsapp" && sendRequirements.headerMediaFormat && (
                       <Box sx={{ mb: 1.6 }}>
                         <Typography sx={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, mb: 0.8 }}>
                           {sendRequirements.headerMediaFormat} Header
@@ -1158,7 +1221,7 @@ const MetaTemplates = () => {
                       </>
                     )}
 
-                    {sendRequirements.dynamicUrlButtons.length > 0 && (
+                    {sendChannel === "whatsapp" && sendRequirements.dynamicUrlButtons.length > 0 && (
                       <Box sx={{ mt: sendBodyVariableCount > 0 ? 1.8 : 0 }}>
                         <Typography sx={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, mb: 0.8 }}>
                           URL Button Parameters
@@ -1219,7 +1282,7 @@ const MetaTemplates = () => {
         <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid #e2e8f0", background: "#fff" }}>
           <Button onClick={() => setSendTemplate(null)} color="inherit" sx={{ color: "#475569", textTransform: "none", fontWeight: 800 }}>Cancel</Button>
           <Button variant="contained" disabled={submitting} onClick={submitSend} startIcon={<SendIcon />} sx={{ background: "linear-gradient(135deg,#D26600,#f58021)", "&:hover": { background: "linear-gradient(135deg,#b35800,#D26600)" }, textTransform: "none", fontWeight: 900, borderRadius: "8px", px: 2.4, boxShadow: "0 5px 16px rgba(245,128,33,0.28)" }}>
-            {submitting ? "Sending..." : "Send Template"}
+            {submitting ? "Sending..." : sendChannel === "sms" ? "Send SMS" : "Send Template"}
           </Button>
         </DialogActions>
       </Dialog>
