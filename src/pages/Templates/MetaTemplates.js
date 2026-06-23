@@ -647,9 +647,16 @@ const MetaTemplates = () => {
               <TableCell sx={cellSx}>{template.category}</TableCell>
               <TableCell sx={cellSx}>{template.language}</TableCell>
               <TableCell sx={{ ...cellSx, maxWidth: 360 }}>
-                <Typography sx={{ fontSize: "0.8rem", color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {template.bodyText}
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography sx={{ fontSize: "0.8rem", color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                    {template.bodyText}
+                  </Typography>
+                  <Tooltip title="View full message" arrow>
+                    <IconButton size="small" onClick={() => setViewTemplate(template)} sx={{ p: 0.45, color: "#2563eb", background: "#eff6ff", borderRadius: "8px", "&:hover": { background: "#dbeafe" } }}>
+                      <VisibilityIcon sx={{ fontSize: 15 }} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </TableCell>
               <TableCell sx={cellSx}>{template.updatedAt ? dayjs(template.updatedAt).format("DD MMM, hh:mm A") : "-"}</TableCell>
               <TableCell sx={cellSx}>
