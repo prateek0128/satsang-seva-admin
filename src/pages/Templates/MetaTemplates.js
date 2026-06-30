@@ -982,7 +982,7 @@ const MetaTemplates = () => {
         <DialogContent sx={{ p: 0, background: "#f8fafc" }}>
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1.45fr 1fr" }, gap: 2, p: 3, maxHeight: "calc(72vh - 88px)", overflow: "auto" }}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <Box sx={{ p: 2, borderRadius: "12px", background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 2px 10px rgba(15,23,42,0.04)" }}>
+              {/* <Box sx={{ p: 2, borderRadius: "12px", background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 2px 10px rgba(15,23,42,0.04)" }}>
                 <Typography sx={{ fontSize: "0.72rem", fontWeight: 900, color: "#64748b", mb: 1.2 }}>
                   Send Channel
                 </Typography>
@@ -1005,7 +1005,7 @@ const MetaTemplates = () => {
                     SMS sends only the resolved body text. Media headers and buttons are ignored.
                   </Typography>
                 )}
-              </Box>
+              </Box> */}
 
               <Box sx={{ p: 2, borderRadius: "12px", background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 2px 10px rgba(15,23,42,0.04)" }}>
                 <Typography sx={{ fontSize: "0.72rem", fontWeight: 900, color: "#64748b", mb: 1.4 }}>
